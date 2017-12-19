@@ -5,7 +5,7 @@ $(window).ready(function() {
     var height = window.innerHeight;
 
     var winTop = $(window).scrollTop();
-    if (pos < winTop + 800) {
+    if (pos < winTop + 900) {
       $(this).addClass("slide");
     }
   });
@@ -17,7 +17,7 @@ $(window).scroll(function() {
     var height = window.innerHeight;
 
     var winTop = $(window).scrollTop();
-    if (pos < winTop + 800) {
+    if (pos < winTop + 900) {
       $(this).addClass("slide");
     }
   });
