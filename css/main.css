@@ -8,7 +8,6 @@
 */
 
 #mainNav {
-  display: none;
   transition: top 0.3s;
   /* Animation handled by scrolling-nav.js*/
 }
@@ -60,7 +59,7 @@ footer {
 
     background-attachment: fixed;
     background-repeat: no-repeat;
-    height:70vh;
+    height: 60vh;
     width: 100%;
 }
 
@@ -100,8 +99,8 @@ h5 {
 }
 
 p {
-  font-family: 'Roboto', arial, sans-serif;
-  color: rgb(17,17,17);
+  font-family: 'Montserrat', arial, sans-serif;
+  color: black;
   font-size: 15px;
   font-weight: 400;
 
@@ -180,7 +179,7 @@ section {
   margin: 20px 0px;
 }
 
-.card-header: {
+.card-header {
   background-color: #FFFFFF;
   transition: all .1s ease-in;
 }
@@ -206,8 +205,8 @@ section {
     animation-name: slide;
     -webkit-animation-name: slide;
     /* The duration of the animation */
-    animation-duration: 1s;
-    -webkit-animation-duration: 1s;
+    animation-duration: 0.7s;
+    -webkit-animation-duration: 0.7s;
     /* Make the element visible */
     visibility: visible;
 }

@@ -28,6 +28,7 @@
 
 })(jQuery); // End of use strict
 
+/* Navbar fade after scrolling a bit
 (function($) {
     $(document).ready(function(){
         $(window).scroll(function(){
@@ -39,3 +40,4 @@
         });
     });
 })(jQuery);
+*/
