@@ -80,6 +80,7 @@ h1 {
 }
 
 h2 {
+  font-family: 'Roboto', sans-serif;
 
 }
 h3 {
@@ -87,17 +88,17 @@ h3 {
 }
 
 h4 {
+  font-family: 'Roboto', sans-serif;
   color: #4285F4;
 }
 
 h5 {
+  font-family: 'Roboto', sans-serif;
   color: #34A853;
 }
 
 p {
-  font-family: 'Montserrat', arial, sans-serif;
   color: black;
-
   display: block;
 }
 
@@ -167,10 +168,8 @@ section {
 
 
 .card {
-  border: 0;
   margin: auto;
-  border-radius: 0px;
-  shape-outside: 0px;
+  border-radius: 5px;
   margin: 20px 0px;
 }
 
@@ -188,9 +187,9 @@ section {
   -o-transition: all .1s ease-in;
   transition: all .1s ease-in;
   opacity: 1;
-  transform: scale(1.02);
-  -ms-transform: scale(1.02); /* IE 9 */
-  -webkit-transform: scale(1.02); /* Safari and Chrome */
+  transform: scale(0.98);
+  -ms-transform: scale(0.98); /* IE 9 */
+  -webkit-transform: scale(0.98); /* Safari and Chrome */
 }
 
 
