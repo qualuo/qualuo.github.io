@@ -50,7 +50,7 @@ footer {
 }
 
 .background-cover {
-    background-image:url('../images/bulb.jpeg');
+    background-image:url('../images/space.jpeg');
     background-size:cover;
     background-position: center;
     display:flex;
@@ -59,12 +59,12 @@ footer {
 
     background-attachment: fixed;
     background-repeat: no-repeat;
-    height: 70vh;
+    height: 100vh;
     width: 100%;
 }
 
 .background-cover2 {
-    background-image:url('../images/launch.jpg');
+    background-image:url('../images/space.jpeg');
     background-size:cover;
     background-position: center;
     display:flex;
@@ -73,8 +73,6 @@ footer {
 
     background-attachment: fixed;
     background-repeat: no-repeat;
-    height: 20vh;
-    width: 100%;
 }
 
 h1 {
@@ -131,8 +129,13 @@ section {
   /*-webkit-box-shadow: 0px 2px 2px 0px rgba(179,179,179,1);
   -moz-box-shadow: 0px 2px 2px 0px rgba(179,179,179,1);
   box-shadow: 1px 2px 2px 1px rgba(179,179,179,1);*/
-  padding: 40px 25px;
+  padding: 40px 20px;
   margin: auto;
+}
+
+.divbar {
+  background-color: #141414;
+  height: 4px;
 }
 
 .flat-button {
