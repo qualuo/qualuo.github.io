@@ -1,4 +1,5 @@
 
+/* slide in things when finished loading, even if haven't scrolled */
 $(window).ready(function() {
   $(".slideanim").each(function(){
     var pos = $(this).offset().top;
@@ -11,6 +12,7 @@ $(window).ready(function() {
   });
 });
 
+/* slide in animation */
 $(window).scroll(function() {
   $(".slideanim").each(function(){
     var pos = $(this).offset().top;

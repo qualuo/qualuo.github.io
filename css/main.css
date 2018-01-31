@@ -1,37 +1,33 @@
-@import url('https://fonts.googleapis.com/css?family=Montserrat:300|Roboto');
+@import url('https://fonts.googleapis.com/css?family=Montserrat|Open+Sans|Roboto');
 /* COLORS
-#4285F4;
-#34A853;
-#FBBC05
-#EA4335
-#141414;
+#4285F4; blue
+#34A853; green
+#FBBC05 orange
+#EA4335 red
+#141414; black
 */
 
 #mainNav {
   background-color: #FFFFFF;
-  transition: top 0.3s;
-  /* Animation handled by scrolling-nav.js*/
+  font-size: 13px;
+  font-family: 'Open Sans', sans-serif;
+  transition: top 0.3s; /* Animation handled by scrolling-nav.js*/
 }
 
 header {
-
-
 }
-@media (min-width: 992px) {
-  header {
-    padding: 124px 0px 124px;
-  }
-}
-
 
 body {
   font-family: 'Montserrat', sans-serif;
 }
 
 #main {
-}
 
+}
 #s1 {
+
+}
+#s12 {
 
 }
 #edu {
@@ -41,6 +37,10 @@ body {
 
 }
 #s3 {
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+#s4 {
 
 }
 
@@ -49,51 +49,65 @@ footer {
   background-color: #141414;
 }
 
-.background-cover {
-    background-image:url('../images/space.jpeg');
-    background-size:cover;
+.bg-cover {
+    background-image: url('../images/space.jpeg');
+    background-size: cover;
     background-position: center;
-    display:flex;
-    flex-direction:column;
-    justify-content:center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 
     background-attachment: fixed;
     background-repeat: no-repeat;
-    height: 100vh;
+    height: 80vh;
 }
 
-.background-cover2 {
-    background-image:url('../images/space.jpeg');
-    background-size:cover;
+.bg-cover2 {
+    background-image: url('../images/rocket.jpeg');
+    background-size: cover;
     background-position: center;
-    display:flex;
-    flex-direction:column;
-    justify-content:center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+}
+
+.bg-cover3 {
+    background-image: url('../images/mountains.jpg');
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 
     background-attachment: fixed;
     background-repeat: no-repeat;
 }
 
 h1 {
-  font-family: 'Roboto', sans-serif;
+  font-family: 'Open Sans', sans-serif;
   font-size: 64px;
+  font-weight: 600;
 }
 
 h2 {
-  font-family: 'Roboto', sans-serif;
-
+  padding: 0px 0px 2px 0px;
+  font-family: 'Montserrat', sans-serif;
 }
-h3 {
 
+h3 {
+  font-family: 'Montserrat', sans-serif;
 }
 
 h4 {
-  font-family: 'Roboto', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   color: #4285F4;
 }
 
 h5 {
-  font-family: 'Roboto', sans-serif;
+  font-family: 'Open Sans', sans-serif;
   color: #34A853;
 }
 
@@ -168,14 +182,15 @@ section {
 
 
 .card {
+  opacity: 0.98;
   margin: auto;
-  border-radius: 5px;
-  margin: 20px 0px;
+  border-radius: 4px;
+  margin: 8px 0px;
 }
 
 .card-header {
-  border: 0;
   background-color: #FFFFFF;
+  border: 0;
   transition: all .1s ease-in;
 }
 
@@ -187,9 +202,9 @@ section {
   -o-transition: all .1s ease-in;
   transition: all .1s ease-in;
   opacity: 1;
-  transform: scale(0.98);
-  -ms-transform: scale(0.98); /* IE 9 */
-  -webkit-transform: scale(0.98); /* Safari and Chrome */
+  transform: scale(0.99);
+  -ms-transform: scale(0.99); /* IE 9 */
+  -webkit-transform: scale(0.99); /* Safari and Chrome */
 }
 
 
@@ -226,55 +241,6 @@ section {
         opacity: 1;
         -webkit-transform: translateY(0%);
     }
-}
-
-/* TYPEWRITER ANIMATION: class="typewriteranim typeline-1"*/
-.typewriteranim{
-  animation: typewriter 3s steps(44) 1s 1 normal both;
-}
-@keyframes typewriter{
-  from{width: 0;}
-  to{width: 24em;}
-}
-
-.typeline-1{
-    margin: 0 auto;
-    font-size: 140%;
-    text-align: center;
-    white-space: nowrap;
-    overflow: hidden;
-}
-
-/* LINES WITH TEXT: class="strike"*/
-.strike {
-    display: block;
-    text-align: center;
-    overflow: hidden;
-}
-
-.strike > span {
-    position: relative;
-    display: inline-block;
-}
-
-.strike > span:before,
-.strike > span:after {
-    content: "";
-    position: absolute;
-    top: 50%;
-    width: 20%;
-    height: 2px;
-    background: #000000;
-}
-
-.strike > span:before {
-    right: 100%;
-    margin-right: 15px;
-}
-
-.strike > span:after {
-    left: 100%;
-    margin-left: 15px;
 }
 
 /* ANIMATED ENVELOPE */
