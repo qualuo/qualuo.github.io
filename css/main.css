@@ -50,7 +50,7 @@ footer {
 }
 
 .bg-cover {
-    background-image: url('../images/space.jpeg');
+    background-image: url('../images/stars.jpeg');
     background-size: cover;
     background-position: center;
     display: flex;
@@ -63,7 +63,7 @@ footer {
 }
 
 .bg-cover2 {
-    background-image: url('../images/rocket.jpeg');
+    background-image: url('../images/sky.jpeg');
     background-size: cover;
     background-position: center;
     display: flex;
@@ -112,7 +112,6 @@ h5 {
 }
 
 p {
-  color: black;
   display: block;
 }
 
@@ -184,7 +183,7 @@ section {
 .card {
   opacity: 0.98;
   margin: auto;
-  border-radius: 4px;
+  border-radius: 2px;
   margin: 8px 0px;
 }
 
