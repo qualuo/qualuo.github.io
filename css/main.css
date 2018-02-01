@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css?family=Montserrat|Open+Sans|Roboto');
+@import url('https://fonts.googleapis.com/css?family=Open+Sans|Catamaran|Roboto');
 /* COLORS
 #4285F4; blue
 #34A853; green
@@ -18,7 +18,6 @@ header {
 }
 
 body {
-  font-family: 'Montserrat', sans-serif;
 }
 
 #main {
@@ -87,31 +86,33 @@ footer {
 }
 
 h1 {
-  font-family: 'Open Sans', sans-serif;
+  font-family: 'Catamaran', sans-serif;
   font-size: 64px;
   font-weight: 600;
 }
 
 h2 {
   padding: 0px 0px 2px 0px;
-  font-family: 'Montserrat', sans-serif;
+  font-family: 'Catamaran', sans-serif;
+  font-size: 32px;
 }
 
 h3 {
-  font-family: 'Montserrat', sans-serif;
+  font-family: 'Catamaran', sans-serif;
 }
 
 h4 {
-  font-family: 'Montserrat', sans-serif;
+  font-family: 'Catamaran', sans-serif;
   color: #4285F4;
 }
 
 h5 {
-  font-family: 'Open Sans', sans-serif;
+  font-family: 'Catamaran', sans-serif;
   color: #34A853;
 }
 
 p {
+  font-family: 'Roboto', sans-serif;
   display: block;
 }
 
@@ -181,14 +182,13 @@ section {
 
 
 .card {
-  opacity: 0.98;
   margin: auto;
   border-radius: 2px;
   margin: 8px 0px;
 }
 
 .card-header {
-  background-color: #FFFFFF;
+  background-color: #f9f9f9;
   border: 0;
   transition: all .1s ease-in;
 }
