@@ -1,10 +1,10 @@
 @import url('https://fonts.googleapis.com/css?family=Open+Sans|Catamaran|Roboto');
 /* COLORS
-#4285F4; blue
-#34A853; green
-#FBBC05 orange
-#EA4335 red
-#141414; black
+#4285F4 - blue
+#34A853 - green
+#FBBC05 - orange
+#EA4335 - red
+#141414 - black
 */
 
 #mainNav {
@@ -58,6 +58,7 @@ footer {
 
     background-attachment: fixed;
     background-repeat: no-repeat;
+    max-width: 100%;
     height: 100vh;
 }
 
@@ -71,6 +72,7 @@ footer {
 
     background-attachment: fixed;
     background-repeat: no-repeat;
+    max-width: 100%;
 }
 
 .bg-cover3 {
@@ -83,6 +85,7 @@ footer {
 
     background-attachment: fixed;
     background-repeat: no-repeat;
+    max-width: 100%;
 }
 
 h1 {
