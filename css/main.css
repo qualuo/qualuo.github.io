@@ -4,7 +4,7 @@
 #34A853 - green
 #FBBC05 - orange
 #EA4335 - red
-#141414 - black
+#242424 - black
 */
 
 #mainNav {
@@ -46,12 +46,12 @@ body {
 /**
 footer {
   color: #FFFFFF;
-  //background-color: #141414;
+  //background-color: #242424;
 }
 */
 
 .bg-cover {
-    background-color: #141414;
+    background-color: #242424;
     background-size: cover;
     background-position: center;
     display: flex;
@@ -65,7 +65,7 @@ footer {
 }
 
 .bg-cover2 {
-    background-color: #141414;
+    background-color: #242424;
     background-size: cover;
     background-position: center;
     display: flex;
@@ -79,7 +79,7 @@ footer {
 
 
 .bg-cover3 {
-    background-color: #141414;
+    background-color: #242424;
     background-size: cover;
     background-position: center;
     display: flex;
@@ -155,7 +155,7 @@ hr {
 }
 
 .divbar {
-  background-color: #141414;
+  background-color: #242424;
   height: 4px;
 }
 
@@ -254,6 +254,7 @@ hr {
 @media (min-width: 800px) {
   .bg-cover {
       background-image: url('../images/stars.jpeg');
+      height: 100vh;
   }
   .bg-cover2 {
       background-image: url('../images/sky.jpeg');
