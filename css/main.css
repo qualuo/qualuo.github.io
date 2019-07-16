@@ -12,6 +12,7 @@
   font-size: 13px;
   font-family: 'Open Sans', sans-serif;
   transition: top 0.3s; /* Animation handled by scrolling-nav.js*/
+
 }
 
 header {
@@ -51,7 +52,7 @@ footer {
 */
 
 .bg-cover {
-    background-color: #242424;
+    background-image: linear-gradient(#0A0A0A, #03121a);
     background-size: cover;
     background-position: center;
     display: flex;
@@ -65,7 +66,7 @@ footer {
 }
 
 .bg-cover2 {
-    background-color: #242424;
+    background-image: linear-gradient(#0A0A0A, #080f22);
     background-size: cover;
     background-position: center;
     display: flex;
@@ -73,13 +74,14 @@ footer {
     justify-content: center;
 
     background-attachment: fixed;
+    background-position: 0px 50px;
     background-repeat: no-repeat;
     width: 100%;
 }
 
 
 .bg-cover3 {
-    background-color: #242424;
+    background-image: linear-gradient(#0A0A0A, #171717);
     background-size: cover;
     background-position: center;
     display: flex;
@@ -117,6 +119,7 @@ h5 {
 }
 
 p {
+  font-family: 'Roboto', sans-serif;
   font-size: 16px;
   line-height: 26px;
 }
@@ -170,11 +173,11 @@ hr {
 
 
 .card-header:hover {
-  -webkit-transition: all .1s ease-in;
-  -moz-transition: all .1s ease-in;
-  -ms-transition: all .1s ease-in;
-  -o-transition: all .1s ease-in;
-  transition: all .1s ease-in;
+  -webkit-transition: all .2s ease-in;
+  -moz-transition: all .2s ease-in;
+  -ms-transition: all .2s ease-in;
+  -o-transition: all .2s ease-in;
+  transition: all .2s ease-in;
   opacity: 1;
   transform: scale(0.99);
   -ms-transform: scale(0.99); /* IE 9 */
@@ -189,8 +192,8 @@ hr {
     animation-name: slide;
     -webkit-animation-name: slide;
     /* The duration of the animation */
-    animation-duration: 0.7s;
-    -webkit-animation-duration: 0.7s;
+    animation-duration: 1.2s;
+    -webkit-animation-duration: 1.2s;
     /* Make the element visible */
     visibility: visible;
 }
@@ -224,7 +227,7 @@ hr {
       height: 100vh;
   }
   .bg-cover2 {
-      background-image: url('../images/sky.jpeg');
+      background-image: url('../images/sky.jpg');
   }
   .bg-cover3 {
       background-image: url('../images/mountains.jpg');
