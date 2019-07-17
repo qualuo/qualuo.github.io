@@ -22,61 +22,62 @@
 
 <body id="page-top">
 
+  <!-- Header -->
   <!-- Navigation -->
   <nav class="navbar navbar-expand-sm navbar-light bg-light fixed-top" id="mainNav">
     <div class="container">
-      <a class="navbar-brand js-scroll-trigger" href="#hdr">QUANG LUONG</a>
+      <a class="navbar-brand js-scroll-trigger" href="#frontcvr">QUANG LUONG</a>
       <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
         </button>
       <div class="collapse navbar-collapse text-right" id="navbarResponsive">
         <ul class="navbar-nav ml-auto">
           <li class="nav-item">
-            <a class="nav-link js-scroll-trigger" href="#s1"><b>PROFILE</b></a>
+            <a class="nav-link js-scroll-trigger text-dark" href="#scprofile"><b>PROFILE</b></a>
           </li>
           <li class="nav-item">
-            <a class="nav-link js-scroll-trigger" href="#s12"><b>SKILLS</b></a>
+            <a class="nav-link js-scroll-trigger text-dark" href="#scskills"><b>SKILLS</b></a>
           </li>
           <li class="nav-item">
-            <a class="nav-link js-scroll-trigger" href="#s2"><b>WORK</b></a>
+            <a class="nav-link js-scroll-trigger text-dark" href="#scwork"><b>WORK</b></a>
           </li>
           <li class="nav-item">
-            <a class="nav-link js-scroll-trigger" href="#s3"><b>PERSONAL</b></a>
+            <a class="nav-link js-scroll-trigger text-dark" href="#scabout"><b>PERSONAL</b></a>
           </li>
           <li class="nav-item">
-            <a class="nav-link js-scroll-trigger" href="#s4"><b>CONTACT</b></a>
+            <a class="nav-link js-scroll-trigger text-dark" href="#sccontact"><b>CONTACT</b></a>
           </li>
         </ul>
       </div>
     </div>
   </nav>
 
-  <!-- Header -->
-  <header id="hdr" class="bg-cover">
-    <div class="container text-center text-light">
-      <h2>Hello! I'm<br/></h2>
-      <h1>Quang Luong</h1>
-    </div>
-  </header>
-
   <!--<a class="nav-link js-scroll-trigger text-dark text-center scroll-down" href="#s1">&#x25BC;</a>-->
 
   <!-- Main sections -->
   <div id="main" class="container-fluid">
 
-    <div class="">
-      <section id="s1" class="">
+      <div id="frontcvr" class="bg-cover">
+        <div class="container text-center text-light">
+          <h2>Hello! I'm<br/></h2>
+          <h1>Quang Luong</h1>
+        </div>
+      </div>
+
+
+    <div class="bg-cover">
+      <section id="scprofile" class="text-light text-center">
         <div class="row">
           <div class="col mx-auto slideanim">
-            <h2 class="text-center">For a better tomorrow</h2>
-            <hr class="bg-dark">
+            <blockquote class="blockquote slideanim">
+              <class=""><i>"Be the change that you wish to see in the world."</i>
+            </blockquote><br/><br/>
+            <h2 class="text-center">Let me introduce myself</h2>
+            <hr class="bg-light">
           </div>
         </div>
         <div class="row">
           <div class="col mx-auto text-center">
-            <blockquote class="blockquote">
-              <p class="slideanim"><i>"Be the change that you wish to see in the world."</i></p>
-            </blockquote>
             <br/>
             <p class="slideanim">
               I'm a computer/software engineer with a wide variety of skillsets. I can create, design and develop web applications, tools, programs, and games.
@@ -87,14 +88,18 @@
             </p>
           </div>
         </div>
+
+          <br/><a class="btn btn-jmp text-light" href="#sccontact">Contact</a>
       </section>
     </div>
 
+    <div class="bar"></div>
+
     <div class="bg-cover2">
-      <section id="s12" class="text-light text-center">
+      <section id="scskills" class="text-light">
         <div class="row">
           <div class="col mx-auto slideanim">
-            <h2 class="text-center">Technical skills and credentials</h2>
+            <h2 class="text-center">What I know</h2>
             <hr class="bg-light">
           </div>
         </div>
@@ -121,16 +126,15 @@
           <div class="col-sm mx-auto slideanim">
             <h4>NATIONALITY</h4>
             <p class="">
-              Born and raised in Sweden. Ethnically Vietnamese. I speak English and Swedish fluently.
+              Based in Sweden, born and raised. Ethnically Vietnamese. I speak English and Swedish fluently.
             </p>
           </div>
         </div>
       </section>
-
     </div>
 
     <div class="bg-cover2">
-      <section id="s2" class="">
+      <section id="scwork" class="text-light">
         <div class="row">
           <div class="col mx-auto slideanim">
             <span><h2 class="text-light text-center">Projects I've worked on</h2></span>
@@ -139,162 +143,143 @@
         </div>
         <div class="row">
           <div class="col-md mx-auto slideanim">
-            <div class="card slideanim">
-              <div class="card-header collapsed" role="tab" id="headingOne" data-toggle="collapse" href="#collapseOne">
-                <div class="">
-                  <h4 class="mb-0">Chess Simulator </h4>
-                  <h5>Hyperion Games</h5>
+
+            <div class="ccard slideanim">
+              <div class="">
+                <h4 class="mb-0">Chess Simulator</h4>
+                <h5>Hyperion Games</h5>
+              </div>
+              <div class="row">
+                <div class="col mx-auto">
+                  <p class="">
+                    Created and developed a chess sandbox game. Features 3D movement and physics where one can interact with all visible game objects. Contains chess AI with concurrency for smooth performance. Targeted at mobile platforms.
+                  </p>
+                  <p>Tech: Unity, C#, chess artificial intelligence.
+                  </p>
+                </div>
+                <div class="col-sm mx-auto">
+                  <video autoplay loop controls>
+                      <source src="images/chesssimulator.mp4" type="video/mp4">
+                      Your browser does not support the video tag.
+                    </video>
                 </div>
               </div>
-              <div id="collapseOne" class="card-body collapse show" role="tabpanel" aria-labelledby="headingOne" data-parent="#accordion">
-                <div class="row">
-                  <div class="col mx-auto">
-                    <p class="">
-                      Created and developed a chess sandbox game. Features 3D movement and physics where one can interact with all visible game objects. Contains chess AI with concurrency for smooth performance. Targeted at mobile platforms.
-                    </p>
-                    <p>Tech: Unity, C#, chess artificial intelligence.
-                    </p>
-                  </div>
-                  <div class="col-sm mx-auto">
-                    <video autoplay loop controls>
-                        <source src="images/chesssimulator.mp4" type="video/mp4">
+            </div>
+
+            <div class="ccard slideanim">
+              <div class="">
+                <h4 class="mb-0">Cube Geometry</h4>
+                <h5>Hyperion Games</h5>
+              </div>
+              <div class="row">
+                <div class="col mx-auto">
+                  <p class="">Created and developed a procedurally generated arcade game where the objective is to balance a cube on a platform through a storm of cubes while collecting gems. Experimental mechanics. Targeted at mobile platforms.
+                  </p>
+                  <p>Tech: Unity, C#, APIs, Google Play.
+                  </p>
+                </div>
+                <div class="col-sm mx-auto">
+                  <video autoplay loop controls>
+                        <source style="max-height:50px;" src="images/cubegeometry.mp4" type="video/mp4">
                         Your browser does not support the video tag.
                       </video>
-                  </div>
                 </div>
               </div>
             </div>
 
-            <div class="card slideanim">
-              <div class="card-header collapsed" role="tab" id="headingTwo" data-toggle="collapse" href="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-                <div class="">
-                  <h4 class="mb-0">Cube Geometry </h4>
-                  <h5>Hyperion Games</h5>
+            <div class="ccard slideanim">
+              <div class="">
+                <h4 class="mb-0">Game Prototypes and Mechanics </h4>
+                <h5>Independent</h5>
+              </div>
+              <div class="row">
+                <div class="col mx-auto">
+                  <p class="">Developed an Unreal multiplayer shooter game prototype, primarily to get familiar with the engine. Inspired by battle royale games. Tech: Unreal, C++.
+                  </p>
+                </div>
+                <div class="col-sm mx-auto">
+                  <video autoplay loop controls>
+                        <source src="images/unrealshootergame.mp4" type="video/mp4">
+                        Your browser does not support the video tag.
+                      </video>
                 </div>
               </div>
-              <div id="collapseTwo" class="card-body collapse show" role="tabpanel" aria-labelledby="headingTwo" data-parent="#accordion">
-                <div class="row">
-                  <div class="col mx-auto">
-                    <p class="">Created and developed a procedurally generated arcade game where the objective is to balance a cube on a platform through a storm of cubes while collecting gems! Experimental mechanics. Targeted at mobile platforms.
-                    </p>
-                    <p>Tech: Unity, C#, APIs, Google Play.
-                    </p>
-                  </div>
-                  <div class="col-sm mx-auto">
-                    <video autoplay loop controls>
-                          <source style="max-width: 300px" src="images/cubegeometry.mp4" type="video/mp4">
-                          Your browser does not support the video tag.
-                        </video>
-                  </div>
+              <br>
+              <div class="row">
+                <div class="col mx-auto">
+                  <p>
+                    Worked on a city-builder game with very open and unrestrictive build system. Tech: Unity, C#.
+                  </p>
+                </div>
+                <div class="col-sm mx-auto">
+                  <video autoplay loop controls>
+                        <source src="images/unitycitygame.mp4" type="video/mp4">
+                        Your browser does not support the video tag.
+                      </video>
                 </div>
               </div>
-            </div>
-
-            <div class="card slideanim">
-              <div class="card-header collapsed" role="tab" id="headingThree" data-toggle="collapse" href="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
-                <div class="">
-                  <h4 class="mb-0">Game Prototypes and Mechanics </h4>
-                  <h5>Independent</h5>
+              <br>
+              <div class="row">
+                <div class="col mx-auto">
+                  <p>
+                    Started a Unity first person shooter game. Implemented shooting mechanics, some physics and level. Tech: Unity, C#.
+                  </p>
+                </div>
+                <div class="col-sm mx-auto">
+                  <video autoplay loop controls>
+                        <source src="images/fpsprototype.mp4" type="video/mp4">
+                        Your browser does not support the video tag.
+                      </video>
                 </div>
               </div>
-              <div id="collapseThree" class="card-body collapse show" role="tabpanel" aria-labelledby="headingThree" data-parent="#accordion">
-                <div class="row">
-                  <div class="col mx-auto">
-                    <p class="">Developed an Unreal multiplayer shooter game prototype, primarily to get familiar with the engine. Inspired by battle royale games. Tech: Unreal, C++.
-                    </p>
-                  </div>
-                  <div class="col-sm mx-auto">
-                    <video autoplay loop controls>
-                          <source src="images/unrealshootergame.mp4" type="video/mp4">
-                          Your browser does not support the video tag.
-                        </video>
-                  </div>
-                </div>
-                <br>
-                <div class="row">
-                  <div class="col mx-auto">
-                    <p>
-                      Worked on a city-builder game with very open and unrestrictive build system. Tech: Unity, C#.
-                    </p>
-                  </div>
-                  <div class="col-sm mx-auto">
-                    <video autoplay loop controls>
-                          <source src="images/unitycitygame.mp4" type="video/mp4">
-                          Your browser does not support the video tag.
-                        </video>
-                  </div>
-                </div>
-                <br>
-                <div class="row">
-                  <div class="col mx-auto">
-                    <p>
-                      Started a Unity first person shooter game. Implemented shooting mechanics, some physics and level. Tech: Unity, C#.
-                    </p>
-                  </div>
-                  <div class="col-sm mx-auto">
-                    <video autoplay loop controls>
-                          <source src="images/fpsprototype.mp4" type="video/mp4">
-                          Your browser does not support the video tag.
-                        </video>
-                  </div>
-                </div>
-                <br>
-                <div class="row">
-                  <div class="col mx-auto">
-                    <p>
-                      Also worked on a team project game engine with multiplayer capability involving development and design of networking protocol and server-client architecture. Tech: Java.
-                    </p>
-                  </div>
+              <br>
+              <div class="row">
+                <div class="col mx-auto">
+                  <p>
+                    Also worked on a team project game engine with multiplayer capability involving development and design of networking protocol and server-client architecture. Tech: Java.
+                  </p>
                 </div>
               </div>
             </div>
 
-            <div class="card slideanim">
-              <div class="card-header collapsed" role="tab" id="headingFour" data-toggle="collapse" href="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
-                <div class="">
-                  <h4 class="mb-0">Network for Railway Signalling System </h4>
-                  <h5>Bombardier</h5>
-                </div>
+            <div class="ccard slideanim">
+              <div class="">
+                <h4 class="mb-0">Networking for Railway Signalling System </h4>
+                <h5>Bombardier</h5>
               </div>
-              <div id="collapseFour" class="card-body collapse show" role="tabpanel" aria-labelledby="collapseFour" data-parent="#accordion">
-                <div class="row">
-                  <div class="col mx-auto">
-                    <p>Developed for a traffic control system project for <i>Bombardier Transportation</i>. The system is meant for smaller areas of operations where a complete Traffic Control Centre (TCC) solution would be excessive. This would also allow
-                      smaller control devices, such as a mobile device to be used to operate wayside objects. I was responsible for the the data communication (network) aspects of the project, implementing communication between the Object Controller System
-                      (OCS) and Central Traffic Control (CTC) subsystems.
-                      <br/>Thesis available online <a href="http://publications.lib.chalmers.se/records/fulltext/238367/238367.pdf"> here</a>.
-                    </p>
-                    <p/> Tech: Linux, distributed system, C, C#, Java.
-                    </p>
-                  </div>
-                  <div class="col-sm mx-auto">
-                    <img class="" src="images/bt_project.png" title="'Mockup Use Case." />
-                  </div>
+              <div class="row">
+                <div class="col mx-auto">
+                  <p>Developed for a traffic control system project for <i>Bombardier Transportation</i>. The system is meant for smaller areas of operations where a complete Traffic Control Centre (TCC) solution would be excessive. This would also allow
+                    smaller control devices, such as a mobile device to be used to operate wayside objects. I was responsible for the the data communication (network) aspects of the project, implementing communication between the Object Controller System
+                    (OCS) and Central Traffic Control (CTC) subsystems.
+                    <br/>Thesis available online <a href="http://publications.lib.chalmers.se/records/fulltext/238367/238367.pdf"> here</a>.
+                  </p>
+                  <p/> Tech: Linux, distributed system, C, C#, Java.
+                  </p>
+                </div>
+                <div class="col-sm mx-auto">
+                  <img class="" src="images/bt_project.png" title="'Mockup Use Case." />
                 </div>
               </div>
             </div>
 
-            <div class="card slideanim">
-              <div class="card-header collapsed" role="tab" id="headingFive" data-toggle="collapse" href="#collapseFive" aria-expanded="false" aria-controls="collapseFive">
-                <div class="">
-                  <h4 class="mb-0">Educational Open World Game</h4>
-                  <h5>Semcon</h5>
-                </div>
+            <div class="ccard slideanim">
+              <div class="">
+                <h4 class="mb-0">Educational Open World Game</h4>
+                <h5>Semcon</h5>
               </div>
-              <div id="collapseFive" class="card-body collapse show" role="tabpanel" aria-labelledby="collapseFive" data-parent="#accordion">
-                <div class="row">
-                  <div class="col mx-auto">
-                    <p class="">Worked in a team project to develop an educational open world mobile game. A game that would be able to substitute lessons and homework. The game is played out on islands where you can play minigames, earn tokens, buy building blocks
-                      and build. The minigames would revolve around answering questions. I wore many hats, developed mechanics in several areas of the project including questions mechanics, boat vehicle with physics, fish AI. I also created 3D models
-                      and mentored other developers in Unity.
-                    </p>
-                    <p>
-                      Tech: Unity, 3D physics, 3D modeling (Blender), optimization, C#.
-                    </p>
-                  </div>
-                  <div class="col-sm mx-auto">
-                    <img class="" src="images/goldislandproject.png" title="Gold Island - A level in the game" />
-                  </div>
+              <div class="row">
+                <div class="col mx-auto">
+                  <p class="">Worked in a team project to develop an educational open world mobile game. A game that would be able to substitute lessons and homework. The game is played out on islands where you can play minigames, earn tokens, buy building blocks
+                    and build. The minigames would revolve around answering questions. I wore many hats, developed mechanics in several areas of the project including questions mechanics, boat vehicle with physics, fish AI. I also created 3D models
+                    and mentored other developers in Unity.
+                  </p>
+                  <p>
+                    Tech: Unity, 3D physics, 3D modeling (Blender), optimization, C#.
+                  </p>
+                </div>
+                <div class="col-sm mx-auto">
+                  <img class="" src="images/goldislandproject.png" title="Gold Island - A level in the game" />
                 </div>
               </div>
             </div>
@@ -305,12 +290,12 @@
     </div>
 
 
-    <div class="">
-      <section id="s3" class="">
+    <div class="bg-cover2 text-light">
+      <section id="scabout" class="">
         <div class="row">
           <div class="col mx-auto slideanim">
             <span><h2 class="text-center">Getting personal</h2></span>
-            <hr class="bg-dark">
+            <hr class="bg-light">
           </div>
         </div>
         <div class="row">
@@ -335,7 +320,7 @@
         </div>
         <div class="row">
           <div class="col mx-auto">
-            <div class="card slideanim">
+            <div class="slideanim">
               <div class="card-header" role="tab" id="headingP" data-toggle="collapse" href="#collapseP">
                 <div class="">
                   <h4 class="">Principles</h4>
@@ -370,8 +355,10 @@
       </section>
     </div>
 
+    <div class="bar"></div>
+
     <div class="bg-cover3">
-      <section id="s4" class="text-light text-center">
+      <section id="sccontact" class="text-light text-center">
         <div class="row">
           <div class="col mx-auto slideanim">
             <span><h2 class="text-center">Where to find me</h2></span>
@@ -384,6 +371,7 @@
             <p class="text-light">If you need a capable creator and problem solver, don't hesitate to contact. Let me know about your project.
               <br/><br/>E-mail: qualuo@gmail.com
             </p>
+            <br/>
             <div class="contact">
               <div class="envelope">
                 <div class="top">
@@ -396,7 +384,7 @@
                 <div class="right"></div>
                 <div class="cover"></div>
                 <div class="paper">
-                  <a class="mail btn btn-primary text-light" href="mailto:qualuo@gmail.com?Subject=Via%20Github%20Page">Compose</a>
+                  <a class="mail btn btn-success text-light" href="mailto:qualuo@gmail.com?Subject=Via%20Github%20Page">Compose</a>
                 </div>
               </div>
             </div>
