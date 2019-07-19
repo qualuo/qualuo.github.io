@@ -21,11 +21,12 @@ body {
 }
 
 #main {
-  perspective: 1px;
-  transform-style: preserve-3d;
 }
 #frontcvr {
-  height: 100vh;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 #scprofile {
   min-height: 100vh;
@@ -39,7 +40,7 @@ body {
   min-height: 100vh;
 }
 #sccontact {
-  min-height: 60vh;
+  min-height: 70vh;
 }
 
 /**
@@ -53,51 +54,31 @@ footer {
   padding: 0px;
 }
 
-.bar {
-  height: .2em;
-  background-color: rgb(200, 200, 200);
+.parallax {
+  perspective: 1px;  /* viewport perspective */
+  height: 100vh;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
-
-.bg-cover {
-    background-image: linear-gradient(#0a0a0a, #03121a, #0a0a0a);
-    background-size: cover;
-    background-position: center;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-
-    background-attachment: fixed;
-    background-repeat: no-repeat;
-    width: 100%;
+.parallax__group {
+  position: relative;
 }
-
-.bg-cover2 {
-    background-image: linear-gradient(#0a0a0a, #080f22, #0a0a0a);
-    background-size: cover;
-    background-position: center;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-
-    background-attachment: fixed;
-    background-position: 0px 0px;
-    background-repeat: no-repeat;
-    width: 100%;
+.parallax_layer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
 }
-
-
-.bg-cover3 {
-    background-image: linear-gradient(#0a0a0a, #171717);
-    background-size: cover;
-    background-position: center;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-
-    background-attachment: fixed;
-    background-repeat: no-repeat;
-    width: 100%;
+.parallax_layer-base {
+  transform: translateZ(0px);
 }
+.parallax_layer-back {
+  transform: translateZ(-1px) scale(2);
+}
+/* scale factor can be calculated with: 1 + (translateZ * -1) / perspective
+Example, if our viewport perspective is set to 1px and
+we translate an element -2px along the Z axis the correction scale factor would be 3 */
 
 h1 {
   font-family: 'Catamaran', sans-serif;
@@ -130,7 +111,6 @@ p {
   font-family: 'Open Sans', sans-serif;
   font-size: 16px;
   line-height: 26px;
-  color: #ffffff;
 }
 
 video {
@@ -153,11 +133,16 @@ img {
 
 section {
   max-width: 26cm;
-  padding: 10vh 1em;
+  padding: 20vh 2em;
   margin: auto;
 }
 
 hr {
+}
+
+.bar {
+  height: .2em;
+  background-color: rgb(200, 200, 200);
 }
 
 .btn {
@@ -167,12 +152,22 @@ hr {
   border-width: .02em;
 }
 
+.interactive {
+  transition: all 0.2s ease-in-out;
+}
+
+.interactive:hover {
+  -webkit-transform: scale(0.95);
+  -ms-transform: scale(0.95);
+  transform: scale(0.95);
+}
 
 .btn-jmp {
   border-color: #FFFFFF;
 }
 
 .btn-c {
+  background-color:
 }
 
 
@@ -180,12 +175,15 @@ hr {
   margin: 5vh 0vh;
 }
 
+
 .card-header {
   visibility: hidden;
 }
 
 /* SLIDE ANIMATION: class="slideanim"*/
-.slideanim {visibility:hidden;}
+.slideanim {
+  visibility: hidden;
+}
 .slide {
     /* The name of the animation */
     animation-name: slide;
@@ -219,16 +217,68 @@ hr {
     }
 }
 
+.bg-cover {
+    background-image: linear-gradient(#0a0a0a, #03121a);
+    background-size: cover;
+    background-position: center;
+
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+    width: 100%;
+}
+
+.bg-cover2 {
+    background-image: linear-gradient(#0a0a0a, #080f22);
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+    width: 100%;
+}
+
+.bg-cover3 {
+    background-image: linear-gradient(#0a0a0a, #080f22);
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+    width: 100%;
+}
+
+.bg-cover4 {
+    background-image: linear-gradient(#0a0a0a, #171717);
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+    width: 100%;
+}
+
 /* Following only shown on bigger screens */
 @media (min-width: 600px) {
   .bg-cover {
       background-image: url('../images/stars.jpeg');
   }
   .bg-cover2 {
-      background-image: url('../images/sky.jpg');
+      background-image: url('../images/newsky.jpg');
   }
   .bg-cover3 {
       background-image: url('../images/mountains.jpg');
+  }
+  .bg-cover4 {
+
   }
 
   .card-header {

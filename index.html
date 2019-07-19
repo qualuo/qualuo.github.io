@@ -33,99 +33,104 @@
       <div class="collapse navbar-collapse text-right" id="navbarResponsive">
         <ul class="navbar-nav ml-auto">
           <li class="nav-item">
-            <a class="nav-link js-scroll-trigger text-dark" href="#scprofile"><b>PROFILE</b></a>
+            <a class="nav-link js-scroll-trigger" href="#scprofile"><b>PROFILE</b></a>
           </li>
           <li class="nav-item">
-            <a class="nav-link js-scroll-trigger text-dark" href="#scskills"><b>SKILLS</b></a>
+            <a class="nav-link js-scroll-trigger" href="#scskills"><b>SKILLS</b></a>
           </li>
           <li class="nav-item">
-            <a class="nav-link js-scroll-trigger text-dark" href="#scwork"><b>WORK</b></a>
+            <a class="nav-link js-scroll-trigger" href="#scwork"><b>WORK</b></a>
           </li>
           <li class="nav-item">
-            <a class="nav-link js-scroll-trigger text-dark" href="#scabout"><b>PERSONAL</b></a>
+            <a class="nav-link js-scroll-trigger" href="#scabout"><b>PERSONAL</b></a>
           </li>
           <li class="nav-item">
-            <a class="nav-link js-scroll-trigger text-dark" href="#sccontact"><b>CONTACT</b></a>
+            <a class="nav-link js-scroll-trigger" href="#sccontact"><b>CONTACT</b></a>
           </li>
         </ul>
       </div>
     </div>
   </nav>
 
-  <!--<a class="nav-link js-scroll-trigger text-dark text-center scroll-down" href="#s1">&#x25BC;</a>-->
-
   <!-- Main sections -->
   <div id="main" class="container-fluid">
 
-      <div id="frontcvr" class="bg-cover">
-        <div class="container text-center text-light">
-          <h2>Hello! I'm<br/></h2>
-          <h1>Quang Luong</h1>
+    <div class="parallax">
+      <div class="parallax_group">
+        <div class="parallax_layer parallax_layer-back bg-cover"></div>
+        <div id="frontcvr" class="parallax_layer parallax_layer-base">
+          <div class="container text-center text-light">
+            <h2>Hello! I'm<br/></h2>
+            <h1>Quang Luong</h1>
+          </div>
         </div>
       </div>
+    </div>
+
+
+    <div class="parallax">
+      <div class="parallax_group"> <!-- TODO: change speeds? -->
+        <div class="parallax_layer parallax_layer-back bg-cover"> </div>
+        <section id="scprofile" class="parallax_layer parallax_layer-base text-light text-center">
+          <div class="row">
+            <div class="col mx-auto slideanim">
+              <blockquote class="blockquote slideanim">
+                <class=""><i>"Be the change that you wish to see in the world."</i>
+              </blockquote><br/><br/>
+              <h2 class="text-center">Let me introduce myself</h2>
+              <hr class="bg-light">
+            </div>
+          </div>
+          <div class="row">
+            <div class="col mx-auto text-center">
+              <br/>
+              <p class="slideanim">
+                I'm a computer/software engineer with a wide variety of skillsets. I can create, design and develop web applications, tools, programs, and games.
+                I also have experience working with machines and robots in precision manufacturing, and am able to work in more hardware-oriented environments as well.
+              </p>
+              <p class="slideanim">
+                I strive to contribute to making the world a better place with my technical ability. To do what I can for a brighter future for everyone.
+              </p>
+            </div>
+          </div>
+          <br/><a class="interactive btn btn-jmp js-scroll-trigger text-light slideanim" href="#sccontact">Contact</a>
+        </section>
+      </div>
+    </div>
 
 
     <div class="bg-cover">
-      <section id="scprofile" class="text-light text-center">
-        <div class="row">
-          <div class="col mx-auto slideanim">
-            <blockquote class="blockquote slideanim">
-              <class=""><i>"Be the change that you wish to see in the world."</i>
-            </blockquote><br/><br/>
-            <h2 class="text-center">Let me introduce myself</h2>
-            <hr class="bg-light">
-          </div>
-        </div>
-        <div class="row">
-          <div class="col mx-auto text-center">
-            <br/>
-            <p class="slideanim">
-              I'm a computer/software engineer with a wide variety of skillsets. I can create, design and develop web applications, tools, programs, and games.
-              I also have experience working with machines and robots in precision manufacturing, and am able to work in more hardware-oriented environments as well.
-            </p>
-            <p class="slideanim">
-              I strive to contribute to making the world a better place with my technical ability. To do what I can for a brighter future for everyone.
-            </p>
-          </div>
-        </div>
-
-          <br/><a class="btn btn-jmp js-scroll-trigger text-light" href="#sccontact">Contact</a>
-      </section>
-    </div>
-
-    <div class="bar"></div>
-
-    <div class="bg-cover2">
       <section id="scskills" class="text-light">
         <div class="row">
           <div class="col mx-auto slideanim">
-            <h2 class="text-center" style="margin: 5em 0em 0em 0em">What I know</h2>
+            <span><h2 class="text-center">My skills and credentials</h2></span>
             <hr class="bg-light">
           </div>
         </div>
         <div class="row">
           <div class="col-sm mx-auto slideanim">
-            <h4 class="">PROGRAMMING</h4>
-            <p class="" style="">
-              I have experience with:<br/> C#, C/C++, Python, Java, HTML, CSS, JS, and SQL.<br/> I have experience in more, but consider myself language-agnostic. All used for projects ranging from embedded systems to programs, games, and web development.
+            <h4>Programming</h4>
+            <p>
+              I have experience with:<br/> C#, C/C++, Python, Java, HTML, CSS, JS, and SQL.<br/> I have experience with more, but consider myself language-agnostic. All used for projects ranging from embedded systems to programs, games, and web development.
             </p>
           </div>
           <div class="col-sm mx-auto slideanim">
-            <h4 class="">TECHNOLOGIES</h4>
-            <p class="">
-              I am familiar with IDEs (e.g. Visual Studio), code editors (Atom), VM (VirtualBox), games engines (Unity), version control system (Git/GitHub) and Matlab. And that's just scratching the surface. Also worked with agile development.
+            <h4>Technologies</h4>
+            <p>
+              I am familiar with tech such as IDEs (e.g. Visual Studio), code editors (Atom), VM (VirtualBox), games engines (Unity), version control system (Git/GitHub), Matlab, and that's just scratching the surface. Also worked with agile development.
             </p>
           </div>
-
+        </div>
+        <div class="row">
           <div class="col-sm mx-auto slideanim">
-            <h4 class="">EDUCATION</h4>
-            <p class="">
+            <h4>Education</h4>
+            <p>
               Bachelor of Science in Computer Engineering.<br/> Chalmers University of Technology, Sweden.<br/>2013 - 2016<br/>
             </p>
           </div>
           <div class="col-sm mx-auto slideanim">
-            <h4>NATIONALITY</h4>
-            <p class="">
+            <h4>Nationality</h4>
+            <p>
               Based in Sweden, born and raised. Ethnically Vietnamese. I speak English and Swedish fluently.
             </p>
           </div>
@@ -133,11 +138,11 @@
       </section>
     </div>
 
-    <div class="bg-cover2">
+    <div class="bg-cover4">
       <section id="scwork" class="text-light">
         <div class="row">
           <div class="col mx-auto slideanim">
-            <span><h2 class="text-light text-center">Projects I've worked on</h2></span>
+            <span><h2 class="text-center">Projects I've worked on</h2></span>
             <hr class="bg-light">
           </div>
         </div>
@@ -236,7 +241,8 @@
               <div class="row">
                 <div class="col mx-auto">
                   <p>
-                    Also worked on a team project game engine with multiplayer capability involving development and design of networking protocol and server-client architecture. Tech: Java.
+                    Also worked on a team project game engine with multiplayer capability involving development and design of networking protocol and server-client architecture.
+                    Tech: Java, networking, TCP/UDP, protocols, audio.
                   </p>
                 </div>
               </div>
@@ -289,7 +295,6 @@
       </section>
     </div>
 
-
     <div class="bg-cover2 text-light">
       <section id="scabout" class="">
         <div class="row">
@@ -300,33 +305,35 @@
         </div>
         <div class="row">
           <div class="col-md mx-auto slideanim">
-            <h4>ENGINEERING</h4>
-            <p> In high school, studying sciences, I came to realize that I had gained a lot of knowledge but was unable to do anything with it.
+            <h4>Engineering</h4>
+            <p> In high school, while studying sciences, I came to realize that I gained a lot of knowledge but was unable to do anything with it.
               Because of this, I chose to pursue engineering, where I now have the ability to put knowledge and also creativity to practical use. I enjoy solving problems and creating things.
           </div>
           <div class="col-md mx-auto slideanim">
-            <h4>GAMING</h4>
+            <h4>Gaming</h4>
             <p> Avid gamer since a young age, and if ranked play is something to go by, I'm pretty good at it. Mostly play shooter and strategy games. Roleplaying games with epic stories are fun too. Though I play all kind of games to see developers' creativity
               put into their creations.</p>
           </div>
+        </div>
+        <div class="row">
           <div class="col-md mx-auto slideanim">
-            <h4>VOLUNTEERING</h4>
+            <h4>Volunteering</h4>
             <p> I have spent many hours tutoring others online, primarily in math. Students varied from middle school to college level. I have also contributed to translating Facebook, with translations being used billions of times monthly (according to Facebook).</p>
           </div>
           <div class="col-md mx-auto slideanim">
-            <h4>ART AND DESIGN</h4>
+            <h4>Designing</h4>
             <p> I consider myself a creative person, which is essential to coming up with new solutions. I like designing and have art skills to a certain extent, being able to make thinga aesthetically pleasing, which is something I also care about.</p>
           </div>
         </div>
         <div class="row">
           <div class="col mx-auto">
             <div class="slideanim">
-              <div class="card-header" role="tab" id="headingP" data-toggle="collapse" href="#collapseP">
-                <div class="">
+              <div class="card-header" style="padding: 0" role="tab" id="headingP" data-toggle="collapse" href="#collapseP">
+                <div class="interactive">
                   <h4 class="">Principles</h4>
                 </div>
               </div>
-              <div id="collapseP" class="card-body collapse hidden" role="tabpanel" aria-labelledby="headingP">
+              <div id="collapseP" class="card-body collapse hidden" style="padding: 0" role="tabpanel" aria-labelledby="headingP">
                 <div class="row">
                   <div class="col mx-auto">
                     <p>
@@ -355,39 +362,22 @@
       </section>
     </div>
 
-    <div class="bar"></div>
 
-    <div class="bg-cover3">
+    <div class="bg-cover4">
       <section id="sccontact" class="text-light text-center">
         <div class="row">
           <div class="col mx-auto slideanim">
-            <span><h2 class="text-center" style="margin: 5em 0em 0em 0em">Where to find me</h2></span>
+            <span><h2 class="">Get in touch</h2></span>
             <hr class="bg-light">
           </div>
         </div>
         <div class="row">
           <div class="col-md mx-auto slideanim">
-            <h4 class="text-light">CONTACT</h4>
             <p class="text-light">If you need a capable creator and problem solver, don't hesitate to contact. Let me know about your project.
               <br/><br/>E-mail: qualuo@gmail.com
             </p>
             <br/>
-            <div class="contact">
-              <div class="envelope">
-                <div class="top">
-                  <div class="outer">
-                    <div class="inner"></div>
-                  </div>
-                </div>
-                <div class="bottom"></div>
-                <div class="left"></div>
-                <div class="right"></div>
-                <div class="cover"></div>
-                <div class="paper">
-                  <a class="mail btn btn-c btn-primary text-light" href="mailto:qualuo@gmail.com?Subject=Via%20Github%20Page">Compose</a>
-                </div>
-              </div>
-            </div>
+            <a class="mail interactive btn btn-c btn-primary text-light" href="mailto:qualuo@gmail.com?Subject=Via%20Portfolio%20Page">Compose</a>
           </div>
           <!--
               <div class="col-md mx-auto slideanim">
@@ -405,11 +395,11 @@
 
 
   <!-- Footer -->
-  <footer class="py-5 bg-cover3">
+  <footer class="py-5 bg-cover4">
 
     <div class="container-fluid">
       <img src="images/pixelself.png" style="border-radius: 50%; max-width: 140px"><br/>
-      <p class="m-0 text-center text-light">Made by Quang Luong.</p>
+      <p class="text-center text-light">Coded with only the web fundamentals. <br/>Made by Quang Luong.</p>
     </div>
 
   </footer>

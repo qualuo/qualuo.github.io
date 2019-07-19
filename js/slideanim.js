@@ -3,10 +3,10 @@
 $(window).ready(function() {
   $(".slideanim").each(function(){
     var pos = $(this).offset().top;
-    var height = window.innerHeight;
+    var height = $(window).height();
 
     var winTop = $(window).scrollTop();
-    if (pos < winTop + 900) {
+    if (pos < winTop + height) {
       $(this).addClass("slide");
     }
   });
@@ -19,7 +19,7 @@ $(window).scroll(function() {
     var height = window.innerHeight;
 
     var winTop = $(window).scrollTop();
-    if (pos < winTop + 900) {
+    if (pos < winTop + height) {
       $(this).addClass("slide");
     }
   });
