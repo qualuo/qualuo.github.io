@@ -218,9 +218,12 @@ hr {
 }
 
 .bg-cover {
-    background-image: linear-gradient(#0a0a0a, #03121a);
+    background-image: linear-gradient(#0a0a0a, #133041);
     background-size: cover;
     background-position: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 
     background-attachment: fixed;
     background-repeat: no-repeat;
