@@ -80,6 +80,7 @@ footer {
 Example, if our viewport perspective is set to 1px and
 we translate an element -2px along the Z axis the correction scale factor would be 3 */
 
+
 h1 {
   font-family: 'Catamaran', sans-serif;
   font-size: 64px;
@@ -153,6 +154,7 @@ hr {
 }
 
 .interactive {
+  cursor: pointer;
   transition: all 0.2s ease-in-out;
 }
 
