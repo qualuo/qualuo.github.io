@@ -46,7 +46,7 @@ body {
 /**
 footer {
   color: #FFFFFF;
-  //background-color: #242424;
+  background-color: #242424;
 }
 */
 
@@ -138,15 +138,13 @@ section {
   margin: auto;
 }
 
-hr {
-}
-
 .bar {
   height: .2em;
   background-color: rgb(200, 200, 200);
 }
 
 .btn {
+  background-color: transparent;
   padding: .8em 2.8em;
   font-size: 20px;
   border-radius: 0;
@@ -168,10 +166,9 @@ hr {
   border-color: #FFFFFF;
 }
 
-.btn-c {
-  background-color:
+.btn-mail {
+  border-color: #FFFFFF;
 }
-
 
 .ccard {
   margin: 5vh 0vh;
@@ -180,6 +177,24 @@ hr {
 
 .card-header {
   visibility: hidden;
+}
+
+input[type=text], select, textarea {
+  width: 100%; 
+  padding: 12px; 
+  border-radius: 2px;
+  margin-top: 6px;
+  margin-bottom: 6px;
+  resize: vertical /* Allow the user to vertically resize the textarea (not horizontally) */
+}
+
+input[type=submit] {
+  background-color: #04AA6D;
+  color: white;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
 }
 
 /* SLIDE ANIMATION: class="slideanim"*/
@@ -271,23 +286,18 @@ hr {
     width: 100%;
 }
 
-/* Following only shown on bigger screens */
-@media (min-width: 600px) {
-  .bg-cover {
-      background-image: url('../images/stars.jpeg');
-  }
-  .bg-cover2 {
-      background-image: url('../images/newsky.jpg');
-  }
-  .bg-cover3 {
-      background-image: url('../images/mountains.jpg');
-  }
-  .bg-cover4 {
+.bg-cover {
+    background-image: url('../images/stars.jpeg');
+}
+.bg-cover2 {
+    background-image: url('../images/newsky.jpg');
+}
+.bg-cover3 {
+    background-image: url('../images/mountains.jpg');
+}
+.bg-cover4 {
 
-  }
-
-  .card-header {
-    visibility: visible;
-  }
-
+}
+.card-header {
+  visibility: visible;
 }
