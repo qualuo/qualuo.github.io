@@ -179,22 +179,13 @@ section {
   visibility: hidden;
 }
 
-input[type=text], select, textarea {
+input, textarea {
   width: 100%; 
   padding: 12px; 
   border-radius: 2px;
   margin-top: 6px;
   margin-bottom: 6px;
   resize: vertical /* Allow the user to vertically resize the textarea (not horizontally) */
-}
-
-input[type=submit] {
-  background-color: #04AA6D;
-  color: white;
-  padding: 12px 20px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
 }
 
 /* SLIDE ANIMATION: class="slideanim"*/
