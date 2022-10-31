@@ -182,7 +182,6 @@ section {
 input, textarea {
   width: 100%; 
   padding: 12px; 
-  border-radius: 2px;
   margin-top: 6px;
   margin-bottom: 6px;
   resize: vertical /* Allow the user to vertically resize the textarea (not horizontally) */
