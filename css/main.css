@@ -286,18 +286,21 @@ input[type=submit] {
     width: 100%;
 }
 
-.bg-cover {
-    background-image: url('../images/stars.jpeg');
-}
-.bg-cover2 {
-    background-image: url('../images/newsky.jpg');
-}
-.bg-cover3 {
-    background-image: url('../images/mountains.jpg');
-}
-.bg-cover4 {
+/* Following only shown on bigger screens */
+@media (min-width: 600px) {
+  .bg-cover {
+      background-image: url('../images/stars.jpeg');
+  }
+  .bg-cover2 {
+      background-image: url('../images/newsky.jpg');
+  }
+  .bg-cover3 {
+      background-image: url('../images/mountains.jpg');
+  }
+  .bg-cover4 {
 
-}
-.card-header {
-  visibility: visible;
+  }
+  .card-header {
+    visibility: visible;
+  }
 }
