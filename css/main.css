@@ -232,7 +232,7 @@ input, textarea {
     flex-direction: column;
     justify-content: center;
 
-    background-attachment: fixed;
+    background-attachment: fixed; /* Fixed background does not work on mobile... alternative?*/
     background-repeat: no-repeat;
     width: 100%;
 }
