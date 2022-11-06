@@ -9,7 +9,7 @@
 
 #mainNav {
   background-color: #FFFFFF;
-  font-size: 13px;
+  font-size: 14px;
   font-family: 'Open Sans', sans-serif;
   transition: top 0.3s; /* Animation handled by scrolling-nav.js*/
 }
@@ -112,6 +112,7 @@ p {
   font-family: 'Open Sans', sans-serif;
   font-size: 16px;
   line-height: 26px;
+  padding: 1vh 0vh;
 }
 
 video {
