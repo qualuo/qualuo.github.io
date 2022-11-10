@@ -174,11 +174,6 @@ section {
   margin: 5vh 0vh;
 }
 
-
-.card-header {
-  visibility: hidden;
-}
-
 input, textarea {
   width: 100%; 
   padding: 12px; 
@@ -289,8 +284,5 @@ input, textarea {
   }
   .bg-cover4 {
 
-  }
-  .card-header {
-    visibility: visible;
   }
 }
