@@ -130,6 +130,7 @@ img {
   width: 100%;
   height: auto;
   max-width: 360px;
+  cursor: zoom-in;
 }
 
 section {
