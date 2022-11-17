@@ -18,7 +18,7 @@
   <meta name="robots" content="index, follow"/>
 
   <title>Quang Luong - Software Engineer - on GitHub</title>
-  <meta name="description" content="Excellent software engineer specialized in 3D experiences. Offers comprehensive tech expertise and skills to conceptualize breakthroughs and transform virtual ideas into reality. Learn more."/>
+  <meta name="description" content="Creative software engineer specialized in 3D experiences. Offers comprehensive tech expertise and skills to conceptualize breakthroughs and transform virtual ideas into reality. Learn more."/>
   <meta name="author" content="Quang Luong"/>
 
   <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
@@ -31,7 +31,7 @@
   <!-- Navigation -->
   <nav class="navbar navbar-expand-sm navbar-light bg-light fixed-top" id="mainNav">
     <div class="container">
-      <a class="navbar-brand js-scroll-trigger" href="#frontcvr">QUANG LUONG</a>
+      <a class="navbar-brand js-scroll-trigger" href="#landing">QUANG LUONG</a>
       <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
@@ -60,15 +60,18 @@
   <!-- Main sections -->
   <div id="main" class="container-fluid">
 
+    <!-- Landing cover -->
     <div class="bg-cover">
-      <div id="frontcvr" class="">
+      <div id="landing" class="">
         <div class="container text-center text-light">
           <h2>Hello! I'm<br /></h2>
           <h1>Quang Luong</h1>
         </div>
       </div>
     </div>
+    <!-- End of Landing-->
 
+    <!-- Profile section -->
     <div class="bg-cover">
       <section id="scprofile" class="text-light text-center">
         <div class="row">
@@ -93,8 +96,10 @@
         <br /><a class="interactive btn btn-jmp js-scroll-trigger text-light slideanim" href="#sccontact">Contact</a>
       </section>
     </div>
+    <!-- End of Profile section -->
 
 
+    <!-- Skills section -->
     <div class="bg-cover">
       <section id="scskills" class="text-light">
         <div class="row">
@@ -136,20 +141,25 @@
         </div>
       </section>
     </div>
+    <!-- End of Skills section -->
     
 
+    <!-- Work section -->
     <div class="bg-cover4">
       <section id="scwork" class="text-light">
         <div class="row">
           <div class="col mx-auto slideanim">
             <span>
-              <h2 class="text-center">A couple things I worked on</h2>
+              <h2 class="text-center">Things I worked on</h2>
             </span>
             <hr class="bg-light">
           </div>
         </div>
         <div class="row">
-          <div class="col-md mx-auto slideanim">
+          <div class="col-md mx-auto">
+            
+            <!-- <h3 class="mb-0 slideanim">Applications</h3> <-->
+            <!-- <h3 class="mb-0 slideanim">Games</h3> -->
 
             <div class="ccard slideanim">
               <div class="">
@@ -159,7 +169,9 @@
               <div class="row">
                 <div class="col mx-auto">
                   <p class="">
-                    Created and developed a chess sandbox game. Features 3D movement and physics where one can interact with all visible game objects. Contains chess AI powered by the world's strongest chess engine, albeit restricted to give humans a chance. Targeted at mobile platforms.
+                    Created and developed a chess sandbox game. Features 3D movement and physics where one can interact with all visible game objects. 
+                    Contains chess AI powered by the world's strongest chess engine, albeit restricted to give humans a chance. 
+                    Targeted at mobile platforms. Shipped globally.
                   </p>
                   <p>Tech: Unity, C#, chess artificial intelligence.
                   </p>
@@ -180,7 +192,8 @@
               </div>
               <div class="row">
                 <div class="col mx-auto">
-                  <p class="">Created and developed a procedurally generated arcade game where the objective is to balance a cube on a platform through a hail of cubes while collecting gems. Complete with ad monetization, online leaderboards, achievements, etc. Targeted at mobile platforms.
+                  <p class="">Created and developed a procedurally generated arcade game where the objective is to balance a cube on a platform through a hail of obstacles while collecting gems. 
+                    Complete with ad monetization, online leaderboards, achievements, etc. Targeted at mobile platforms.
                   </p>
                   <p>Tech: Unity, C#, APIs, Google Play.
                   </p>
@@ -244,7 +257,7 @@
                 <div class="col mx-auto">
                   <p>
                     Also worked on a team project game engine with multiplayer capability involving development and design of networking protocol and server-client architecture.
-                    Tech: Java, networking, TCP/UDP, protocols, audio.
+                    Tech: Java, multi-threading, networking, TCP/UDP, protocols, audio.
                   </p>
                 </div>
               </div>
@@ -294,16 +307,81 @@
                 </div>
               </div>
             </div>
+            
+            <div class="ccard slideanim">
+              <div class="">
+                <h4 class="mb-0">Pathfinding Visualization</h4>
+                <h5>Independent</h5>
+              </div>
+              <div class="row">
+                <div class="col mx-auto">
+                  <p class="">
+                    I created a <a href="https://github.com/qualuo/dijkstras-algorithm">pathfinding visualizer</a> using C# and Unity. The tool visualizes Dijkstra's algorithm as well as the A* search algorithm for educational purposes.
+                    <br/><br/>
+                    These algorithms are used in pathfinding, graph traversal. They are used in many applications, such as in games, 
+                    where pathfinding is utilized for characters (agents) to be able to navigate through the environment or networks. 
+                    And in route planning, to find the shortest path to the destination. 
+                  </p>
+                </div>
+              </div>
+            </div>
 
+            <div class="ccard slideanim">
+              <div class="">
+                <h4 class="mb-0">Pasteboard</h4>
+                <h5>Independent</h5>
+              </div>
+              <div class="row">
+                <div class="col mx-auto">
+                  <p class="">
+                    Using Python and a UI framework, I created "Pasteboard", a clipboard manager application that allows you to save and manage your clipboard history. 
+                    An entry is made every time you use the Copy command and allows easy access to past entries.
+                    <br/><br/>
+                    The idea for this application appeared to me while trying out penetration testing that required variations of payloads. Managing snippets became a whole
+                    lot easier with this tool, which can be used in many scenarios where you need to manage many versions of different snippets, or texts. Say trying
+                    different approaches in an algorithm, or restructuring paragraphs of text.
+                    Serving as a clipboard history, it also lets you save versions of texts and easily find them again later in a visual user interface.
+                    <br/><br/>
+                    Since then, Windows has implemented a lite feature with this functionality with Alt+V.
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <!-- WIP
+            <div class="ccard slideanim">
+              <div class="">
+                <h4 class="mb-0">Web-related</h4>
+                <h5>Independent</h5>
+              </div>
+              <div class="row">
+                <div class="col mx-auto">
+                  <p class="">
+                    Created <a href="https://qualuo.github.io/gacha-simulator/#/admin/default">gacha simulator</a> web application using React, Redux and a UI kit.
+                  </p>
+                  <p class="">
+                    This website was put together using HTML, CSS, JS, Bootstrap, and jQuery.
+                  </p>
+                  <p class="">
+                    Chose to use GitHub Pages as a reliable hosting service.
+                  </p>
+                </div>
+              </div>
+            </div>
+          -->
+            
             <!-- Insert content here -->
 
           </div>
         </div>
       </section>
     </div>
+    <!-- End of Work section -->
 
+    <!-- About section -->
     <div class="bg-cover2 text-light">
       <section id="scabout" class="">
+
         <div class="row">
           <div class="col mx-auto slideanim">
             <span>
@@ -312,6 +390,7 @@
             <hr class="bg-light">
           </div>
         </div>
+        
         <div class="row">
           <div class="col-md mx-auto slideanim">
             <h4>Engineering</h4>
@@ -324,9 +403,66 @@
             </p>
           </div>
         </div>
+
         <div class="row">
           <div class="col mx-auto">
 
+            <!-- Experiences collapse -->
+            <div class="bg-cover4 text-light slideanim" style="margin: 25px 0px">
+              <div class="card-header interactive" style="padding: 25px" role="tab" id="headingExperiences" data-toggle="collapse" data-target="#collapseExperiences" href="#collapseExperiences">
+                <h4 class="">» Experiences</h4>
+              </div>
+              <div id="collapseExperiences" class="card-body collapse" style="padding: 0px 25px" role="tabpanel" aria-labelledby="headingExperiences">
+                <div class="row">
+                  <div class="col mx-auto">
+                    <i>Some neat things I was part of.</i>
+                    <br/><br/>
+                    <h5>Genshin Impact Lore</h5>
+                    </p>
+                      Genshin Impact is a live-service gacha RPG by miHoYo released in September 2020, and is among the world's most popular games. The game is among the most expensive games ever made, if not the most, at a cost of $500 million USD by its 2nd anniversary with a revenue of over $3 billion USD per year.
+                      <br/><br/>  
+                      I wrote and designed a series of lore articles for the game Genshin Impact, which became popular and viral within the community. The theories became a main influence in lore discussions and 
+                      has significantly influenced the community's perception of the game's lore. Perhaps even the writers' as well.
+                    </p>
+                    <br/>
+                    <h5>Military Roleplay Leadership — Executive Officer & Gamemaster</h5>
+                    <p>
+                      Roleplay is used in real life to train all kinds of professions at their jobs. Be it paramedics, police, soldiers, or <a href="https://youtu.be/EQP-lfVRgX8?t=1950">government agents</a>. Roleplay simulates real scenarios while removing harmful and costly consequences.
+                      <br/><br/>
+                      For one year, I was part of a military roleplay community involving 100,000+ members — the largest of its kind. I rose through the ranks from private to executive officer of a reconnaissance division, 
+                      co-commanding said division of around 100 active members. I gained recognition for my actions, leadership, and strategy, and was made an officer. 
+                      As an officer I created comprehensive documentation of structure and procedures, and streamlined processes revolving recruitment, trainings, discipline and knowledge, improving overall management in an exemplary manner.
+                      <br/><br/>
+                      The chain of command (ascending order): Private, Private First Class, Lance Corporal, Corporal, Sergeant, Staff Sergeant, Sergeant First Class, Master Sergeant, First Sergeant, Sergeant Major, Warrant Officer, Second Lieutenant, First Lieutenant, Captain, Major, Lieutenant Colonel, Colonel, Executive Officer, Commander.
+                      <br/><br/>
+                      I was also accepted as a gamemaster for the community, orchestrating large-scale events and missions for the community with other gamemasters, as well as for smaller groups for more intimate storylines.
+                    </p>
+                    <br/>
+                    <h5>Typing, Guides & Articles</h5>
+                    <p>
+                      I've written multiple helpful guides and articles in different subjects to help others. In general, I just like to write, to share knowledge and help others out. 
+                      My typing speed is 120+ words per minute (peak is higher) which is statistically in the top 1%, considered a "competitive speed".
+                    </p>
+                    <br/>
+                    <h5>Translate Facebook — Translations used billions of times</h5>
+                    <p>
+                      I contributed to translating Facebook using its built-in web service, with contributions used many billions of times (according to Facebook's own system).
+                    </p>
+                    <br/>
+                    <h5>Volunteering — Good will</h5>
+                    <p>
+                      I have spent a lot of time helping others with their problems related to technology/studies and sharing my knowledge, anonymously. Not for likes, reputation or money, but because I enjoy helping others and 
+                      I believe it is the right thing to do. 
+                    </p>
+                    <br/>
+
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- End of Experiences collapse -->
+
+            <!-- Principles collapse -->
             <div class="bg-cover4 text-light slideanim" style="margin: 25px 0px">
               <div class="card-header interactive" style="padding: 25px" role="tab" id="headingPrinciples" data-toggle="collapse" data-target="#collapsePrinciples" href="#collapsePrinciples">
                 <h4 class="">» Principles</h4>
@@ -334,33 +470,52 @@
               <div id="collapsePrinciples" class="card-body collapse" style="padding: 0px 25px" role="tabpanel" aria-labelledby="headingPrinciples">
                 <div class="row">
                   <div class="col mx-auto">
+                    <h5>Occam's Razor</h5> 
                     <p>
-                      <h5>Occam's Razor</h5> I believe that the simpler explanation is (usually) better. Designing for simplicity is preferred. Explaining
-                      things in a simple manner keeps things understandable and clear with less expended mental capacity, so I like to keep things as simple as possible.
+                      I have a tendency to prefer simplicity. Designing for simplicity is best practice. It's a must to 
+                      get more people to use your product. It's also a must to make it easier to maintain and extend.
+                      Explaining things in a simple manner keeps things understandable and clear with less expended mental capacity. 
+                      <br/><br/>
+                      I like Einstein's quote: <i>"If you can't explain it simply, you don't understand it well enough."</i>
+                      Often people make up explanations that kind of make sense, but don't really understand it themselves.
+                      Being able to put things simply means you have a good understanding of the subject.
                     </p>
+                    <br/>
+                    <h5>No self-rating</h5> 
                     <p>
-                      <h5>Dunnig-Kruger Effect</h5> This effect is the bias in a person with low ability assessing themself as superior. In the same vein as <i>"The more you know, the more you know you don't know," </i> said by Aristotle, and
+                      The Dunning-Kruger effect is the bias in a person with low ability assessing themself as superior. In the same vein as <i>"The more you know, the more you know you don't know," </i> said by Aristotle, and
                       Einstein's quote: <i style="">“The more I learn, the more I realize how much I don't know.” </i> I understand that there is so much more than one can possibly know, and thus avoid overrating my abilities. A person can not accurately
-                      evaluate oneself. Only when compared to others can that be done.
+                      evaluate oneself without comparing to something else for reference.
                     </p>
+                    <br/>
+                    <h5>Ingenuity</h5> 
                     <p>
-                      <h5>Not Reinventing the Wheel</h5> Effort is wasted when recreating something that already exists. That effort should instead be used to solve new problems, or at least make improved solutions to make progress. After all, we stand
-                      on the shoulders of giants.
+                      Effort is wasted when recreating something that already exists. That effort should instead be used to solve new problems, or at least make improved solutions to make progress. 
+                      After all, <a href="https://en.wikipedia.org/wiki/Standing_on_the_shoulders_of_giants">we stand on the shoulders of giants</a>. 
                     </p>
+                    <br/>
+                    <h5>Honesty</h5> 
                     <p>
-                      <h5>Honesty</h5> I am a very honest person. I believe in a world without lies because it would be far more straight forward. Deception is a hindrance to improvement and progress.
+                      I am a very honest person. I believe in a world without lies because it would be far more straight forward.
                     </p>
+                    <br/>
+                    <h5>Positive Outlook</h5> 
                     <p>
-                      <h5>Optimism</h5> I look at the bright things and try to avoid negativity. I believe in the greatness of humanity. Evident in our technological progress and ingenuity. Those who believe in the opposite would say that humanity is
-                      a plague to the world.
-                      I believe the opposite of that. I believe that whatever happens to the world, we will strive to look for sustainable methods and adjust to new conditions, and move towards a brighter future. So that, ultimately, we may find the
-                      answers to our unanswered questions.
+                      I look at the bright things and try to avoid negativity. I believe in the greatness of humanity. Evident in our technological progress and ingenuity. 
+                      Those who believe in the opposite would say that humanity is  plague to the world.
+                      I believe the opposite of that. I believe that whatever happens to the world, we will strive to look for sustainable methods and adjust to new conditions, 
+                      and move towards a brighter future, because that's the trend we have been on.
+                      So that, ultimately, we may find the answers to our unanswered questions.
                     </p>
+                    <br/>
                   </div>
                 </div>
               </div>
             </div>
+            <!-- End of Principles collapse -->
 
+
+            <!-- Art collapse -->
             <div class="bg-cover4 text-light slideanim" style="margin: 25px 0px">
               <div class="card-header interactive" style="padding: 25px" role="tab" id="headingArt" data-toggle="collapse" data-target="#collapseArt" href="#collapseArt">
                 <h4 class="">» Art</h4>
@@ -368,8 +523,8 @@
               <div id="collapseArt" class="card-body collapse" style="padding: 0px 25px" role="tabpanel" aria-labelledby="headingArt">
                 <div class="row">
                   <div class="col mx-auto">
-                    <i>Stable Diffusion, Custom</i>
-
+                    <i>Engineer-generated art is art. Nov 2022.</i>
+                    <br/><br/>
                     <div style="padding: 20px 0"> 
                       <h5>Matriarchs</h5>
                       <div class="row">
@@ -392,7 +547,7 @@
                         <img class="" style="border-radius: 1em; max-width: 30%" src="images/art_m11.png" title="" />
                       </div>
                     </div>
-
+                    <br/>
                     <div style="padding: 20px 0"> 
                       <h5>Miscellaneous</h5>
                       <div class="row">
@@ -407,26 +562,32 @@
                 </div>
               </div>
             </div>
+            <!-- End of Art collapse-->
+            
+
 
           </div>
         </div>
       </section>
     </div>
+    <!-- End of About section -->
 
 
+    <!-- Contact section -->
     <div class="bg-cover3">
       <section id="sccontact" class="text-light text-center">
         <div class="row">
-          <div class="col mx-auto slideanim">
+          <div class="col mx-auto slideanim" ">
             <span>
-              <h2 class="">Get in touch</h2>
+              <h2 class="" style="backdrop-filter: blur(2px);">Get in touch</h2>
             </span>
             <hr class="bg-light">
           </div>
         </div>
         <div class="row">
-          <div class="col-md mx-auto slideanim">
-            <p class="text-light">I offer comprehensive tech expertise and skills to conceptualize breakthroughs and transform virtual ideas into reality.<br/>
+          <div class="col-md mx-auto slideanim" style="backdrop-filter: blur(6px); padding: 25px 25px; border-radius: 5px;">
+            <p class="text-light">I offer comprehensive tech expertise and skills to conceptualize breakthroughs and transform virtual ideas into reality.
+              <br/>
               Let me know about your project.
               <br/>
               <p>Mail to <a class="text-light" href="mailto:qualuo@gmail.com?Subject=Via%20Portfolio%20Page">qualuo@gmail.com</a>, or use the form:
@@ -455,6 +616,7 @@
         </div>
       </section>
     </div>
+    <!-- End of Contact section-->
 
   </div>
   <!-- End of main section-->
@@ -464,8 +626,8 @@
   <footer class="py-5 bg-cover3">
 
     <div class="container-fluid">
-      <!-- <img src="images/pixelself.png" style="border-radius: 50%; max-width: 140px"><br /> -->
-      <p class="text-center text-light">Custom-made with the fundamentals of the web. 
+      <!-- <img src="images/aaaa.png" style="border-radius: 50%; max-width: 140px"><br /> -->
+      <p class="text-center text-light" style="backdrop-filter: blur(1px);">Custom-made with the fundamentals of the web. 
       </p> 
     </div>
 

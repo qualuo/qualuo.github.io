@@ -22,7 +22,7 @@ body {
 
 #main {
 }
-#frontcvr {
+#landing {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -158,8 +158,8 @@ section {
 }
 
 .interactive:hover {
-  -webkit-transform: scale(0.95);
-  -ms-transform: scale(0.95);
+  -webkit-transform: scale(0.98);
+  -ms-transform: scale(0.98);
   transform: scale(0.95);
 }
 
@@ -185,7 +185,7 @@ input, textarea {
 
 /* SLIDE ANIMATION: class="slideanim"*/
 .slideanim {
-  visibility: hidden;
+  visibility: visible;
 }
 .slide {
     /* The name of the animation */

@@ -1,18 +1,7 @@
-
-$(window).ready(function() {
-  $(".slideanim").each(function(){
-    var pos = $(this).offset().top;
-    var height = $(window).height();
-
-    var winTop = $(window).scrollTop();
-    if (pos < winTop + height) {
-      $(this).addClass("slide");
-    }
-  });
-});
-
 /* slide in animation */
-$(window).scroll(function() {
+$(window).scroll(invokeSlide);
+
+function invokeSlide() {
   $(".slideanim").each(function(){
     var pos = $(this).offset().top;
     var height = window.innerHeight;
@@ -22,4 +11,4 @@ $(window).scroll(function() {
       $(this).addClass("slide");
     }
   });
-});
+}
