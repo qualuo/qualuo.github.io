@@ -144,31 +144,40 @@ section {
   background-color: rgb(200, 200, 200);
 }
 
-.btn {
+.interactive {
+  cursor: pointer;
+}
+
+.btn-framed {
   background-color: transparent;
   padding: .8em 2.8em;
   font-size: 20px;
   border-radius: 0;
   border-width: .02em;
-}
-
-.interactive {
-  cursor: pointer;
+  border-color: #FFFFFF;
   transition: all 0.2s ease-in-out;
 }
 
-.interactive:hover {
-  -webkit-transform: scale(0.98);
-  -ms-transform: scale(0.98);
+.btn-framed:hover {
+  -webkit-transform: scale(0.95);
+  -ms-transform: scale(0.95);
   transform: scale(0.95);
-}
-
-.btn-jmp {
-  border-color: #FFFFFF;
 }
 
 .btn-mail {
   border-color: #FFFFFF;
+}
+
+.btn-collapse {
+  text-align: left;
+  border-width: 0;
+  transition: all 0.2s ease-in-out;
+}
+
+.btn-collapse:hover {
+  -webkit-transform: translateX(1em);
+  -ms-transform: translateX(1em);
+  transform: translateX(1em);
 }
 
 .ccard {
