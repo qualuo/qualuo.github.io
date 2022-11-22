@@ -2,11 +2,9 @@
 
 ### Up at: https://qualuo.github.io
 
-Anyone can make a trendy website with no technical skills with the help of visual drag and drop builders; this is instead a uniquely made, fundamental one with personal touch — can't go out of style if it's not in style.
+Multi layered one-pager about me. 
 
-<p align="center">
-    <img src="./ext/highresrollsafe.jpg" alt=""/>
-</p>
+Anyone can make a trendy website with no technical skills with the help of visual drag and drop builders; this is instead a uniquely made, fundamental one with personal touch.
 
 ### Features
 - [x] Unique
@@ -20,7 +18,7 @@ Anyone can make a trendy website with no technical skills with the help of visua
 - [x] Animations
 - [x] Responsive
 - [x] Accessible
-- [ ] Follows latest web trends
+- [ ] Latest web trends
 - [ ] AI chatbot
 - [x] Timeless
 - [x] ✨
