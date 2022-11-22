@@ -1,6 +1,6 @@
-# Personal Website on GitHub Pages
+# Personal Website
 
-### Personal site: https://qualuo.github.io
+### Up at: https://qualuo.github.io
 
 Anyone can make a trendy website with no technical skills with the help of visual drag and drop builders; this is instead a uniquely made, fundamental one with personal touch — can't go out of style if it's not in style.
 
