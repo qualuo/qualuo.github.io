@@ -80,7 +80,6 @@ footer {
 Example, if our viewport perspective is set to 1px and
 we translate an element -2px along the Z axis the correction scale factor would be 3 */
 
-
 h1 {
   font-family: 'Catamaran', sans-serif;
   font-size: 64px;
@@ -171,10 +170,13 @@ section {
 .btn-collapse {
   text-align: left;
   border-width: 0;
+}
+
+.sliderightmicroanim {
   transition: all 0.2s ease-in-out;
 }
 
-.btn-collapse:hover {
+.btn-collapse:hover .sliderightmicroanim {
   -webkit-transform: translateX(1em);
   -ms-transform: translateX(1em);
   transform: translateX(1em);
