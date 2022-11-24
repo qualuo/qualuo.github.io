@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css?family=Open+Sans|Catamaran|Roboto');
+@import url('https://fonts.googleapis.com/css?family=Poppins|Open+Sans');
 /* COLORS
 #4285F4 - blue
 #34A853 - green
@@ -8,10 +8,11 @@
 */
 
 #mainNav {
-  background-color: #FFFFFF;
-  font-size: 14px;
-  font-family: 'Open Sans', sans-serif;
+  background-color: rgb(255, 255, 255);
+  font-family: 'Poppins', sans-serif;
   transition: top 0.3s; /* Animation handled by scrolling-nav.js*/
+  box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.26);
+  z-index: 100;
 }
 
 header {
@@ -22,25 +23,23 @@ body {
 
 #main {
 }
-#landing {
-  min-height: 100vh;
+#scprofile {
   display: flex;
   flex-direction: column;
   justify-content: center;
-}
-#scprofile {
   min-height: 100vh;
 }
 #scskills {
   min-height: 100vh;
 }
 #scwork {
+  min-height: 100vh;
 }
 #scabout {
   min-height: 100vh;
 }
 #sccontact {
-  min-height: 70vh;
+  min-height: 100vh;
 }
 
 /**
@@ -52,6 +51,19 @@ footer {
 
 .container-fluid {
   padding: 0px;
+}
+
+#audioplayer {
+  position: absolute;
+  top: 10%;
+  right: 1%;
+  z-index: 99;
+  border-width: 0;
+  font-size: 3em;
+  min-width: 2em;
+  text-align: left;
+  background: transparent;
+
 }
 
 .parallax {
@@ -80,37 +92,42 @@ footer {
 Example, if our viewport perspective is set to 1px and
 we translate an element -2px along the Z axis the correction scale factor would be 3 */
 
+
+
 h1 {
-  font-family: 'Catamaran', sans-serif;
+  font-family: 'Poppins', sans-serif;
   font-size: 64px;
   font-weight: 700;
 }
 
 h2 {
-  padding: 0px 0px 2px 0px;
-  font-family: 'Catamaran', sans-serif;
+  font-family: 'Poppins', sans-serif;
   font-weight: bold;
 }
 
 h3 {
-  font-family: 'Catamaran', sans-serif;
+  font-family: 'Poppins', sans-serif;
   font-weight: bold;
 }
 
 h4 {
-  font-family: 'Roboto', sans-serif;
+  font-family: 'Poppins', sans-serif;
   color: #4285F4;
 }
 
 h5 {
-  font-family: 'Roboto', sans-serif;
+  font-family: 'Poppins', sans-serif;
   color: #34A853;
 }
 
+h1, h2, h3, h4, h5, h6 {
+  padding: 0px 0px 0px 10px;
+}
+
 p {
-  font-family: 'Open Sans', sans-serif;
+  font-family: 'Poppins', sans-serif;
   font-size: 16px;
-  line-height: 26px;
+  padding: 10px;
 }
 
 video {
@@ -138,8 +155,34 @@ section {
   margin: auto;
 }
 
+form {
+  padding: 25px;
+  backdrop-filter: blur(2px); 
+  border-radius: 1em;
+  justify-content: center;
+}
+
+form > input, textarea {
+  width: 100%; 
+  padding: 12px; 
+  margin-top: 6px;
+  margin-bottom: 6px;
+  resize: vertical; /* Allow the user to vertically resize the textarea (not horizontally) */
+  font-family: 'Poppins', sans-serif;
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 0.2em;
+  border-width: 0.01em;
+  box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.26);
+}
+
+form > #submit {
+  background-color: rgba(247, 195, 27, 1);
+  border-width: 0;
+  box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.26);
+}
+
 .bar {
-  height: .2em;
+  height: 0.2em;
   background-color: rgb(200, 200, 200);
 }
 
@@ -151,10 +194,13 @@ section {
   background-color: transparent;
   padding: .8em 2.8em;
   font-size: 20px;
-  border-radius: 0;
+  border-radius: 2em;
   border-width: .02em;
   border-color: #FFFFFF;
   transition: all 0.2s ease-in-out;
+
+  font-family: Poppins, sans-serif;
+  
 }
 
 .btn-framed:hover {
@@ -170,6 +216,7 @@ section {
 .btn-collapse {
   text-align: left;
   border-width: 0;
+  box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.26);
 }
 
 .sliderightmicroanim {
@@ -182,17 +229,20 @@ section {
   transform: translateX(1em);
 }
 
-.ccard {
-  margin: 5vh 0vh;
+.card-header {
+  padding: 25px;
 }
 
-input, textarea {
-  width: 100%; 
-  padding: 12px; 
-  margin-top: 6px;
-  margin-bottom: 6px;
-  resize: vertical /* Allow the user to vertically resize the textarea (not horizontally) */
+.card-body {
+  box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.26);
 }
+
+.ccard {
+  margin: 5vh 0vh;
+  padding: 25px;
+  box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.26);
+}
+
 
 /* SLIDE ANIMATION: class="slideanim"*/
 .slideanim {
