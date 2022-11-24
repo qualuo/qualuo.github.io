@@ -1,5 +1,7 @@
 tracks = {
-    "1" : new Audio("/audio/track-uplifting-113842.mp3"),
+    "1" : new Audio("/audio/track-electronic-rock-king-around-here-15045.mp3"),
+    "2" : new Audio("/audio/track-space-120280.mp3"),
+    "3" : new Audio("/audio/track-uplifting-113842.mp3"),
 }
 ambience = {
     "1" : new Audio("/audio/ambience-wind-during-snow-storm-17562.mp3"),
@@ -10,8 +12,8 @@ soundbites = {
 }
 
 tracks["1"].loop = true;
-ambience["1"].volume = 0.5;
-ambience["1"].loop = true;
+tracks["2"].volume = 0.5;
+tracks["2"].loop = true;
 
 hasInteracted = false; // Has the user interacted with the page yet?
 isPlaying = false;
@@ -33,7 +35,7 @@ function togglePlay() {
 }
 
 window.addEventListener("scroll", function() {
-    
+
     // First play
     if (!hasInteracted) {
         try {
@@ -68,9 +70,9 @@ window.addEventListener("scroll", function() {
 
     if (currentSection == 5) { // mountains
         tracks["1"].volume = 0;
-        ambience["1"].play();
+        tracks["2"].play();
     } else {
-        ambience["1"].pause();
+        tracks["2"].pause();
     }
 
 });
@@ -82,7 +84,7 @@ function getCurrentSection() {
     let sections = $("section");
     let currentSection = 0;
     for (var i = 0; i < sections.length; i++) {
-        if ($(window).height() + $(window).scrollTop() > $(sections[i]).offset().top + $(window).height() - 1) {
+        if ($(window).height() + $(window).scrollTop() > $(sections[i]).offset().top + $(window).height() - 5) {
             currentSection++;
         }
     }
