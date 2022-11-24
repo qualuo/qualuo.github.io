@@ -176,7 +176,7 @@ form > input, textarea {
 }
 
 form > #submit {
-  background-color: rgba(247, 195, 27, 1);
+  background-color: rgb(236, 187, 24);
   border-width: 0;
   box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.26);
 }

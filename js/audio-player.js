@@ -68,7 +68,7 @@ window.addEventListener("scroll", function() {
         currentSection = newSection;
     } 
 
-    if (currentSection == 5) { // mountains
+    if (newSection == 5) { // mountains
         tracks["1"].volume = 0;
         tracks["2"].play();
     } else {

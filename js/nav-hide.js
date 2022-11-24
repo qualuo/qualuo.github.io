@@ -13,3 +13,9 @@ window.addEventListener("scroll", function() {
   }
   prevScrollPos = currentScrollPos;
 });
+
+window.onload = function() {
+  nav = document.getElementById(navbarID);
+  height = nav.offsetHeight;
+  nav.style.top = "-" + height + "px";
+}
