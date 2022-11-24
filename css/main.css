@@ -19,8 +19,8 @@ header {
 }
 
 body {
+  background-color: #171717;
 }
-
 #main {
 }
 #scprofile {
@@ -55,8 +55,11 @@ footer {
 
 #audioplayer {
   position: absolute;
-  top: 10%;
-  right: 1%;
+  bottom: 10%;
+  left: 50%;
+  -ms-transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%);
+  right: 50%;
   z-index: 99;
   border-width: 0;
   font-size: 3em;
@@ -331,6 +334,8 @@ form > #submit {
     background-attachment: fixed;
     background-repeat: no-repeat;
     width: 100%;
+    position: relative;
+    z-index: 1;
 }
 
 /* Following only shown on bigger screens */

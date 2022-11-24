@@ -10,7 +10,6 @@ soundbites = {
     "click" : new Audio("/audio/bite-processing-122132.mp3"),
     "flick" : new Audio("/audio/bite-flick-98674.mp3"),
 }
-
 tracks["1"].loop = true;
 tracks["2"].volume = 0.5;
 tracks["2"].loop = true;
