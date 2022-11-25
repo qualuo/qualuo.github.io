@@ -16,7 +16,6 @@ Anyone can make a trendy website with no technical skills with the help of visua
 - [x] Flat design
 - [x] Parallax
 - [x] Animations
-- [x] ✨
 - [x] Responsive
 - [x] Accessibility
 - [ ] AI chatbot
