@@ -10,23 +10,30 @@ soundbites = {
     "click" : new Audio("/audio/bite-processing-122132.mp3"),
     "flick" : new Audio("/audio/bite-flick-98674.mp3"),
 }
+tracks["1"].volume = 0.4;
 tracks["1"].loop = true;
 tracks["2"].volume = 0.5;
 tracks["2"].loop = true;
 
-hasInteracted = false; // Has the user interacted with the page yet?
-isPlaying = false;
+let hasAutoplayed = false;
+let isPlaying = false;
 
 let currentSection = getCurrentSection();
 
 document.getElementById("audioplayer").addEventListener("click", togglePlay);
 function togglePlay() {
     isPlaying = !isPlaying;
-    if (isPlaying) {
+    setPlay(isPlaying);
+}
+
+function setPlay(state) {
+    if (state == true) {
+        isPlaying = true;
         soundbites["flick"].play();
         tracks["1"].play();
         audioplayer.textContent = "🔊";
-    } else {
+    } else if (state == false) {
+        isPlaying = false;
         soundbites["flick"].play();
         tracks["1"].pause();
         audioplayer.textContent = "🔈";
@@ -35,22 +42,20 @@ function togglePlay() {
 
 window.addEventListener("scroll", function() {
 
-    // First play
-    if (!hasInteracted) {
-        try {
-            soundbites["flick"].play();
-            tracks["1"].volume = 0.4;
-            setTimeout(function() {
-                tracks["1"].play();
-            }, 1000);
-            hasInteracted = true;
-            isPlaying = true;
-            audioplayer.textContent = "🔊";
-        } catch {
-            hasInteracted = false;
-            isPlaying = false;
-            audioplayer.textContent = "🔈";
-            console.log("Error playing audio");
+    // One time play
+    if (!hasAutoplayed) {
+        if (isPlaying) { 
+            hasAutoplayed = true;
+            return;
+        }
+        
+        let playPromise = soundbites["flick"].play();
+        if (playPromise !== undefined) {
+            playPromise.then(function() {
+                setPlay(true);
+            }).catch(function(error) {
+                //console.log(error);
+            });
         }
     }
 
