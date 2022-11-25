@@ -353,3 +353,13 @@ form > #submit {
 
   }
 }
+
+/* Hide effect on too wide resolution*/
+@media (min-width: 2000px) {
+  #stars {
+    display: none;
+  }
+  #snow {
+    display: none;
+  }
+}
