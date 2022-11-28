@@ -55,14 +55,14 @@ footer {
 
 #audioplayer {
   position: absolute;
-  bottom: 10%;
-  left: 50%;
+  top: 12%;
+  left: 90%;
   -ms-transform: translate(-50%, -50%);
   transform: translate(-50%, -50%);
   right: 50%;
   z-index: 99;
   border-width: 0;
-  font-size: 3em;
+  font-size: 2em;
   min-width: 2em;
   text-align: left;
   background: transparent;
@@ -285,7 +285,7 @@ form > #submit {
 }
 
 .bg-cover {
-    background-image: linear-gradient(#0a0a0a, #133041);
+    background-image: linear-gradient(#0f2433, #133041);
     background-size: cover;
     background-position: center;
     display: flex;
@@ -311,7 +311,7 @@ form > #submit {
 }
 
 .bg-cover3 {
-    background-image: linear-gradient(#0a0a0a, #080f22);
+    background-image: linear-gradient(#0e1416, #0e1416);
     background-size: cover;
     background-position: center;
     display: flex;
