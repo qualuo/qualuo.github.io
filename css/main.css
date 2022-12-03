@@ -19,10 +19,12 @@ header {
 }
 
 body {
-  background-color: #171717;
+  background-color: #000000;
 }
+
 #main {
 }
+
 #scprofile {
   display: flex;
   flex-direction: column;
@@ -30,7 +32,7 @@ body {
   min-height: 100vh;
 }
 #scskills {
-  min-height: 100vh;
+  /*min-height: 100vh;*/
 }
 #scwork {
   min-height: 100vh;
@@ -42,7 +44,7 @@ body {
   min-height: 100vh;
 }
 
-/**
+/*
 footer {
   color: #FFFFFF;
   background-color: #242424;
@@ -264,106 +266,88 @@ form > #submit {
   visibility: visible;
 }
 .slide {
-    /* The name of the animation */
-    animation-name: slide;
-    -webkit-animation-name: slide;
-    /* The duration of the animation */
-    animation-duration: 1.2s;
-    -webkit-animation-duration: 1.2s;
-    /* Make the element visible */
-    visibility: visible;
+  /* The name of the animation */
+  animation-name: slide;
+  -webkit-animation-name: slide;
+  /* The duration of the animation */
+  animation-duration: 1.2s;
+  -webkit-animation-duration: 1.2s;
+  /* Make the element visible */
+  visibility: visible;
 }
 
 /* Goes from 0% to 100% opacity (see-through) and specify the percentage from when to slide in the element along the Y-axis */
 @keyframes slide {
-    0% {
-        opacity: 0;
-        transform: translateY(50%);
-    }
-    100% {
-        opacity: 1;
-        transform: translateY(0%);
-    }
+  0% {
+      opacity: 0;
+      transform: translateY(50%);
+  }
+  100% {
+      opacity: 1;
+      transform: translateY(0%);
+  }
 }
 @-webkit-keyframes slide {
-    0% {
-        opacity: 0;
-        -webkit-transform: translateY(50%);
-    }
-    100% {
-        opacity: 1;
-        -webkit-transform: translateY(0%);
-    }
+  0% {
+      opacity: 0;
+      -webkit-transform: translateY(50%);
+  }
+  100% {
+      opacity: 1;
+      -webkit-transform: translateY(0%);
+  }
 }
 
 .bg-cover {
-    background-image: linear-gradient(#0f2433, #133041);
-    background-size: cover;
-    background-position: center;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-
-    background-attachment: fixed; /* Fixed background does not work on mobile... alternative?*/
-    background-repeat: no-repeat;
-    width: 100%;
+  background-image: url('../images/stars.jpeg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .bg-cover2 {
-    background-image: linear-gradient(#0a0a0a, #080f22);
-    background-size: cover;
-    background-position: center;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+  background-image: url('../images/newsky.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 
-    background-attachment: fixed;
-    background-repeat: no-repeat;
-    width: 100%;
 }
 
 .bg-cover3 {
-    background-image: linear-gradient(#0e1416, #0e1416);
-    background-size: cover;
-    background-position: center;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-
-    background-attachment: fixed;
-    background-repeat: no-repeat;
-    width: 100%;
+  background-image: url('../images/mountains.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .bg-cover4 {
-    background-image: linear-gradient(#0a0a0a, #171717);
-    background-size: cover;
-    background-position: center;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+  background-image: linear-gradient(#171717, #171717);
 
-    background-attachment: fixed;
-    background-repeat: no-repeat;
-    width: 100%;
-    position: relative;
-    z-index: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative; /* keep in front of stars */
+  z-index: 10; 
 }
 
 /* Following only shown on bigger screens */
 @media (min-width: 600px) {
-  .bg-cover {
-      background-image: url('../images/stars.jpeg');
-  }
-  .bg-cover2 {
-      background-image: url('../images/newsky.jpg');
-  }
-  .bg-cover3 {
-      background-image: url('../images/mountains.jpg');
-  }
-  .bg-cover4 {
 
+  .bg-cover {
+    background-attachment: fixed;
   }
+
+  .bg-cover2 {
+    background-attachment: fixed;
+  }
+
+  .bg-cover3 {
+    background-attachment: fixed;
+  }
+
+  .bg-cover4 {
+  }
+
 }
 
 /* Hide effect on too wide resolution*/
