@@ -1,4 +1,4 @@
-# Personal Website
+# ✨ Personal Website 
 
 ### Up at: https://qualuo.github.io
 
@@ -10,7 +10,7 @@ Anyone can make a trendy website with no technical skills with the help of visua
 - [x] Unique
 - [x] Simple
 - [x] Lightweight
-- [x] ~0.5s load time
+- [x] ~0.5s load time~
 - [ ] Superfluous frameworks
 - [ ] Optimized
 - [x] Flat design
@@ -20,7 +20,6 @@ Anyone can make a trendy website with no technical skills with the help of visua
 - [x] Accessibility
 - [ ] AI chatbot
 - [x] Timeless
-- [x] 🤘
 - [x] ✨
 - [x] 🚀
 - [x] ⛰️
