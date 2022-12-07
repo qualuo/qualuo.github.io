@@ -8,10 +8,10 @@
 */
 
 #mainNav {
-  background-color: rgb(255, 255, 255);
+  backdrop-filter: opacity(96%) blur(8px);
   font-family: 'Poppins', sans-serif;
   transition: top 0.3s; /* Animation handled by scrolling-nav.js*/
-  box-shadow: 0 2px 5px 2px rgba(0, 0, 0, 0.26);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
   z-index: 100;
 }
 
@@ -64,8 +64,8 @@ footer {
   right: 50%;
   z-index: 99;
   border-width: 0;
-  font-size: 2em;
-  min-width: 2em;
+  font-size: 2rem;
+  min-width: 2rem;
   text-align: left;
   background: transparent;
 }
@@ -109,8 +109,6 @@ footer {
 /* scale factor can be calculated with: 1 + (translateZ * -1) / perspective
 Example, if our viewport perspective is set to 1px and
 we translate an element -2px along the Z axis the correction scale factor would be 3 */
-
-
 
 h1 {
   font-family: 'Poppins', sans-serif;
