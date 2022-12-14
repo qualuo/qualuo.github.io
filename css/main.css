@@ -25,22 +25,22 @@ body {
 #main {
 }
 
-#scprofile {
+#profile {
   display: flex;
   flex-direction: column;
   justify-content: center;
   min-height: 100vh;
 }
-#scskills {
+#skills {
   /*min-height: 100vh;*/
 }
-#scwork {
+#work {
   min-height: 100vh;
 }
-#scabout {
+#about {
   min-height: 100vh;
 }
-#sccontact {
+#contact {
   min-height: 100vh;
 }
 
