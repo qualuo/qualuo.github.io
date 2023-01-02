@@ -1,7 +1,6 @@
 tracks = {
     "1" : new Audio("/audio/track-electronic-rock-king-around-here-15045.mp3"),
     "2" : new Audio("/audio/track-space-120280.mp3"),
-    "3" : new Audio("/audio/track-uplifting-113842.mp3"),
 }
 ambience = {
     "1" : new Audio("/audio/ambience-wind-during-snow-storm-17562.mp3"),
