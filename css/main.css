@@ -8,7 +8,8 @@
 */
 
 #mainNav {
-  backdrop-filter: opacity(96%) blur(8px);
+  backdrop-filter: opacity(100%);
+  background-color: black;
   font-size: 12px;
   font-family: 'Poppins', sans-serif;
   transition: top 0.3s; /* Animation handled by scrolling-nav.js*/
@@ -248,11 +249,11 @@ form > #submit {
   box-shadow: 0 2px 5px 2px rgba(0, 0, 0, 0.26);
 }
 
-.sliderightmicroanim {
+.slide-right-anim {
   transition: all 0.2s ease-in-out;
 }
 
-.btn-collapse:hover .sliderightmicroanim {
+.btn-collapse:hover .slide-right-anim {
   -webkit-transform: translateX(1em);
   -ms-transform: translateX(1em);
   transform: translateX(1em);
@@ -348,9 +349,40 @@ form > #submit {
   }
 }
 
+
+.interval-underline-anim {
+  position: relative;
+  color: white;
+  text-decoration: none;
+}
+
+.interval-underline-anim::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 1px;
+  bottom: 0;
+  left: 0;
+  background-color: white;
+  animation: shooting-underline 2s;
+}
+
+@keyframes shooting-underline {
+  0% {
+    transform: scaleX(0);
+    transform-origin: bottom left;
+    width: 0%;
+  }
+  100% {
+    transform: scaleX(1);
+    transform-origin: bottom right;
+    width: 100%;
+  }
+}
+
 .hover-underline-anim {
   position: relative;
-  color: #FFFFFF;
+  color: white;
   text-decoration: none;
 }
 
@@ -451,10 +483,18 @@ form > #submit {
   .bg-cover4 {
   }
 
+  #mainNav {
+    backdrop-filter: opacity(96%) blur(8px);
+    background-color: transparent;
+  }
+
+  .navbar-nav {
+  }
+
 }
 
 /* Hide effect on too wide resolution*/
-@media (min-width: 2000px) {
+@media (min-width: 2300px) {
   #stars {
     display: none;
   }
