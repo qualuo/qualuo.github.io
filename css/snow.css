@@ -130,6 +130,6 @@
       transform: translateX(-500px) translateY(-100px);
     }
     to {
-      transform: translateX(0px) translateY(200px);
+      transform: translateX(0px) translateY(100px);
     }
   }
