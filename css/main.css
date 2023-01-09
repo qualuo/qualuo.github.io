@@ -4,7 +4,7 @@
 #34A853 - green
 #FBBC05 - orange
 #EA4335 - red
-#242424 - black
+#171717 - black
 */
 
 #mainNav {
@@ -113,8 +113,11 @@ we translate an element -2px along the Z axis the correction scale factor would 
 
 h1 {
   font-family: 'Poppins', sans-serif;
-  font-size: 64px;
+  font-size: 82px;
   font-weight: 700;
+
+  position: relative;
+  display: inline-block;
 }
 
 h2 {
@@ -206,6 +209,16 @@ form > #submit {
   cursor: pointer;
 }
 
+/* TODO audio visualizer in circle */
+.btn-circle {
+  height: 50px;
+  width: 50px;
+  float: right;
+  border-radius: 100%;
+  background-color: white;
+  box-shadow:  2px 5px 2px rgba(0, 0, 0, 0.26);
+}
+
 .btn-framed {
   background-color: transparent;
   padding: .8em 2.8em;
@@ -260,21 +273,37 @@ form > #submit {
 }
 
 
+.delayed-fade-anim {
+  animation: fade-out 10s linear forwards;
+}
+
+@keyframes fade-out {
+  0% {
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+
 /* SLIDE ANIMATION: class="slideanim"*/
 .slideanim {
   visibility: visible;
 }
 .slide {
-  /* The name of the animation */
   animation-name: slide;
   -webkit-animation-name: slide;
-  /* The duration of the animation */
   animation-duration: 1.2s;
   -webkit-animation-duration: 1.2s;
-  /* Make the element visible */
   visibility: visible;
 }
-
 /* Goes from 0% to 100% opacity (see-through) and specify the percentage from when to slide in the element along the Y-axis */
 @keyframes slide {
   0% {
@@ -297,6 +326,28 @@ form > #submit {
   }
 }
 
+@keyframes rollIn {
+  from {
+    transform: translateX(-10%);
+  }
+  to {
+    transform: translateX(0%);
+  }
+}
+
+.growanim {
+  animation: grow 1s ease-in-out forwards alternate infinite;
+}
+
+@keyframes grow {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.01);
+  }
+}
+
 .bg-cover {
   background-image: url('../images/stars.jpeg');
   background-size: cover;
@@ -309,6 +360,9 @@ form > #submit {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+
+  position: relative; /* keep in front of stars */
+  z-index: 10; 
 
 }
 
@@ -325,6 +379,7 @@ form > #submit {
   display: flex;
   flex-direction: column;
   justify-content: center;
+  
   position: relative; /* keep in front of stars */
   z-index: 10; 
 }
