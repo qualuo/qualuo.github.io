@@ -127,9 +127,9 @@
   
   @keyframes animSnow3 {
     from {
-      transform: translateX(-500px) translateY(0px);
+      transform: translateX(-500px) translateY(-100px);
     }
     to {
-      transform: translateX(0px) translateY(500px);
+      transform: translateX(0px) translateY(200px);
     }
   }
