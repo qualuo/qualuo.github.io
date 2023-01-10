@@ -427,7 +427,13 @@ form > #submit {
   transform: scaleX(1);
 }
 
-
+.canvas-dot-grid {
+  visibility: hidden;
+  position: absolute;
+  top: 0%;
+  left: 0%;
+  z-index: 1;
+}
 
 .bg-cover {
   background-image: url('../images/stars.jpeg');
@@ -490,6 +496,9 @@ form > #submit {
 
   .navbar-nav {
   }
+
+  .canvas-dot-grid {
+    visibility: visible;
 
 }
 
