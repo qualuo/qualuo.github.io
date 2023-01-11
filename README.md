@@ -2,9 +2,7 @@
 
 ### Up at: https://qualuo.github.io
 
-Multi layered one-pager about me. 
-
-Anyone can make a trendy website with no technical skills with the help of visual drag and drop builders; this is instead a uniquely made, fundamental one with personal touch.
+Anyone can make a trendy website without technical skills with the help of visual drag and drop builders; this is a uniquely made, fundamental one with personal touch.
 
 ### Features
 - [x] Unique
@@ -19,8 +17,14 @@ Anyone can make a trendy website with no technical skills with the help of visua
 - [x] Responsive
 - [x] Accessibility
 - [ ] AI chatbot
-- [x] Timeless
+- [x] Timeless(?)
 - [x] ✨
 - [x] 🚀
 - [x] ⛰️
+- [x] Fancy gallery
 
+### UX considerations
+
+- Quick access to contact info.
+- Music is instrumental, as vocals are distracting while reading. 
+- No flashy animations to distract from reading.
