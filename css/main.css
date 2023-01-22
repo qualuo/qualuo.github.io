@@ -81,7 +81,7 @@ footer {
   height: 50px;
   border-radius: 50%;
   border: 2px solid white;
-  transition: all .075s ease-out;
+  transition: all .1s linear;
 }
 
 a:hover .ring-cursor {
