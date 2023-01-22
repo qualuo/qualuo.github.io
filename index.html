@@ -78,8 +78,9 @@
   <!-- End of Navigation -->
 </head>
 
-<body id="page-top" style="overflow: auto;">
+<body id="page-top" style="overflow-x: hidden; overflow-y: auto; cursor: none;">
 
+  <div class="ring-cursor"></div>
 
   <!-- Main sections -->
   <div id="main" class="container-fluid">
@@ -389,8 +390,10 @@
                     These algorithms are used in many applications, including games, and robotics 
                     where pathfinding is utilized for characters/agents to be able to navigate through the environment or networks. 
                     As well as in route planning. 
+                    <!--
                     <br/><br/>
                     <iframe id="pathfinding" style="width: 100%; height: 700px; border-width: 0.2em; background-color: white;" src="https://qualuo.github.io/dijkstras-algorithm/" ></iframe>  
+                    -->
                   </p>
                 </div>
               </div>
@@ -702,6 +705,7 @@
 <script src="js/slideanim.js"></script> <!-- slide in animation -->
 <script src="js/img-focus.js"></script> <!-- image modal -->
 <script src="js/audio-player.js"></script> <!-- auto audio -->
+<script src="js/ring-cursor.js"></script> 
 
 <!-- Bootstrap core JavaScript -->
 <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
