@@ -519,7 +519,7 @@ form > #submit {
 }
 
 /* Hide effect on too wide resolution*/
-@media (min-width: 2560px) {
+@media (min-width: 2561px) {
   #stars {
     display: none;
   }
