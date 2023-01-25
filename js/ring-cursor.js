@@ -1,3 +1,5 @@
+// <div class="ring-cursor"></div>
+
 const cursor = document.querySelector('.ring-cursor');
 cursor.style.visibility = 'hidden';
 let ringDiameter = 50;
