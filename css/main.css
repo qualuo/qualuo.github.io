@@ -443,6 +443,21 @@ form > #submit {
   transform: scaleX(1);
 }
 
+.scrolling-text {
+  position: relative;
+  animation: text-scroll 12s linear infinite;
+  font-weight: bold;
+}
+
+@keyframes text-scroll {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(-100%);
+  }
+}
+
 .canvas-dot-grid {
   visibility: hidden;
   position: absolute;
