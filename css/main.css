@@ -241,7 +241,7 @@ form > #submit {
   padding: .8em 2.8em;
   font-size: 20px;
   border-radius: 2em;
-  border-width: .05em;
+  border-width: 1px;
   border-color: #FFFFFF;
   transition: all 0.2s ease-in-out;
 
