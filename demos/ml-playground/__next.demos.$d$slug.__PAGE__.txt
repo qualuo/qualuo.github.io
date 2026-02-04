@@ -1,0 +1,6 @@
+1:"$Sreact.fragment"
+2:I[71366,["/_next/static/chunks/632dedf97b94960d.js","/_next/static/chunks/7970907d841251fd.js","/_next/static/chunks/691a932e762ad7c6.js","/_next/static/chunks/6162f3d41ec888d6.js"],"DemoPageClient"]
+3:I[97367,["/_next/static/chunks/ff1a16fafef87110.js","/_next/static/chunks/d2be314c3ece3fbe.js"],"OutletBoundary"]
+4:"$Sreact.suspense"
+0:{"buildId":"T-ZzcF-fSbcApKr_fYCgS","rsc":["$","$1","c",{"children":[["$","$L2",null,{"demo":{"slug":"ml-playground","title":"ML Playground","subtitle":"AI Toolkit","description":"Try different machine learning tasks—sentiment analysis, named entity recognition, image classification, and more.","icon":"🤖","gradient":"from-indigo-500 via-purple-500 to-violet-500","tech":["Transformers.js","BERT","ViT","DETR"],"status":"live"}}],[["$","script","script-0",{"src":"/_next/static/chunks/7970907d841251fd.js","async":true}],["$","script","script-1",{"src":"/_next/static/chunks/691a932e762ad7c6.js","async":true}],["$","script","script-2",{"src":"/_next/static/chunks/6162f3d41ec888d6.js","async":true}]],["$","$L3",null,{"children":["$","$4",null,{"name":"Next.MetadataOutlet","children":"$@5"}]}]]}],"loading":null,"isPartial":false}
+5:null
