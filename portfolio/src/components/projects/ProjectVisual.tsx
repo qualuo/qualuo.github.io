@@ -1,0 +1,77 @@
+"use client";
+
+import { useRef, useEffect, useState } from "react";
+import { MotionValue } from "framer-motion";
+import { Project } from "@/lib/projects";
+import { AbstractVisual } from "./visuals/AbstractVisual";
+
+interface ProjectVisualProps {
+  project: Project;
+  scrollProgress: MotionValue<number>;
+}
+
+export function ProjectVisual({ project, scrollProgress }: ProjectVisualProps) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isInView, setIsInView] = useState(false);
+
+  // Control video playback based on scroll position
+  useEffect(() => {
+    const unsubscribe = scrollProgress.on("change", (value) => {
+      const inView = value > 0.15 && value < 0.85;
+      setIsInView(inView);
+
+      if (videoRef.current) {
+        if (inView) {
+          videoRef.current.play().catch(() => {});
+        } else {
+          videoRef.current.pause();
+        }
+      }
+    });
+
+    return () => unsubscribe();
+  }, [scrollProgress]);
+
+  // If project has media, display it
+  if (project.media) {
+    if (project.media.type === "video") {
+      return (
+        <video
+          ref={videoRef}
+          src={project.media.src}
+          className="absolute inset-0 w-full h-full object-cover"
+          muted
+          loop
+          playsInline
+          preload="metadata"
+        />
+      );
+    }
+
+    if (project.media.type === "image") {
+      return (
+        <img
+          src={project.media.src}
+          alt={project.title}
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+      );
+    }
+  }
+
+  // Otherwise, render abstract visual based on category
+  if (project.visualConfig) {
+    return (
+      <AbstractVisual
+        type={project.visualConfig.type}
+        colors={project.visualConfig.colors}
+        isActive={isInView}
+      />
+    );
+  }
+
+  // Fallback gradient
+  return (
+    <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900" />
+  );
+}
