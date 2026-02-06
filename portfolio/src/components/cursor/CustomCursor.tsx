@@ -55,10 +55,14 @@ export function CustomCursor() {
   useEffect(() => {
     if (isTouchDevice) return;
 
+    let visible = isVisible;
     const handleMouseMove = (e: MouseEvent) => {
       mouseX.set(e.clientX);
       mouseY.set(e.clientY);
-      if (!isVisible) setIsVisible(true);
+      if (!visible) {
+        visible = true;
+        setIsVisible(true);
+      }
     };
 
     const handleMouseLeave = () => {
@@ -69,7 +73,7 @@ export function CustomCursor() {
       setIsVisible(true);
     };
 
-    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mousemove", handleMouseMove, { passive: true });
     document.addEventListener("mouseleave", handleMouseLeave);
     document.addEventListener("mouseenter", handleMouseEnter);
 

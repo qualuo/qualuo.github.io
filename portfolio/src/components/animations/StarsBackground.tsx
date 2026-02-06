@@ -120,9 +120,9 @@ function createStarsWithPoissonDistribution(): Star[] {
   const stars: Star[] = [];
 
   const layers: Array<{ name: "distant" | "mid" | "near"; count: number; minAngularDist: number }> = [
-    { name: "distant", count: 60, minAngularDist: 0.08 },
-    { name: "mid", count: 30, minAngularDist: 0.12 },
-    { name: "near", count: 15, minAngularDist: 0.2 },
+    { name: "distant", count: 35, minAngularDist: 0.08 },
+    { name: "mid", count: 18, minAngularDist: 0.12 },
+    { name: "near", count: 10, minAngularDist: 0.2 },
   ];
 
   for (const { name: layer, count, minAngularDist } of layers) {
@@ -332,7 +332,7 @@ function drawDiffractionSpikes(
 const FADE_MARGIN = 120;
 
 // Meteor settings - rare and magical
-const METEOR_SPAWN_CHANCE = 0.0008; // Per frame chance (~1 every 20 seconds at 60fps)
+const METEOR_SPAWN_CHANCE = 0.000167; // Per frame chance (~1 every 100 seconds at 60fps)
 const METEOR_MIN_SPEED = 800;
 const METEOR_MAX_SPEED = 1500;
 
@@ -479,10 +479,12 @@ export function StarsBackground() {
     frameTimesRef.current.push(frameTime);
     if (frameTimesRef.current.length > 30) frameTimesRef.current.shift();
 
-    // Calculate average frame time and adjust quality
+    // Calculate average frame time and adjust quality - react faster on drops
     const avgFrameTime = frameTimesRef.current.reduce((a, b) => a + b, 0) / frameTimesRef.current.length;
-    const targetQuality = avgFrameTime > 20 ? 0.6 : avgFrameTime > 16.7 ? 0.85 : 1; // Drop quality if > 60fps target
-    qualityScaleRef.current += (targetQuality - qualityScaleRef.current) * 0.1; // Smooth transition
+    const targetQuality = avgFrameTime > 24 ? 0.4 : avgFrameTime > 20 ? 0.6 : avgFrameTime > 16.7 ? 0.85 : 1;
+    // Faster drop, slower recovery for stability
+    const lerpRate = targetQuality < qualityScaleRef.current ? 0.2 : 0.05;
+    qualityScaleRef.current += (targetQuality - qualityScaleRef.current) * lerpRate;
 
     // Performance: reduce update frequency when tab is not active
     const baseDelta = isTabActiveRef.current ? deltaTime : deltaTime * 0.25;
@@ -549,10 +551,14 @@ export function StarsBackground() {
 
     ctx.clearRect(0, 0, width, height);
 
+    // #4: Calculate how many stars to render based on quality scale
+    const quality = qualityScaleRef.current;
+
     // Skip aurora when zoomed out (dpr < 1) to avoid rendering artifacts
     const isZoomedOut = dpr < 0.99;
 
-    if (!isZoomedOut) {
+    // Skip aurora when quality is low to save GPU gradient fills
+    if (!isZoomedOut && quality > 0.8) {
       // === AURORA BOREALIS ===
       // Subtle, ethereal glow near the polar region
       const auroraOpacity = opacityRef.current * 0.5;
@@ -622,9 +628,6 @@ export function StarsBackground() {
     const mouseOffsetX = isTabActiveRef.current ? (smoothMouseRef.current.x - 0.5) * 20 : 0;
     const mouseOffsetY = isTabActiveRef.current ? (smoothMouseRef.current.y - 0.5) * 20 : 0;
 
-    // #4: Calculate how many stars to render based on quality scale
-    const quality = qualityScaleRef.current;
-
     // Stars are pre-sorted by renderOrder (dim/distant first, bright/near last)
     // This ensures proper layering of glows
     for (let i = 0; i < starsRef.current.length; i++) {
@@ -693,8 +696,8 @@ export function StarsBackground() {
       // Skip rendering if opacity too low
       if (opacity < 0.01) continue;
 
-      // Draw diffraction spikes for first-magnitude stars
-      if (star.magnitude < 2 && opacity > 0.1) {
+      // Draw diffraction spikes for first-magnitude stars (skip when quality drops)
+      if (star.magnitude < 2 && opacity > 0.1 && quality > 0.7) {
         drawDiffractionSpikes(ctx, x, y, star.size, opacity * 0.5, star.spectralType);
       }
 
@@ -730,7 +733,8 @@ export function StarsBackground() {
       }
 
       // Draw inner glow for medium-bright stars - tighter gradient for crispness
-      if (star.magnitude < 4.5 && opacity > 0.03) {
+      // Skip when quality is low to reduce gradient creation
+      if (star.magnitude < 4.5 && opacity > 0.03 && (quality > 0.7 || star.magnitude < 3)) {
         const innerGlowSize = star.size * 2;
         const innerGradient = ctx.createRadialGradient(x, y, 0, x, y, innerGlowSize);
         innerGradient.addColorStop(0, getExtinctionColor(star.spectralType, opacity * 0.8, extinction.warming));

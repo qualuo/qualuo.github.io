@@ -220,7 +220,7 @@ export default function Colophon() {
         {/* Stats */}
         <Section className="mb-24">
           <div className="grid grid-cols-3 gap-8 py-8 border-y border-white/10">
-            <Stat value={110} label="Stars" />
+            <Stat value={68} label="Stars" />
             <Stat value={60} label="Latitude" suffix="°N" />
             <Stat value={7} label="Spectral Types" />
           </div>
@@ -282,7 +282,7 @@ export default function Colophon() {
           </RevealText>
           <p className="text-slate-400 leading-relaxed">
             If you wait, you might catch a meteor. They appear perhaps once every
-            forty seconds—rare enough to be a gift, common enough that patience
+            couple of minutes—rare enough to be a gift, common enough that patience
             is rewarded. Each one traces a unique path, fading as it burns through
             our thin atmosphere.
           </p>

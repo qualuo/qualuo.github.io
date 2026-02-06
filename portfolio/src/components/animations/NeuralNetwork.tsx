@@ -78,6 +78,7 @@ function Network({ mousePosition }: NetworkProps) {
 
   const smoothMouse = useRef({ x: 0, y: 0 });
   const time = useRef(0);
+  const dummyRef = useRef(new THREE.Object3D());
 
   const { nodes, connections, basePositions } = useMemo(() => {
     const nodes = generateNodes(CONFIG.nodeCount, CONFIG.spread);
@@ -119,7 +120,7 @@ function Network({ mousePosition }: NetworkProps) {
 
     // Organic node drift
     if (nodesRef.current) {
-      const dummy = new THREE.Object3D();
+      const dummy = dummyRef.current;
 
       nodes.forEach((node, i) => {
         const base = basePositions[i];
@@ -199,7 +200,7 @@ function Network({ mousePosition }: NetworkProps) {
     <group ref={groupRef} position={[0, 0, 0]}>
       {/* Nodes - small, soft spheres */}
       <instancedMesh ref={nodesRef} args={[undefined, undefined, nodes.length]}>
-        <sphereGeometry args={[CONFIG.nodeSize, 16, 16]} />
+        <sphereGeometry args={[CONFIG.nodeSize, 8, 8]} />
         <meshBasicMaterial color="#ffffff" transparent opacity={0.7} />
       </instancedMesh>
 
@@ -242,7 +243,7 @@ export function NeuralNetwork() {
       mousePosition.current.y = -(e.clientY / window.innerHeight) * 2 + 1;
     };
 
-    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mousemove", handleMouseMove, { passive: true });
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
 
@@ -254,11 +255,11 @@ export function NeuralNetwork() {
     >
       <Canvas
         gl={{
-          antialias: true,
+          antialias: false,
           alpha: true,
           powerPreference: "high-performance",
         }}
-        dpr={[1, 2]}
+        dpr={1}
       >
         <Scene mousePosition={mousePosition} />
       </Canvas>

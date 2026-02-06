@@ -37,7 +37,7 @@ const COLOR_SCHEMES = {
 };
 
 const DEFAULT_CONFIG: Config = {
-  particleCount: 300,
+  particleCount: 200,
   gravity: 0,
   friction: 0.98,
   mouseForce: 0.8,
@@ -212,19 +212,13 @@ export function ParticlePlayground() {
       ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
 
-    // Draw particles
+    // Draw particles - single fill pass (shadowBlur removed for performance)
     for (const p of particlesRef.current) {
       ctx.beginPath();
       ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
       ctx.fillStyle = p.color;
       ctx.globalAlpha = p.alpha;
       ctx.fill();
-
-      // Glow effect
-      ctx.shadowBlur = 15;
-      ctx.shadowColor = p.color;
-      ctx.fill();
-      ctx.shadowBlur = 0;
     }
 
     ctx.globalAlpha = 1;
@@ -455,7 +449,7 @@ export function ParticlePlayground() {
             <input
               type="range"
               min="50"
-              max="800"
+              max="500"
               step="50"
               value={config.particleCount}
               onChange={(e) =>

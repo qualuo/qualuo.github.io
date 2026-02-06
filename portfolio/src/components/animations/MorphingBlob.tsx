@@ -7,7 +7,7 @@ import * as THREE from "three";
 // Refined configuration — optimized for performance
 const CONFIG = {
   radius: 1.4,
-  detail: 12, // Reduced for performance
+  detail: 8, // Reduced further for laptop performance (was 12)
   noise: {
     scale: 0.8,
     speed: 0.12,
@@ -209,8 +209,8 @@ function Blob({ mousePosition }: BlobProps) {
       const breathe = 1 + Math.sin(time.current * CONFIG.breathe.speed) * CONFIG.breathe.amplitude;
       meshRef.current.scale.setScalar(breathe);
 
-      // Morph vertices with noise — every 4th frame only
-      if (frameCount.current % 4 === 0) {
+      // Morph vertices with noise — every 6th frame for better laptop perf
+      if (frameCount.current % 6 === 0) {
         const geometry = meshRef.current.geometry as THREE.IcosahedronGeometry;
         const positions = geometry.attributes.position.array as Float32Array;
         const original = originalPositions.current;
@@ -277,7 +277,7 @@ export function MorphingBlob() {
       mousePosition.current.y = -(e.clientY / window.innerHeight) * 2 + 1;
     };
 
-    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mousemove", handleMouseMove, { passive: true });
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
 
@@ -293,7 +293,7 @@ export function MorphingBlob() {
           alpha: true,
           powerPreference: "high-performance",
         }}
-        dpr={[1, 1.5]}
+        dpr={1}
       >
         <Scene mousePosition={mousePosition} />
       </Canvas>
