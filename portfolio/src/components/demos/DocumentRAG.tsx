@@ -332,7 +332,7 @@ ${context}`
           animate={{ opacity: 1, y: 0 }}
           className="max-w-md w-full text-center"
         >
-          <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-orange-500 to-rose-500 flex items-center justify-center mb-4 text-3xl">
+          <div className="w-16 h-16 mx-auto rounded-2xl bg-linear-to-br from-orange-500 to-rose-500 flex items-center justify-center mb-4 text-3xl">
             📚
           </div>
           <h3 className="text-2xl font-bold text-white mb-2">Document Q&A</h3>
@@ -397,7 +397,7 @@ ${context}`
 
           <button
             onClick={initialize}
-            className="w-full py-4 px-6 rounded-xl bg-gradient-to-r from-orange-500 to-rose-500 text-white font-medium hover:opacity-90 transition-opacity"
+            className="w-full py-4 px-6 rounded-xl bg-linear-to-r from-orange-500 to-rose-500 text-white font-medium hover:opacity-90 transition-opacity"
           >
             Load Models & Start
           </button>
@@ -420,7 +420,7 @@ ${context}`
           className="text-center max-w-md"
         >
           <div className="w-16 h-16 mx-auto mb-6 relative">
-            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-orange-500 to-rose-500 animate-pulse" />
+            <div className="absolute inset-0 rounded-2xl bg-linear-to-br from-orange-500 to-rose-500 animate-pulse" />
             <div className="absolute inset-0 flex items-center justify-center text-2xl">
               {status === "loading-embedder" ? "🔤" : "🧠"}
             </div>
@@ -431,7 +431,7 @@ ${context}`
               : "Loading Language Model"}
           </h3>
           <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-            <p className="text-slate-400 text-sm break-words">{statusMessage}</p>
+            <p className="text-slate-400 text-sm wrap-break-word">{statusMessage}</p>
           </div>
         </motion.div>
       </div>
@@ -440,11 +440,11 @@ ${context}`
 
   // Ready state - main interface
   return (
-    <div className="flex-1 flex flex-col rounded-2xl overflow-hidden bg-white/[0.02] border border-white/[0.08]">
+    <div className="flex-1 flex flex-col rounded-2xl overflow-hidden bg-white/2 border border-white/8">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-white/[0.02]">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-white/2">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500 to-rose-500 flex items-center justify-center text-sm">
+          <div className="w-8 h-8 rounded-lg bg-linear-to-br from-orange-500 to-rose-500 flex items-center justify-center text-sm">
             📚
           </div>
           <div>
@@ -504,7 +504,7 @@ ${context}`
 
       {/* Document list */}
       {documents.length > 0 && (
-        <div className="px-4 py-2 border-b border-white/10 bg-white/[0.01]">
+        <div className="px-4 py-2 border-b border-white/10 bg-white/1">
           <div className="flex flex-wrap gap-2">
             {[...new Set(documents.map((d) => d.source))].map((source) => (
               <span
@@ -534,7 +534,7 @@ ${context}`
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 && (
-          <div className="flex-1 flex items-center justify-center h-full min-h-[200px]">
+          <div className="flex-1 flex items-center justify-center h-full min-h-50">
             <div className="text-center text-slate-500">
               {documents.length === 0 ? (
                 <>
@@ -569,7 +569,7 @@ ${context}`
               <div
                 className={`max-w-[80%] ${
                   message.role === "user"
-                    ? "bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-2xl px-4 py-3"
+                    ? "bg-linear-to-r from-orange-500 to-rose-500 text-white rounded-2xl px-4 py-3"
                     : "space-y-2"
                 }`}
               >
@@ -627,7 +627,7 @@ ${context}`
       </div>
 
       {/* Input */}
-      <div className="p-4 border-t border-white/10 bg-white/[0.02]">
+      <div className="p-4 border-t border-white/10 bg-white/2">
         <div className="flex gap-3">
           <textarea
             value={input}
@@ -645,7 +645,7 @@ ${context}`
           <button
             onClick={sendMessage}
             disabled={!input.trim() || isGenerating}
-            className="px-4 py-3 rounded-xl bg-gradient-to-r from-orange-500 to-rose-500 text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
+            className="px-4 py-3 rounded-xl bg-linear-to-r from-orange-500 to-rose-500 text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
           >
             <svg
               className="w-5 h-5"

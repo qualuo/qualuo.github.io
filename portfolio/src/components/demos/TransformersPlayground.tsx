@@ -318,7 +318,7 @@ export function TransformersPlayground() {
       <div className="flex-1 flex flex-col items-center justify-center p-8">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-lg w-full">
           <div className="text-center mb-8">
-            <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center mb-4 text-3xl">
+            <div className="w-16 h-16 mx-auto rounded-2xl bg-linear-to-br from-indigo-500 to-purple-500 flex items-center justify-center mb-4 text-3xl">
               🤖
             </div>
             <h3 className="text-2xl font-bold text-white mb-2">ML Playground</h3>
@@ -341,11 +341,11 @@ export function TransformersPlayground() {
                 className={`w-full p-4 rounded-xl border transition-all text-left ${
                   selectedTask.id === task.id
                     ? "bg-white/10 border-white/20"
-                    : "bg-white/5 border-white/10 hover:bg-white/[0.07]"
+                    : "bg-white/5 border-white/10 hover:bg-white/7"
                 }`}
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500/20 to-purple-500/20 flex items-center justify-center text-xl">
+                  <div className="w-10 h-10 rounded-lg bg-linear-to-br from-indigo-500/20 to-purple-500/20 flex items-center justify-center text-xl">
                     {task.icon}
                   </div>
                   <div className="flex-1">
@@ -369,7 +369,7 @@ export function TransformersPlayground() {
 
           <button
             onClick={() => loadModel(selectedTask)}
-            className="w-full py-4 px-6 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-medium hover:opacity-90 transition-opacity"
+            className="w-full py-4 px-6 rounded-xl bg-linear-to-r from-indigo-500 to-purple-500 text-white font-medium hover:opacity-90 transition-opacity"
           >
             Load {selectedTask.name}
           </button>
@@ -388,7 +388,7 @@ export function TransformersPlayground() {
       <div className="flex-1 flex flex-col items-center justify-center p-8">
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center max-w-md">
           <div className="w-16 h-16 mx-auto mb-6 relative">
-            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-500 animate-pulse" />
+            <div className="absolute inset-0 rounded-2xl bg-linear-to-br from-indigo-500 to-purple-500 animate-pulse" />
             <div className="absolute inset-0 flex items-center justify-center text-2xl">{selectedTask.icon}</div>
           </div>
           <h3 className="text-xl font-semibold text-white mb-4">Loading {selectedTask.name}</h3>
@@ -403,11 +403,11 @@ export function TransformersPlayground() {
 
   // Render ready state - main interface
   return (
-    <div className="flex-1 flex flex-col rounded-2xl overflow-hidden bg-white/[0.02] border border-white/[0.08]">
+    <div className="flex-1 flex flex-col rounded-2xl overflow-hidden bg-white/2 border border-white/8">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-white/[0.02]">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-white/2">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-sm">
+          <div className="w-8 h-8 rounded-lg bg-linear-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-sm">
             {selectedTask.icon}
           </div>
           <div>
@@ -522,7 +522,7 @@ export function TransformersPlayground() {
                             </div>
                             <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
                               <div
-                                className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all"
+                                className="h-full bg-linear-to-r from-indigo-500 to-purple-500 transition-all"
                                 style={{ width: `${r.score * 100}%` }}
                               />
                             </div>
@@ -620,7 +620,7 @@ export function TransformersPlayground() {
                           </div>
                           <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
                             <div
-                              className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all"
+                              className="h-full bg-linear-to-r from-indigo-500 to-purple-500 transition-all"
                               style={{ width: `${r.score * 100}%` }}
                             />
                           </div>
@@ -661,7 +661,7 @@ export function TransformersPlayground() {
       </div>
 
       {/* Input area */}
-      <div className="p-4 border-t border-white/10 bg-white/[0.02]">
+      <div className="p-4 border-t border-white/10 bg-white/2">
         {selectedTask.inputType === "text" ? (
           <div className="flex gap-3">
             <input
@@ -676,7 +676,7 @@ export function TransformersPlayground() {
             <button
               onClick={runInference}
               disabled={!input.trim() || isProcessing}
-              className="px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
+              className="px-6 py-3 rounded-xl bg-linear-to-r from-indigo-500 to-purple-500 text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
             >
               {isProcessing ? (
                 <div className="flex gap-1">
@@ -693,7 +693,7 @@ export function TransformersPlayground() {
           <button
             onClick={runInference}
             disabled={!imageUrl || isProcessing}
-            className="w-full py-3 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
+            className="w-full py-3 rounded-xl bg-linear-to-r from-indigo-500 to-purple-500 text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
           >
             {isProcessing ? (
               <div className="flex items-center justify-center gap-1">

@@ -109,10 +109,10 @@ type Phase = "idle" | "exploding" | "reforming";
 
 interface SceneProps {
   mousePosition: React.MutableRefObject<{ x: number; y: number }>;
-  shouldExplode: React.MutableRefObject<boolean>;
+  shouldExplodeRef: React.MutableRefObject<boolean>;
 }
 
-function BlobScene({ mousePosition, shouldExplode }: SceneProps) {
+function BlobScene({ mousePosition, shouldExplodeRef }: SceneProps) {
   const groupRef = useRef<THREE.Group>(null);
   const meshRef = useRef<THREE.Mesh>(null);
   const pointsRef = useRef<THREE.Points>(null);
@@ -227,6 +227,8 @@ function BlobScene({ mousePosition, shouldExplode }: SceneProps) {
       depthWrite: false,
     });
   }, []);
+  const shaderMaterialRef = useRef(shaderMaterial);
+  const particleMaterialRef = useRef(particleMaterial);
 
   // Store original positions & init particle geometry
   useEffect(() => {
@@ -259,8 +261,8 @@ function BlobScene({ mousePosition, shouldExplode }: SceneProps) {
       (mousePosition.current.y - smoothMouse.current.y) * CONFIG.mouse.smoothing;
 
     // --- Explosion trigger ---
-    if (shouldExplode.current) {
-      shouldExplode.current = false;
+    if (shouldExplodeRef.current) {
+      shouldExplodeRef.current = false;
       if (phase.current === "idle" && meshRef.current && pointsRef.current) {
         phase.current = "exploding";
         phaseTime.current = 0;
@@ -350,7 +352,7 @@ function BlobScene({ mousePosition, shouldExplode }: SceneProps) {
     if (phase.current === "idle") {
       if (meshRef.current) meshRef.current.visible = true;
       if (pointsRef.current) pointsRef.current.visible = false;
-      shaderMaterial.uniforms.uOpacity.value = 1.0;
+      shaderMaterialRef.current.uniforms.uOpacity.value = 1.0;
 
       if (frameCount.current % 6 === 0) morphMesh();
     } else {
@@ -364,12 +366,12 @@ function BlobScene({ mousePosition, shouldExplode }: SceneProps) {
         // Hide mesh, show particles at full
         if (meshRef.current) meshRef.current.visible = false;
         if (pointsRef.current) pointsRef.current.visible = true;
-        particleMaterial.uniforms.uOpacity.value = 1.0;
+        particleMaterialRef.current.uniforms.uOpacity.value = 1.0;
 
         // Size swell: quick burst then settle
         const et = phaseTime.current / CONFIG.explosion.duration;
         const swell = et < 0.15 ? 1.0 + et / 0.15 * 0.6 : 1.6 - (et - 0.15) * 0.7;
-        particleMaterial.uniforms.uScale.value = Math.max(swell, 0.9);
+        particleMaterialRef.current.uniforms.uScale.value = Math.max(swell, 0.9);
 
         const positions = pointsRef.current.geometry.attributes.position
           .array as Float32Array;
@@ -413,13 +415,13 @@ function BlobScene({ mousePosition, shouldExplode }: SceneProps) {
         // Show mesh once cross-fade begins, morph it to stay in sync
         if (meshRef.current) {
           meshRef.current.visible = crossFade > 0;
-          shaderMaterial.uniforms.uOpacity.value = meshOpacity;
+          shaderMaterialRef.current.uniforms.uOpacity.value = meshOpacity;
         }
-        particleMaterial.uniforms.uOpacity.value = particleOpacity;
+        particleMaterialRef.current.uniforms.uOpacity.value = particleOpacity;
         pointsRef.current.visible = particleOpacity > 0;
 
         // Shrink particles as they converge, mesh morphs during cross-fade
-        particleMaterial.uniforms.uScale.value = 1.0 - crossFade * 0.4;
+        particleMaterialRef.current.uniforms.uScale.value = 1.0 - crossFade * 0.4;
         if (crossFade > 0) morphMesh();
 
         let maxDistSq = 0;
@@ -458,17 +460,17 @@ function BlobScene({ mousePosition, shouldExplode }: SceneProps) {
         pointsRef.current.geometry.attributes.position.needsUpdate = true;
 
         if (maxDistSq < CONFIG.explosion.reformThreshold || t >= 1) {
-          shaderMaterial.uniforms.uOpacity.value = 1.0;
+          shaderMaterialRef.current.uniforms.uOpacity.value = 1.0;
           phase.current = "idle";
         }
       }
 
-      particleMaterial.uniforms.uTime.value = time.current;
+      particleMaterialRef.current.uniforms.uTime.value = time.current;
     }
 
     // Always update mesh shader time
     if (meshRef.current) {
-      shaderMaterial.uniforms.uTime.value = time.current;
+      shaderMaterialRef.current.uniforms.uTime.value = time.current;
     }
   });
 
@@ -487,7 +489,7 @@ function BlobScene({ mousePosition, shouldExplode }: SceneProps) {
 export function MorphingBlob() {
   const containerRef = useRef<HTMLDivElement>(null);
   const mousePosition = useRef({ x: 0, y: 0 });
-  const shouldExplode = useRef(false);
+  const shouldExplodeRef = useRef(false);
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -508,7 +510,7 @@ export function MorphingBlob() {
       ref={containerRef}
       className="absolute inset-0 cursor-pointer"
       onClick={() => {
-        shouldExplode.current = true;
+        shouldExplodeRef.current = true;
       }}
     >
       <WebGLErrorBoundary fallback={fallback}>
@@ -522,7 +524,7 @@ export function MorphingBlob() {
         >
           <BlobScene
             mousePosition={mousePosition}
-            shouldExplode={shouldExplode}
+            shouldExplodeRef={shouldExplodeRef}
           />
         </Canvas>
       </WebGLErrorBoundary>

@@ -26,7 +26,8 @@ interface AbstractVisualProps {
   scrollProgress: MotionValue<number>;
 }
 
-function useIsActive(_scrollProgress: MotionValue<number>) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function useIsActive(_: MotionValue<number>) {
   // Always animate — gating caused a visible jump when scrolling into range
   const ref = useRef(true);
   return ref;

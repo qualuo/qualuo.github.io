@@ -35,7 +35,7 @@ function DemoPlaceholder({ demo }: { demo: Demo }) {
         initial={{ scale: 0, rotate: -180 }}
         animate={{ scale: 1, rotate: 0 }}
         transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.2 }}
-        className={`w-24 h-24 rounded-3xl bg-gradient-to-br ${demo.gradient} flex items-center justify-center text-5xl shadow-2xl mb-8`}
+        className={`w-24 h-24 rounded-3xl bg-linear-to-br ${demo.gradient} flex items-center justify-center text-5xl shadow-2xl mb-8`}
       >
         {demo.icon}
       </motion.div>
@@ -194,7 +194,7 @@ export function DemoPageClient({ demo }: DemoPageClientProps) {
             className="mb-6 pt-4"
           >
             <p
-              className={`text-sm font-medium bg-gradient-to-r ${demo.gradient} bg-clip-text text-transparent tracking-widest uppercase mb-2`}
+              className={`text-sm font-medium bg-linear-to-r ${demo.gradient} bg-clip-text text-transparent tracking-widest uppercase mb-2`}
             >
               {demo.subtitle}
             </p>
@@ -219,7 +219,7 @@ export function DemoPageClient({ demo }: DemoPageClientProps) {
                 <DemoComponent />
               </Suspense>
             ) : (
-              <div className="flex-1 rounded-3xl overflow-hidden bg-white/[0.02] border border-white/[0.08] backdrop-blur-sm flex items-center justify-center">
+              <div className="flex-1 rounded-3xl overflow-hidden bg-white/2 border border-white/8 backdrop-blur-sm flex items-center justify-center">
                 <DemoPlaceholder demo={demo} />
               </div>
             )}

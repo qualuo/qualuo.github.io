@@ -38,7 +38,7 @@ export function HeartbeatPulse() {
         }}
       >
         <div
-          className="w-[800px] h-[800px] rounded-full blur-[150px]"
+          className="w-200 h-200 rounded-full blur-[150px]"
           style={{
             background: `radial-gradient(circle, ${colors.deepRose}30, ${colors.warmBlush}10, transparent 70%)`,
           }}
@@ -60,7 +60,7 @@ export function HeartbeatPulse() {
         }}
       >
         <div
-          className="w-[500px] h-[500px] rounded-full blur-[120px]"
+          className="w-125 h-125 rounded-full blur-[120px]"
           style={{
             background: `radial-gradient(circle, ${colors.softGold}20, transparent 70%)`,
           }}
@@ -82,7 +82,7 @@ export function HeartbeatPulse() {
         }}
       >
         <div
-          className="w-[400px] h-[400px] rounded-full blur-[100px]"
+          className="w-100 h-100 rounded-full blur-[100px]"
           style={{
             background: `radial-gradient(circle, ${colors.warmBlush}25, transparent 70%)`,
           }}

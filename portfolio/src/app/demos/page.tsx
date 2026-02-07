@@ -22,16 +22,16 @@ function DemoCard({ demo }: { demo: Demo }) {
         >
           {/* Gradient background with glow */}
           <div
-            className={`absolute inset-0 bg-gradient-to-br ${demo.gradient} opacity-10 group-hover:opacity-20 transition-opacity duration-500`}
+            className={`absolute inset-0 bg-linear-to-br ${demo.gradient} opacity-10 group-hover:opacity-20 transition-opacity duration-500`}
           />
 
           {/* Card content */}
-          <div className="relative p-8 md:p-10 bg-white/[0.03] border border-white/[0.08] rounded-3xl backdrop-blur-sm h-full flex flex-col min-h-[320px]">
+          <div className="relative p-8 md:p-10 bg-white/3 border border-white/8 rounded-3xl backdrop-blur-sm h-full flex flex-col min-h-80">
             {/* Header with icon and status */}
             <div className="flex items-start justify-between mb-6">
               {/* Icon with gradient background */}
               <motion.div
-                className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${demo.gradient} flex items-center justify-center text-3xl shadow-lg`}
+                className={`w-16 h-16 rounded-2xl bg-linear-to-br ${demo.gradient} flex items-center justify-center text-3xl shadow-lg`}
                 whileHover={{ rotate: [0, -10, 10, 0] }}
                 transition={{ duration: 0.5 }}
               >
@@ -48,16 +48,16 @@ function DemoCard({ demo }: { demo: Demo }) {
 
             {/* Title and subtitle */}
             <div className="mb-4">
-              <h3 className="text-2xl md:text-3xl font-semibold text-white mb-2 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-white group-hover:to-slate-300 transition-all duration-300">
+              <h3 className="text-2xl md:text-3xl font-semibold text-white mb-2 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-linear-to-r group-hover:from-white group-hover:to-slate-300 transition-all duration-300">
                 {demo.title}
               </h3>
-              <p className={`text-sm font-medium bg-gradient-to-r ${demo.gradient} bg-clip-text text-transparent`}>
+              <p className={`text-sm font-medium bg-linear-to-r ${demo.gradient} bg-clip-text text-transparent`}>
                 {demo.subtitle}
               </p>
             </div>
 
             {/* Description */}
-            <p className="text-slate-400 leading-relaxed mb-6 flex-grow">
+            <p className="text-slate-400 leading-relaxed mb-6 grow">
               {demo.description}
             </p>
 
@@ -79,7 +79,7 @@ function DemoCard({ demo }: { demo: Demo }) {
                 <span className="text-slate-600">In Development</span>
               ) : (
                 <motion.span
-                  className={`flex items-center gap-2 bg-gradient-to-r ${demo.gradient} bg-clip-text text-transparent`}
+                  className={`flex items-center gap-2 bg-linear-to-r ${demo.gradient} bg-clip-text text-transparent`}
                 >
                   Launch Demo
                   <svg
@@ -125,7 +125,7 @@ export default function DemosPage() {
 
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-6">
               <span className="text-white">Demo </span>
-              <span className="bg-gradient-to-r from-blue-400 via-violet-400 to-purple-400 bg-clip-text text-transparent">
+              <span className="bg-linear-to-r from-blue-400 via-violet-400 to-purple-400 bg-clip-text text-transparent">
                 Laboratory
               </span>
             </h1>
@@ -136,7 +136,7 @@ export default function DemosPage() {
           </div>
 
           {/* Decorative line */}
-          <div className="w-full h-px bg-gradient-to-r from-transparent via-white/20 to-transparent mb-16" />
+          <div className="w-full h-px bg-linear-to-r from-transparent via-white/20 to-transparent mb-16" />
 
           {/* Live demos section */}
           {liveDemos.length > 0 && (

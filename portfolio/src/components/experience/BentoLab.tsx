@@ -114,13 +114,13 @@ function BentoCard({ experience, size, onClick }: BentoCardProps) {
       />
 
       {/* Background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent" />
+      <div className="absolute inset-0 bg-linear-to-br from-white/5 to-transparent" />
 
       {/* Animated Background */}
       <AnimatedBackground color={experience.color} isActive={isHovered} />
 
       {/* Overlay gradient */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+      <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent" />
 
       {/* Content */}
       <div className="absolute inset-0 p-6 flex flex-col justify-end">
@@ -263,10 +263,10 @@ function DetailModal({
 
           <div className="flex flex-col md:flex-row h-full">
             {/* Visual area */}
-            <div className="relative w-full md:w-1/2 h-64 md:h-auto min-h-[300px]">
+            <div className="relative w-full md:w-1/2 h-64 md:h-auto min-h-75">
               <AnimatedBackground color={experience.color} isActive={true} />
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent to-black/50 md:block hidden" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent md:hidden" />
+              <div className="absolute inset-0 bg-linear-to-r from-transparent to-black/50 md:block hidden" />
+              <div className="absolute inset-0 bg-linear-to-t from-black/50 to-transparent md:hidden" />
             </div>
 
             {/* Content */}
@@ -307,7 +307,7 @@ function DetailModal({
                     {experience.highlights.map((highlight, i) => (
                       <li key={i} className="flex items-start gap-3 text-white/80">
                         <span
-                          className="mt-2 w-1.5 h-1.5 rounded-full flex-shrink-0"
+                          className="mt-2 w-1.5 h-1.5 rounded-full shrink-0"
                           style={{ backgroundColor: experience.color }}
                         />
                         {highlight}

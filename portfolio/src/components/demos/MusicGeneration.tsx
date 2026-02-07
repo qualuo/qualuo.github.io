@@ -245,7 +245,7 @@ export function MusicGeneration() {
       <div className="flex-1 flex flex-col items-center justify-center p-8">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-md w-full">
           <div className="text-center mb-8">
-            <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-pink-500 to-red-500 flex items-center justify-center mb-4 text-3xl">
+            <div className="w-16 h-16 mx-auto rounded-2xl bg-linear-to-br from-pink-500 to-red-500 flex items-center justify-center mb-4 text-3xl">
               🎵
             </div>
             <h3 className="text-2xl font-bold text-white mb-2">Music Generation</h3>
@@ -274,7 +274,7 @@ export function MusicGeneration() {
 
           <div className="mb-6 p-4 rounded-xl bg-white/5 border border-white/10">
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-pink-500 to-red-500 flex items-center justify-center text-lg">
+              <div className="w-10 h-10 rounded-lg bg-linear-to-br from-pink-500 to-red-500 flex items-center justify-center text-lg">
                 🎹
               </div>
               <div>
@@ -289,7 +289,7 @@ export function MusicGeneration() {
 
           <button
             onClick={loadModel}
-            className="w-full py-4 px-6 rounded-xl bg-gradient-to-r from-pink-500 to-red-500 text-white font-medium hover:opacity-90 transition-opacity"
+            className="w-full py-4 px-6 rounded-xl bg-linear-to-r from-pink-500 to-red-500 text-white font-medium hover:opacity-90 transition-opacity"
           >
             Load Model
           </button>
@@ -308,7 +308,7 @@ export function MusicGeneration() {
       <div className="flex-1 flex flex-col items-center justify-center p-8">
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center max-w-md">
           <div className="w-16 h-16 mx-auto mb-6 relative">
-            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-pink-500 to-red-500 animate-pulse" />
+            <div className="absolute inset-0 rounded-2xl bg-linear-to-br from-pink-500 to-red-500 animate-pulse" />
             <div className="absolute inset-0 flex items-center justify-center text-2xl">🎵</div>
           </div>
           <h3 className="text-xl font-semibold text-white mb-4">Loading Model</h3>
@@ -323,11 +323,11 @@ export function MusicGeneration() {
 
   // Ready state - main interface
   return (
-    <div className="flex-1 flex flex-col rounded-2xl overflow-hidden bg-white/[0.02] border border-white/[0.08]">
+    <div className="flex-1 flex flex-col rounded-2xl overflow-hidden bg-white/2 border border-white/8">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-white/[0.02]">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-white/2">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-pink-500 to-red-500 flex items-center justify-center text-sm">
+          <div className="w-8 h-8 rounded-lg bg-linear-to-br from-pink-500 to-red-500 flex items-center justify-center text-sm">
             🎵
           </div>
           <div>
@@ -348,7 +348,7 @@ export function MusicGeneration() {
       {/* Generated tracks */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {tracks.length === 0 && generationStatus === "idle" && (
-          <div className="flex-1 flex flex-col items-center justify-center h-full min-h-[200px]">
+          <div className="flex-1 flex flex-col items-center justify-center h-full min-h-50">
             <div className="text-center text-slate-500 mb-6">
               <p className="text-sm">Describe the music you want to create.</p>
               <p className="text-xs mt-1">The AI will generate a unique audio clip.</p>
@@ -371,11 +371,11 @@ export function MusicGeneration() {
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="p-4 rounded-xl bg-gradient-to-r from-pink-500/10 to-red-500/10 border border-pink-500/20"
+            className="p-4 rounded-xl bg-linear-to-r from-pink-500/10 to-red-500/10 border border-pink-500/20"
           >
             <div className="flex items-center gap-3">
               <div className="relative w-10 h-10">
-                <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-pink-500 to-red-500 animate-pulse" />
+                <div className="absolute inset-0 rounded-lg bg-linear-to-br from-pink-500 to-red-500 animate-pulse" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="flex gap-0.5">
                     {[...Array(4)].map((_, i) => (
@@ -410,8 +410,8 @@ export function MusicGeneration() {
               exit={{ opacity: 0 }}
               className={`p-4 rounded-xl border transition-all ${
                 currentlyPlaying === track.id
-                  ? "bg-gradient-to-r from-pink-500/10 to-red-500/10 border-pink-500/30"
-                  : "bg-white/5 border-white/10 hover:bg-white/[0.07]"
+                  ? "bg-linear-to-r from-pink-500/10 to-red-500/10 border-pink-500/30"
+                  : "bg-white/5 border-white/10 hover:bg-white/7"
               }`}
             >
               <div className="flex items-start gap-3">
@@ -421,7 +421,7 @@ export function MusicGeneration() {
                   }
                   className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${
                     currentlyPlaying === track.id
-                      ? "bg-gradient-to-br from-pink-500 to-red-500"
+                      ? "bg-linear-to-br from-pink-500 to-red-500"
                       : "bg-white/10 hover:bg-white/20"
                   }`}
                 >
@@ -459,7 +459,7 @@ export function MusicGeneration() {
       </div>
 
       {/* Input area */}
-      <div className="p-4 border-t border-white/10 bg-white/[0.02]">
+      <div className="p-4 border-t border-white/10 bg-white/2">
         <div className="flex gap-3">
           <input
             type="text"
@@ -473,7 +473,7 @@ export function MusicGeneration() {
           <button
             onClick={generateMusic}
             disabled={!prompt.trim() || generationStatus === "generating"}
-            className="px-6 py-3 rounded-xl bg-gradient-to-r from-pink-500 to-red-500 text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
+            className="px-6 py-3 rounded-xl bg-linear-to-r from-pink-500 to-red-500 text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
           >
             {generationStatus === "generating" ? (
               <div className="flex gap-1">

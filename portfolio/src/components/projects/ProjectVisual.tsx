@@ -73,6 +73,6 @@ export function ProjectVisual({ project, scrollProgress }: ProjectVisualProps) {
 
   // Fallback gradient
   return (
-    <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900" />
+    <div className="absolute inset-0 bg-linear-to-br from-slate-900 via-slate-800 to-slate-900" />
   );
 }

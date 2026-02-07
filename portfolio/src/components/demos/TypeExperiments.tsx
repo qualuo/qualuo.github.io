@@ -437,7 +437,7 @@ export function TypeExperiments() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
-        className="mt-6 p-6 bg-white/[0.03] border border-white/10 rounded-2xl"
+        className="mt-6 p-6 bg-white/3 border border-white/10 rounded-2xl"
       >
         {/* Effect Selector */}
         <div className="mb-6">

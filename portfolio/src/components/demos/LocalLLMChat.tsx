@@ -283,7 +283,7 @@ export function LocalLLMChat() {
           className="max-w-md w-full"
         >
           <div className="text-center mb-8">
-            <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-emerald-500 to-cyan-500 flex items-center justify-center mb-4 text-3xl">
+            <div className="w-16 h-16 mx-auto rounded-2xl bg-linear-to-br from-emerald-500 to-cyan-500 flex items-center justify-center mb-4 text-3xl">
               🧠
             </div>
             <h3 className="text-2xl font-bold text-white mb-2">
@@ -309,7 +309,7 @@ export function LocalLLMChat() {
                 className={`w-full p-4 rounded-xl border transition-all text-left ${
                   selectedModel === model.id
                     ? "bg-white/10 border-white/20"
-                    : "bg-white/5 border-white/10 hover:bg-white/[0.07]"
+                    : "bg-white/5 border-white/10 hover:bg-white/7"
                 }`}
               >
                 <div className="flex items-center justify-between">
@@ -343,7 +343,7 @@ export function LocalLLMChat() {
 
           <button
             onClick={loadModel}
-            className="w-full py-4 px-6 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-white font-medium hover:opacity-90 transition-opacity"
+            className="w-full py-4 px-6 rounded-xl bg-linear-to-r from-emerald-500 to-cyan-500 text-white font-medium hover:opacity-90 transition-opacity"
           >
             Load Model
           </button>
@@ -366,7 +366,7 @@ export function LocalLLMChat() {
           className="text-center max-w-md"
         >
           <div className="w-16 h-16 mx-auto mb-6 relative">
-            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-emerald-500 to-cyan-500 animate-pulse" />
+            <div className="absolute inset-0 rounded-2xl bg-linear-to-br from-emerald-500 to-cyan-500 animate-pulse" />
             <div className="absolute inset-0 flex items-center justify-center text-2xl">
               🧠
             </div>
@@ -387,11 +387,11 @@ export function LocalLLMChat() {
 
   // Render chat interface
   return (
-    <div className="flex-1 flex flex-col min-h-0 rounded-2xl overflow-hidden bg-white/[0.02] border border-white/[0.08]">
+    <div className="flex-1 flex flex-col min-h-0 rounded-2xl overflow-hidden bg-white/2 border border-white/8">
       {/* Chat header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-white/[0.02]">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-white/2">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-cyan-500 flex items-center justify-center text-sm">
+          <div className="w-8 h-8 rounded-lg bg-linear-to-br from-emerald-500 to-cyan-500 flex items-center justify-center text-sm">
             🧠
           </div>
           <div>
@@ -412,7 +412,7 @@ export function LocalLLMChat() {
       {/* Messages area */}
       <div data-lenis-prevent className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 && (
-          <div className="flex-1 flex items-center justify-center h-full min-h-[200px]">
+          <div className="flex-1 flex items-center justify-center h-full min-h-50">
             <div className="text-center text-slate-500">
               <p className="text-sm">Start a conversation with the AI.</p>
               <p className="text-xs mt-1">
@@ -437,11 +437,11 @@ export function LocalLLMChat() {
                 <div
                   className={`px-4 py-3 rounded-2xl ${
                     message.role === "user"
-                      ? "bg-gradient-to-r from-emerald-500 to-cyan-500 text-white"
+                      ? "bg-linear-to-r from-emerald-500 to-cyan-500 text-white"
                       : "bg-white/10 text-slate-200"
                   }`}
                 >
-                  <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
+                  <p className="text-sm whitespace-pre-wrap wrap-break-word">{message.content}</p>
                 </div>
                 <div className={`flex items-center gap-2 mt-1 px-1 ${message.role === "user" ? "justify-end" : "justify-start"}`}>
                   <span className="text-[10px] text-slate-600">{formatTime(message.timestamp)}</span>
@@ -493,7 +493,7 @@ export function LocalLLMChat() {
       </div>
 
       {/* Input area */}
-      <div className="p-4 border-t border-white/10 bg-white/[0.02]">
+      <div className="p-4 border-t border-white/10 bg-white/2">
         <div className="flex gap-3">
           <textarea
             ref={inputRef}
@@ -522,7 +522,7 @@ export function LocalLLMChat() {
             <button
               onClick={sendMessage}
               disabled={!input.trim()}
-              className="px-4 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
+              className="px-4 py-3 rounded-xl bg-linear-to-r from-emerald-500 to-cyan-500 text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
             >
               <svg
                 className="w-5 h-5"

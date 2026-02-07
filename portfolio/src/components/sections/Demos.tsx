@@ -32,7 +32,7 @@ function DemoCard({ demo, index }: { demo: Demo; index: number }) {
         >
           {/* Gradient background with glow */}
           <div
-            className={`absolute inset-0 bg-gradient-to-br ${demo.gradient} opacity-10 group-hover:opacity-20 transition-opacity duration-500`}
+            className={`absolute inset-0 bg-linear-to-br ${demo.gradient} opacity-10 group-hover:opacity-20 transition-opacity duration-500`}
           />
 
           {/* Subtle border glow on hover */}
@@ -45,12 +45,12 @@ function DemoCard({ demo, index }: { demo: Demo; index: number }) {
           />
 
           {/* Card content */}
-          <div className="relative p-8 md:p-10 bg-white/[0.03] border border-white/[0.08] rounded-3xl backdrop-blur-sm h-full flex flex-col">
+          <div className="relative p-8 md:p-10 bg-white/3 border border-white/8 rounded-3xl backdrop-blur-sm h-full flex flex-col">
             {/* Header with icon and status */}
             <div className="flex items-start justify-between mb-6">
               {/* Icon with gradient background */}
               <motion.div
-                className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${demo.gradient} flex items-center justify-center text-2xl shadow-lg`}
+                className={`w-14 h-14 rounded-2xl bg-linear-to-br ${demo.gradient} flex items-center justify-center text-2xl shadow-lg`}
                 whileHover={{ rotate: [0, -10, 10, 0] }}
                 transition={{ duration: 0.5 }}
               >
@@ -67,16 +67,16 @@ function DemoCard({ demo, index }: { demo: Demo; index: number }) {
 
             {/* Title and subtitle */}
             <div className="mb-4">
-              <h3 className="text-xl md:text-2xl font-semibold text-white mb-1 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-white group-hover:to-slate-300 transition-all duration-300">
+              <h3 className="text-xl md:text-2xl font-semibold text-white mb-1 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-linear-to-r group-hover:from-white group-hover:to-slate-300 transition-all duration-300">
                 {demo.title}
               </h3>
-              <p className={`text-sm font-medium bg-gradient-to-r ${demo.gradient} bg-clip-text text-transparent`}>
+              <p className={`text-sm font-medium bg-linear-to-r ${demo.gradient} bg-clip-text text-transparent`}>
                 {demo.subtitle}
               </p>
             </div>
 
             {/* Description */}
-            <p className="text-slate-400 text-sm leading-relaxed mb-6 flex-grow">
+            <p className="text-slate-400 text-sm leading-relaxed mb-6 grow">
               {demo.description}
             </p>
 
@@ -98,7 +98,7 @@ function DemoCard({ demo, index }: { demo: Demo; index: number }) {
                 <span className="text-slate-600">In Development</span>
               ) : (
                 <>
-                  <span className={`bg-gradient-to-r ${demo.gradient} bg-clip-text text-transparent`}>
+                  <span className={`bg-linear-to-r ${demo.gradient} bg-clip-text text-transparent`}>
                     Launch Demo
                   </span>
                   <motion.svg
@@ -114,7 +114,7 @@ function DemoCard({ demo, index }: { demo: Demo; index: number }) {
                       strokeLinejoin="round"
                       strokeWidth={2}
                       d="M17 8l4 4m0 0l-4 4m4-4H3"
-                      className={`stroke-current bg-gradient-to-r ${demo.gradient}`}
+                      className={`stroke-current bg-linear-to-r ${demo.gradient}`}
                       style={{ stroke: "url(#gradient)" }}
                     />
                   </motion.svg>
@@ -153,7 +153,7 @@ export function Demos() {
 
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
             <span className="text-white">Demo </span>
-            <span className="bg-gradient-to-r from-blue-400 via-violet-400 to-purple-400 bg-clip-text text-transparent">
+            <span className="bg-linear-to-r from-blue-400 via-violet-400 to-purple-400 bg-clip-text text-transparent">
               Laboratory
             </span>
           </h2>
@@ -170,7 +170,7 @@ export function Demos() {
           whileInView={{ scaleX: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 1, delay: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
-          className="w-full h-px bg-gradient-to-r from-transparent via-white/20 to-transparent mb-16"
+          className="w-full h-px bg-linear-to-r from-transparent via-white/20 to-transparent mb-16"
         />
 
         {/* Demo grid */}

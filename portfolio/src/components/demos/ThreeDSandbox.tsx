@@ -546,7 +546,7 @@ export function ThreeDSandbox() {
     <div className="relative w-full flex flex-col">
       {/* 3D Canvas */}
       <div
-        className="relative bg-gradient-to-b from-slate-900 to-black rounded-2xl overflow-hidden"
+        className="relative bg-linear-to-b from-slate-900 to-black rounded-2xl overflow-hidden"
         style={{ height: "55vh", minHeight: "400px" }}
       >
         <Canvas
@@ -584,7 +584,7 @@ export function ThreeDSandbox() {
         className="mt-6 space-y-4"
       >
         {/* Add shapes */}
-        <div className="p-4 bg-white/[0.03] border border-white/10 rounded-xl">
+        <div className="p-4 bg-white/3 border border-white/10 rounded-xl">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Primitives */}
             <div>
@@ -631,7 +631,7 @@ export function ThreeDSandbox() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Selected object controls */}
-          <div className="p-4 bg-white/[0.03] border border-white/10 rounded-xl">
+          <div className="p-4 bg-white/3 border border-white/10 rounded-xl">
             <label className="block text-xs text-slate-500 uppercase tracking-wide mb-3">
               Selected Object
             </label>
@@ -732,7 +732,7 @@ export function ThreeDSandbox() {
           </div>
 
           {/* Scene controls */}
-          <div className="p-4 bg-white/[0.03] border border-white/10 rounded-xl">
+          <div className="p-4 bg-white/3 border border-white/10 rounded-xl">
             <label className="block text-xs text-slate-500 uppercase tracking-wide mb-3">
               Scene Settings
             </label>

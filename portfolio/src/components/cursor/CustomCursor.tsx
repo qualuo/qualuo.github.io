@@ -92,7 +92,7 @@ export function CustomCursor() {
     <>
       {/* Main cursor dot/circle */}
       <motion.div
-        className="fixed top-0 left-0 pointer-events-none z-[9999]"
+        className="fixed top-0 left-0 pointer-events-none z-9999"
         style={{
           x: cursorX,
           y: cursorY,
@@ -220,7 +220,7 @@ export function CustomCursor() {
 
       {/* Outer ring - only for default state */}
       <motion.div
-        className="fixed top-0 left-0 pointer-events-none z-[9998]"
+        className="fixed top-0 left-0 pointer-events-none z-9998"
         style={{
           x: outerX,
           y: outerY,

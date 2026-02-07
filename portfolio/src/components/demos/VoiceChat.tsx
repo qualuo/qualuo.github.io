@@ -349,7 +349,7 @@ export function VoiceChat() {
           className="max-w-md w-full"
         >
           <div className="text-center mb-8">
-            <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center mb-4 text-3xl">
+            <div className="w-16 h-16 mx-auto rounded-2xl bg-linear-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center mb-4 text-3xl">
               🎙️
             </div>
             <h3 className="text-2xl font-bold text-white mb-2">Voice Chat</h3>
@@ -375,7 +375,7 @@ export function VoiceChat() {
                   className={`w-full p-3 rounded-xl border transition-all text-left ${
                     selectedWhisper === model.id
                       ? "bg-white/10 border-white/20"
-                      : "bg-white/5 border-white/10 hover:bg-white/[0.07]"
+                      : "bg-white/5 border-white/10 hover:bg-white/7"
                   }`}
                 >
                   <div className="flex items-center justify-between">
@@ -407,7 +407,7 @@ export function VoiceChat() {
                   className={`w-full p-3 rounded-xl border transition-all text-left ${
                     selectedLLM === model.id
                       ? "bg-white/10 border-white/20"
-                      : "bg-white/5 border-white/10 hover:bg-white/[0.07]"
+                      : "bg-white/5 border-white/10 hover:bg-white/7"
                   }`}
                 >
                   <div className="flex items-center justify-between">
@@ -430,7 +430,7 @@ export function VoiceChat() {
 
           <button
             onClick={loadModels}
-            className="w-full py-4 px-6 rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white font-medium hover:opacity-90 transition-opacity"
+            className="w-full py-4 px-6 rounded-xl bg-linear-to-r from-violet-500 to-fuchsia-500 text-white font-medium hover:opacity-90 transition-opacity"
           >
             Load Models
           </button>
@@ -449,7 +449,7 @@ export function VoiceChat() {
       <div className="flex-1 flex flex-col items-center justify-center p-8">
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center max-w-md">
           <div className="w-16 h-16 mx-auto mb-6 relative">
-            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-violet-500 to-fuchsia-500 animate-pulse" />
+            <div className="absolute inset-0 rounded-2xl bg-linear-to-br from-violet-500 to-fuchsia-500 animate-pulse" />
             <div className="absolute inset-0 flex items-center justify-center text-2xl">🎙️</div>
           </div>
           <h3 className="text-xl font-semibold text-white mb-4">Loading Models</h3>
@@ -482,11 +482,11 @@ export function VoiceChat() {
 
   // Render voice chat interface
   return (
-    <div className="flex-1 flex flex-col rounded-2xl overflow-hidden bg-white/[0.02] border border-white/[0.08]">
+    <div className="flex-1 flex flex-col rounded-2xl overflow-hidden bg-white/2 border border-white/8">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-white/[0.02]">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-white/2">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center text-sm">
+          <div className="w-8 h-8 rounded-lg bg-linear-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center text-sm">
             🎙️
           </div>
           <div>
@@ -518,7 +518,7 @@ export function VoiceChat() {
       {/* Messages area */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 && (
-          <div className="flex-1 flex items-center justify-center h-full min-h-[200px]">
+          <div className="flex-1 flex items-center justify-center h-full min-h-50">
             <div className="text-center text-slate-500">
               <p className="text-sm">Press the microphone to start talking.</p>
               <p className="text-xs mt-1">Everything runs locally on your device.</p>
@@ -538,7 +538,7 @@ export function VoiceChat() {
               <div
                 className={`max-w-[80%] px-4 py-3 rounded-2xl ${
                   message.role === "user"
-                    ? "bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white"
+                    ? "bg-linear-to-r from-violet-500 to-fuchsia-500 text-white"
                     : "bg-white/10 text-slate-200"
                 }`}
               >
@@ -552,7 +552,7 @@ export function VoiceChat() {
       </div>
 
       {/* Voice control area */}
-      <div className="p-6 border-t border-white/10 bg-white/[0.02]">
+      <div className="p-6 border-t border-white/10 bg-white/2">
         <div className="flex flex-col items-center">
           {/* Main mic button */}
           <motion.button
@@ -566,7 +566,7 @@ export function VoiceChat() {
                 ? "bg-fuchsia-500 shadow-lg shadow-fuchsia-500/30"
                 : voiceState === "transcribing" || voiceState === "thinking"
                 ? "bg-white/10 cursor-not-allowed"
-                : "bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:shadow-lg hover:shadow-violet-500/30"
+                : "bg-linear-to-r from-violet-500 to-fuchsia-500 hover:shadow-lg hover:shadow-violet-500/30"
             }`}
           >
             {/* Pulse animation when recording */}
