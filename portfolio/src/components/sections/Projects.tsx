@@ -8,7 +8,8 @@ import { ProjectHero } from "@/components/projects/ProjectHero";
 import { ProjectProgress } from "@/components/projects/ProjectProgress";
 import { AbstractVisual } from "@/components/projects/visuals/AbstractVisual";
 
-const AUTO_SCROLL_SPEED = 0.8; // pixels per frame (~48px/s at 60fps)
+const AUTO_SCROLL_SPEED = 0.8; // desktop: pixels per frame (~48px/s at 60fps)
+const AUTO_SCROLL_SPEED_MOBILE = 1.6; // mobile: faster (~96px/s at 60fps)
 const IDLE_RESUME_MS = 30_000; // 30 seconds
 
 // Mobile project card component
@@ -164,7 +165,8 @@ export function Projects() {
         return;
       }
 
-      window.scrollBy(0, AUTO_SCROLL_SPEED);
+      const speed = window.innerWidth < 1024 ? AUTO_SCROLL_SPEED_MOBILE : AUTO_SCROLL_SPEED;
+      window.scrollBy(0, speed);
       rafId = requestAnimationFrame(tick);
     };
 
