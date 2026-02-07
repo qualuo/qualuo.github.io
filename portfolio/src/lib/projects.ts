@@ -102,7 +102,7 @@ export const projects: Project[] = [
     category: "Web & Visualization",
     description:
       "Developed an interactive 3D visualization tool for urban planning, enabling stakeholders to explore and evaluate city development proposals in an immersive digital environment.",
-    tech: ["WebGL", "Three.js", "TypeScript", "GIS Data"],
+    tech: ["WebGL", "Cesium", "GIS Data"],
     impact: "Modernizing municipal planning processes",
     visualConfig: {
       type: "city",

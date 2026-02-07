@@ -2,6 +2,7 @@
 
 import { useRef, useEffect, useMemo, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { MotionValue } from "framer-motion";
 import * as THREE from "three";
 
 interface AbstractVisualProps {
@@ -10,11 +11,21 @@ interface AbstractVisualProps {
     primary: string;
     secondary: string;
   };
-  isActive: boolean;
+  scrollProgress: MotionValue<number>;
+}
+
+function useIsActive(scrollProgress: MotionValue<number>) {
+  const ref = useRef(false);
+  useFrame(() => {
+    const v = scrollProgress.get();
+    ref.current = v > 0.15 && v < 0.85;
+  });
+  return ref;
 }
 
 // Neural Network Visual (for AI & Innovation)
-function NeuralNetworkVisual({ colors, isActive }: { colors: AbstractVisualProps["colors"]; isActive: boolean }) {
+function NeuralNetworkVisual({ colors, scrollProgress }: { colors: AbstractVisualProps["colors"]; scrollProgress: MotionValue<number> }) {
+  const isActive = useIsActive(scrollProgress);
   const groupRef = useRef<THREE.Group>(null);
   const nodesRef = useRef<THREE.InstancedMesh>(null);
   const linesRef = useRef<THREE.LineSegments>(null);
@@ -67,7 +78,7 @@ function NeuralNetworkVisual({ colors, isActive }: { colors: AbstractVisualProps
   }, [nodes]);
 
   useFrame((_, delta) => {
-    if (!isActive) return;
+    if (!isActive.current) return;
     time.current += delta;
 
     if (groupRef.current) {
@@ -141,7 +152,8 @@ function NeuralNetworkVisual({ colors, isActive }: { colors: AbstractVisualProps
 }
 
 // Grid Visual (for Architecture)
-function GridVisual({ colors, isActive }: { colors: AbstractVisualProps["colors"]; isActive: boolean }) {
+function GridVisual({ colors, scrollProgress }: { colors: AbstractVisualProps["colors"]; scrollProgress: MotionValue<number> }) {
+  const isActive = useIsActive(scrollProgress);
   const groupRef = useRef<THREE.Group>(null);
   const time = useRef(0);
 
@@ -149,7 +161,7 @@ function GridVisual({ colors, isActive }: { colors: AbstractVisualProps["colors"
   const gridDivisions = 20;
 
   useFrame((_, delta) => {
-    if (!isActive) return;
+    if (!isActive.current) return;
     time.current += delta;
 
     if (groupRef.current) {
@@ -188,7 +200,8 @@ function GridVisual({ colors, isActive }: { colors: AbstractVisualProps["colors"
 }
 
 // Flow Visual (for Data Engineering) - Org Network with pulsing connections
-function FlowVisual({ colors, isActive }: { colors: AbstractVisualProps["colors"]; isActive: boolean }) {
+function FlowVisual({ colors, scrollProgress }: { colors: AbstractVisualProps["colors"]; scrollProgress: MotionValue<number> }) {
+  const isActive = useIsActive(scrollProgress);
   const groupRef = useRef<THREE.Group>(null);
   const nodeRefs = useRef<THREE.Mesh[]>([]);
   const pulseRefs = useRef<THREE.Mesh[]>([]);
@@ -267,7 +280,7 @@ function FlowVisual({ colors, isActive }: { colors: AbstractVisualProps["colors"
   }, []);
 
   useFrame((_, delta) => {
-    if (!isActive) return;
+    if (!isActive.current) return;
     time.current += delta;
 
     // Gentle rotation
@@ -364,7 +377,8 @@ function FlowVisual({ colors, isActive }: { colors: AbstractVisualProps["colors"
 }
 
 // City Visual (for Web & Visualization) - Isometric city with buildings
-function CityVisual({ colors, isActive }: { colors: AbstractVisualProps["colors"]; isActive: boolean }) {
+function CityVisual({ colors, scrollProgress }: { colors: AbstractVisualProps["colors"]; scrollProgress: MotionValue<number> }) {
+  const isActive = useIsActive(scrollProgress);
   const groupRef = useRef<THREE.Group>(null);
   const buildingRefs = useRef<THREE.Mesh[]>([]);
   const time = useRef(0);
@@ -397,12 +411,12 @@ function CityVisual({ colors, isActive }: { colors: AbstractVisualProps["colors"
   }, []);
 
   useFrame((_, delta) => {
-    if (!isActive) return;
+    if (!isActive.current) return;
     time.current += delta;
 
     if (groupRef.current) {
       groupRef.current.rotation.y += delta * 0.05;
-      groupRef.current.rotation.x = -0.5 + Math.sin(time.current * 0.2) * 0.05;
+      groupRef.current.rotation.x = 0.8 + Math.sin(time.current * 0.2) * 0.05;
     }
 
     // Animate building heights slightly
@@ -464,7 +478,8 @@ function CityVisual({ colors, isActive }: { colors: AbstractVisualProps["colors"
 }
 
 // Chess Visual (for Game Development) - 3D chess board with pieces
-function ChessVisual({ colors, isActive }: { colors: AbstractVisualProps["colors"]; isActive: boolean }) {
+function ChessVisual({ colors, scrollProgress }: { colors: AbstractVisualProps["colors"]; scrollProgress: MotionValue<number> }) {
+  const isActive = useIsActive(scrollProgress);
   const groupRef = useRef<THREE.Group>(null);
   const pieceRefs = useRef<THREE.Mesh[]>([]);
   const time = useRef(0);
@@ -510,7 +525,7 @@ function ChessVisual({ colors, isActive }: { colors: AbstractVisualProps["colors
   }, []);
 
   useFrame((_, delta) => {
-    if (!isActive) return;
+    if (!isActive.current) return;
     time.current += delta;
 
     if (groupRef.current) {
@@ -610,7 +625,8 @@ function TrackLine({ points, color, opacity }: { points: THREE.Vector3[]; color:
 }
 
 // Circuit Visual (for Critical Infrastructure) - Railway Network with realistic trains
-function CircuitVisual({ colors, isActive }: { colors: AbstractVisualProps["colors"]; isActive: boolean }) {
+function CircuitVisual({ colors, scrollProgress }: { colors: AbstractVisualProps["colors"]; scrollProgress: MotionValue<number> }) {
+  const isActive = useIsActive(scrollProgress);
   const groupRef = useRef<THREE.Group>(null);
   const trainRefs = useRef<THREE.Group[]>([]);
   const signalRefs = useRef<THREE.Mesh[]>([]);
@@ -718,7 +734,7 @@ function CircuitVisual({ colors, isActive }: { colors: AbstractVisualProps["colo
   const targetColors = useRef(signals.map(() => new THREE.Color(0x22cc66)));
 
   useFrame((_, delta) => {
-    if (!isActive) return;
+    if (!isActive.current) return;
     time.current += delta;
 
     // Subtle perspective rotation
@@ -1012,7 +1028,7 @@ function CircuitVisual({ colors, isActive }: { colors: AbstractVisualProps["colo
 }
 
 // Scene wrapper
-function Scene({ type, colors, isActive }: AbstractVisualProps) {
+function Scene({ type, colors, scrollProgress }: AbstractVisualProps) {
   const { camera } = useThree();
 
   useEffect(() => {
@@ -1021,23 +1037,23 @@ function Scene({ type, colors, isActive }: AbstractVisualProps) {
 
   switch (type) {
     case "neural":
-      return <NeuralNetworkVisual colors={colors} isActive={isActive} />;
+      return <NeuralNetworkVisual colors={colors} scrollProgress={scrollProgress} />;
     case "grid":
-      return <GridVisual colors={colors} isActive={isActive} />;
+      return <GridVisual colors={colors} scrollProgress={scrollProgress} />;
     case "flow":
-      return <FlowVisual colors={colors} isActive={isActive} />;
+      return <FlowVisual colors={colors} scrollProgress={scrollProgress} />;
     case "city":
-      return <CityVisual colors={colors} isActive={isActive} />;
+      return <CityVisual colors={colors} scrollProgress={scrollProgress} />;
     case "chess":
-      return <ChessVisual colors={colors} isActive={isActive} />;
+      return <ChessVisual colors={colors} scrollProgress={scrollProgress} />;
     case "circuit":
-      return <CircuitVisual colors={colors} isActive={isActive} />;
+      return <CircuitVisual colors={colors} scrollProgress={scrollProgress} />;
     default:
-      return <NeuralNetworkVisual colors={colors} isActive={isActive} />;
+      return <NeuralNetworkVisual colors={colors} scrollProgress={scrollProgress} />;
   }
 }
 
-export function AbstractVisual({ type, colors, isActive }: AbstractVisualProps) {
+export function AbstractVisual({ type, colors, scrollProgress }: AbstractVisualProps) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -1073,7 +1089,7 @@ export function AbstractVisual({ type, colors, isActive }: AbstractVisualProps) 
         }}
         dpr={[1, 1.5]}
       >
-        <Scene type={type} colors={colors} isActive={isActive} />
+        <Scene type={type} colors={colors} scrollProgress={scrollProgress} />
       </Canvas>
     </div>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect } from "react";
 import { MotionValue } from "framer-motion";
 import { Project } from "@/lib/projects";
 import { AbstractVisual } from "./visuals/AbstractVisual";
@@ -12,13 +12,11 @@ interface ProjectVisualProps {
 
 export function ProjectVisual({ project, scrollProgress }: ProjectVisualProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [isInView, setIsInView] = useState(false);
 
-  // Control video playback based on scroll position
+  // Control video playback based on scroll position (ref-based, no re-renders)
   useEffect(() => {
     const unsubscribe = scrollProgress.on("change", (value) => {
       const inView = value > 0.15 && value < 0.85;
-      setIsInView(inView);
 
       if (videoRef.current) {
         if (inView) {
@@ -65,7 +63,7 @@ export function ProjectVisual({ project, scrollProgress }: ProjectVisualProps) {
       <AbstractVisual
         type={project.visualConfig.type}
         colors={project.visualConfig.colors}
-        isActive={isInView}
+        scrollProgress={scrollProgress}
       />
     );
   }
