@@ -1,10 +1,26 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useMemo } from "react";
 import { loveTheme } from "@/lib/creativeWorks";
+
+function createPRNG(seed = 1) {
+  let s = seed;
+  return () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; };
+}
 
 export function HeartbeatPulse() {
   const { heartbeat, colors } = loveTheme;
+
+  const particles = useMemo(() => {
+    const rand = createPRNG(77);
+    return Array.from({ length: 12 }, () => ({
+      size: 4 + rand() * 4,
+      left: `${10 + rand() * 80}%`,
+      top: `${10 + rand() * 80}%`,
+      duration: 3 + rand() * 2,
+    }));
+  }, []);
 
   return (
     <div className="fixed inset-0 pointer-events-none overflow-hidden">
@@ -74,15 +90,15 @@ export function HeartbeatPulse() {
       </motion.div>
 
       {/* Floating warmth particles */}
-      {[...Array(12)].map((_, i) => (
+      {particles.map((p, i) => (
         <motion.div
           key={i}
           className="absolute rounded-full"
           style={{
-            width: 4 + Math.random() * 4,
-            height: 4 + Math.random() * 4,
-            left: `${10 + Math.random() * 80}%`,
-            top: `${10 + Math.random() * 80}%`,
+            width: p.size,
+            height: p.size,
+            left: p.left,
+            top: p.top,
             backgroundColor: i % 3 === 0 ? colors.softGold : colors.warmBlush,
           }}
           animate={{
@@ -91,7 +107,7 @@ export function HeartbeatPulse() {
             scale: [1, 1.2, 1],
           }}
           transition={{
-            duration: 3 + Math.random() * 2,
+            duration: p.duration,
             repeat: Infinity,
             ease: "easeInOut",
             delay: i * 0.3,

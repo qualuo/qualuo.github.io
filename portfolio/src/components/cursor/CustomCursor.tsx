@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { motion, useMotionValue, useSpring, AnimatePresence } from "framer-motion";
-import { useCursor, CursorVariant } from "./CursorProvider";
+import { useCursor } from "./CursorProvider";
 
 const CURSOR_SIZE = {
   default: 8,
@@ -27,7 +27,11 @@ const OUTER_SIZE = {
 export function CustomCursor() {
   const { variant, text, isHovering } = useCursor();
   const [isVisible, setIsVisible] = useState(false);
-  const [isTouchDevice, setIsTouchDevice] = useState(false);
+  const isTouchDevice = useSyncExternalStore(
+    () => () => {},
+    () => "ontouchstart" in window || navigator.maxTouchPoints > 0,
+    () => false
+  );
 
   // Raw mouse position
   const mouseX = useMotionValue(-100);
@@ -42,14 +46,6 @@ export function CustomCursor() {
   const outerSpringConfig = { damping: 20, stiffness: 200, mass: 0.8 };
   const outerX = useSpring(mouseX, outerSpringConfig);
   const outerY = useSpring(mouseY, outerSpringConfig);
-
-  // Detect touch devices
-  useEffect(() => {
-    const checkTouch = () => {
-      return "ontouchstart" in window || navigator.maxTouchPoints > 0;
-    };
-    setIsTouchDevice(checkTouch());
-  }, []);
 
   // Track mouse position
   useEffect(() => {

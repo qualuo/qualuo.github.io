@@ -235,7 +235,7 @@ export function MusicGeneration() {
     }
   };
 
-  const useExamplePrompt = (example: string) => {
+  const handleExamplePrompt = (example: string) => {
     setPrompt(example);
   };
 
@@ -357,7 +357,7 @@ export function MusicGeneration() {
               {EXAMPLE_PROMPTS.map((example) => (
                 <button
                   key={example}
-                  onClick={() => useExamplePrompt(example)}
+                  onClick={() => handleExamplePrompt(example)}
                   className="px-3 py-1.5 text-xs rounded-full bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white transition-colors border border-white/10"
                 >
                   {example}

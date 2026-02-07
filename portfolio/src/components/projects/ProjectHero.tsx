@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useEffect } from "react";
-import { motion, useScroll, useTransform, MotionValue } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { Project, categoryThemes } from "@/lib/projects";
 import { ProjectVisual } from "./ProjectVisual";
 import { ProjectContent } from "./ProjectContent";
@@ -9,17 +9,13 @@ import { ProjectContent } from "./ProjectContent";
 interface ProjectHeroProps {
   project: Project;
   index: number;
-  totalProjects: number;
   onActive?: () => void;
-  globalProgress: MotionValue<number>;
 }
 
 export function ProjectHero({
   project,
   index,
-  totalProjects,
   onActive,
-  globalProgress,
 }: ProjectHeroProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const theme = categoryThemes[project.category] || categoryThemes["AI & Innovation"];

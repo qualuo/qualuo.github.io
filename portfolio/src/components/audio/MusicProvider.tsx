@@ -22,7 +22,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
     // Create audio element
     const audio = new Audio("/music/ambient.mp3");
     audio.loop = true;
-    audio.volume = volume;
+    audio.volume = 0.15;
     audio.preload = "none";
 
     audio.addEventListener("canplaythrough", () => {

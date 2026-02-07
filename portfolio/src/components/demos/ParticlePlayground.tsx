@@ -57,7 +57,7 @@ export function ParticlePlayground() {
   const [config, setConfig] = useState<Config>(DEFAULT_CONFIG);
   const [fps, setFps] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
-  const lastTimeRef = useRef(performance.now());
+  const lastTimeRef = useRef(0);
   const frameCountRef = useRef(0);
 
   const getRandomColor = useCallback(() => {
@@ -239,24 +239,6 @@ export function ParticlePlayground() {
     }
   }, [config.trailEffect, config.mouseRadius, config.mouseMode]);
 
-  const animate = useCallback(() => {
-    if (!isPaused) {
-      updateParticles();
-      render();
-
-      // FPS counter
-      frameCountRef.current++;
-      const now = performance.now();
-      if (now - lastTimeRef.current >= 1000) {
-        setFps(frameCountRef.current);
-        frameCountRef.current = 0;
-        lastTimeRef.current = now;
-      }
-    }
-
-    animationRef.current = requestAnimationFrame(animate);
-  }, [isPaused, updateParticles, render]);
-
   // Initialize and resize
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -281,9 +263,27 @@ export function ParticlePlayground() {
 
   // Animation loop
   useEffect(() => {
+    const animate = () => {
+      if (!isPaused) {
+        updateParticles();
+        render();
+
+        // FPS counter
+        frameCountRef.current++;
+        const now = performance.now();
+        if (now - lastTimeRef.current >= 1000) {
+          setFps(frameCountRef.current);
+          frameCountRef.current = 0;
+          lastTimeRef.current = now;
+        }
+      }
+
+      animationRef.current = requestAnimationFrame(animate);
+    };
+
     animationRef.current = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(animationRef.current);
-  }, [animate]);
+  }, [isPaused, updateParticles, render]);
 
   // Reinitialize when particle count changes
   useEffect(() => {
@@ -326,35 +326,39 @@ export function ParticlePlayground() {
     initParticles();
   };
 
-  const handleExplode = () => {
+  const handleExplode = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
+    const particles = particlesRef.current;
 
-    for (const p of particlesRef.current) {
+    for (let i = 0; i < particles.length; i++) {
+      const p = particles[i];
       const dx = p.x - centerX;
       const dy = p.y - centerY;
       const dist = Math.sqrt(dx * dx + dy * dy) || 1;
       p.vx = (dx / dist) * 15;
       p.vy = (dy / dist) * 15;
     }
-  };
+  }, []);
 
-  const handleImplode = () => {
+  const handleImplode = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
+    const particles = particlesRef.current;
 
-    for (const p of particlesRef.current) {
+    for (let i = 0; i < particles.length; i++) {
+      const p = particles[i];
       const dx = centerX - p.x;
       const dy = centerY - p.y;
       const dist = Math.sqrt(dx * dx + dy * dy) || 1;
       p.vx = (dx / dist) * 10;
       p.vy = (dy / dist) * 10;
     }
-  };
+  }, []);
 
   return (
     <div className="relative w-full flex flex-col">

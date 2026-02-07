@@ -3,11 +3,11 @@
 import { useRef, useMemo, useEffect } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
+import { WebGLErrorBoundary } from "@/components/ui/WebGLErrorBoundary";
 
-// Refined configuration — optimized for performance
 const CONFIG = {
   radius: 1.4,
-  detail: 8, // Reduced further for laptop performance (was 12)
+  detail: 8,
   noise: {
     scale: 0.8,
     speed: 0.12,
@@ -23,6 +23,15 @@ const CONFIG = {
   breathe: {
     speed: 0.4,
     amplitude: 0.03,
+  },
+  explosion: {
+    minSpeed: 1.5,
+    maxSpeed: 4.0,
+    spread: 1.2,
+    drag: 0.955,
+    duration: 2.2,
+    reformDuration: 1.8,
+    reformThreshold: 0.001,
   },
 };
 
@@ -96,30 +105,38 @@ function noise3D(x: number, y: number, z: number): number {
   );
 }
 
-interface BlobProps {
+type Phase = "idle" | "exploding" | "reforming";
+
+interface SceneProps {
   mousePosition: React.MutableRefObject<{ x: number; y: number }>;
+  shouldExplode: React.MutableRefObject<boolean>;
 }
 
-function Blob({ mousePosition }: BlobProps) {
+function BlobScene({ mousePosition, shouldExplode }: SceneProps) {
+  const groupRef = useRef<THREE.Group>(null);
   const meshRef = useRef<THREE.Mesh>(null);
+  const pointsRef = useRef<THREE.Points>(null);
   const smoothMouse = useRef({ x: 0, y: 0 });
   const time = useRef(0);
   const frameCount = useRef(0);
-
-  // Store original positions
   const originalPositions = useRef<Float32Array | null>(null);
+  const phase = useRef<Phase>("idle");
+  const phaseTime = useRef(0);
+  const particleVelocities = useRef<Float32Array | null>(null);
+  const { camera } = useThree();
 
-  // Custom shader with iridescent effect
+  useEffect(() => {
+    camera.position.set(0, 0, 4);
+  }, [camera]);
+
+  // Blob iridescent shader
   const shaderMaterial = useMemo(() => {
     return new THREE.ShaderMaterial({
-      uniforms: {
-        uTime: { value: 0 },
-      },
+      uniforms: { uTime: { value: 0 }, uOpacity: { value: 1.0 } },
       vertexShader: `
         varying vec3 vNormal;
         varying vec3 vPosition;
         varying vec3 vWorldNormal;
-
         void main() {
           vNormal = normalize(normalMatrix * normal);
           vWorldNormal = normalize(mat3(modelMatrix) * normal);
@@ -129,12 +146,53 @@ function Blob({ mousePosition }: BlobProps) {
       `,
       fragmentShader: `
         uniform float uTime;
-
+        uniform float uOpacity;
         varying vec3 vNormal;
         varying vec3 vPosition;
         varying vec3 vWorldNormal;
+        vec3 palette(float t) {
+          vec3 a = vec3(0.8, 0.8, 0.9);
+          vec3 b = vec3(0.2, 0.2, 0.3);
+          vec3 c = vec3(0.6, 0.8, 1.0);
+          vec3 d = vec3(0.0, 0.1, 0.2);
+          return a + b * cos(6.28318 * (c * t + d));
+        }
+        void main() {
+          vec3 viewDirection = normalize(cameraPosition - vPosition);
+          float fresnel = 1.0 - max(dot(viewDirection, vNormal), 0.0);
+          fresnel = pow(fresnel, 2.5);
+          float iridescence = dot(vWorldNormal, vec3(0.0, 1.0, 0.0)) * 0.5 + 0.5;
+          iridescence += fresnel * 0.3;
+          iridescence += sin(uTime * 0.3) * 0.1;
+          vec3 iriColor = palette(iridescence + uTime * 0.05);
+          vec3 baseColor = vec3(0.95, 0.95, 1.0);
+          vec3 color = mix(baseColor, iriColor, fresnel * 0.6 + 0.15);
+          float innerGlow = 1.0 - fresnel;
+          color += vec3(0.1, 0.15, 0.2) * innerGlow * 0.3;
+          float breathe = sin(uTime * 0.5) * 0.05 + 0.85;
+          float alpha = (breathe - fresnel * 0.25) * uOpacity;
+          gl_FragColor = vec4(color, alpha);
+        }
+      `,
+      transparent: true,
+      side: THREE.FrontSide,
+    });
+  }, []);
 
-        // Soft iridescent palette
+  // Particle shader — crisp iridescent points (same palette as blob)
+  const particleMaterial = useMemo(() => {
+    return new THREE.ShaderMaterial({
+      uniforms: {
+        uTime: { value: 0 },
+        uOpacity: { value: 1.0 },
+        uScale: { value: 1.0 },
+      },
+      vertexShader: `
+        uniform float uScale;
+        uniform float uTime;
+        attribute float aRandom;
+        varying vec3 vColor;
+
         vec3 palette(float t) {
           vec3 a = vec3(0.8, 0.8, 0.9);
           vec3 b = vec3(0.2, 0.2, 0.3);
@@ -144,46 +202,50 @@ function Blob({ mousePosition }: BlobProps) {
         }
 
         void main() {
-          vec3 viewDirection = normalize(cameraPosition - vPosition);
-
-          // Fresnel for edge glow
-          float fresnel = 1.0 - max(dot(viewDirection, vNormal), 0.0);
-          fresnel = pow(fresnel, 2.5);
-
-          // Iridescence based on view angle + normal
-          float iridescence = dot(vWorldNormal, vec3(0.0, 1.0, 0.0)) * 0.5 + 0.5;
-          iridescence += fresnel * 0.3;
-          iridescence += sin(uTime * 0.3) * 0.1;
-
-          // Subtle color shift
+          vec3 dir = normalize(position);
+          float iridescence = dir.y * 0.5 + 0.5 + sin(uTime * 0.3) * 0.1;
           vec3 iriColor = palette(iridescence + uTime * 0.05);
-
-          // Base white with iridescent tint
           vec3 baseColor = vec3(0.95, 0.95, 1.0);
-          vec3 color = mix(baseColor, iriColor, fresnel * 0.6 + 0.15);
+          vColor = mix(baseColor, iriColor, 0.45);
 
-          // Add subtle inner glow
-          float innerGlow = 1.0 - fresnel;
-          color += vec3(0.1, 0.15, 0.2) * innerGlow * 0.3;
-
-          // Soft alpha with breathing
-          float breathe = sin(uTime * 0.5) * 0.05 + 0.85;
-          float alpha = breathe - fresnel * 0.25;
-
-          gl_FragColor = vec4(color, alpha);
+          vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+          gl_PointSize = (0.4 + aRandom * 0.6) * uScale * (30.0 / -mvPosition.z);
+          gl_Position = projectionMatrix * mvPosition;
+        }
+      `,
+      fragmentShader: `
+        uniform float uOpacity;
+        varying vec3 vColor;
+        void main() {
+          float dist = length(gl_PointCoord - vec2(0.5));
+          if (dist > 0.5) discard;
+          float alpha = 1.0 - smoothstep(0.35, 0.5, dist);
+          gl_FragColor = vec4(vColor, alpha * 0.9 * uOpacity);
         }
       `,
       transparent: true,
-      side: THREE.FrontSide,
+      depthWrite: false,
     });
   }, []);
 
+  // Store original positions & init particle geometry
   useEffect(() => {
-    if (meshRef.current) {
-      const geometry = meshRef.current.geometry as THREE.IcosahedronGeometry;
-      originalPositions.current = new Float32Array(
-        geometry.attributes.position.array
-      );
+    if (!meshRef.current) return;
+    originalPositions.current = new Float32Array(
+      meshRef.current.geometry.attributes.position.array
+    );
+
+    if (pointsRef.current) {
+      const count = meshRef.current.geometry.attributes.position.count;
+      const positions = new Float32Array(count * 3);
+      const randoms = new Float32Array(count);
+      for (let i = 0; i < count; i++) randoms[i] = Math.random();
+
+      const geom = new THREE.BufferGeometry();
+      geom.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+      geom.setAttribute("aRandom", new THREE.BufferAttribute(randoms, 1));
+      pointsRef.current.geometry.dispose();
+      pointsRef.current.geometry = geom;
     }
   }, []);
 
@@ -191,85 +253,241 @@ function Blob({ mousePosition }: BlobProps) {
     time.current += delta;
     frameCount.current += 1;
 
-    // Smooth mouse following
     smoothMouse.current.x +=
       (mousePosition.current.x - smoothMouse.current.x) * CONFIG.mouse.smoothing;
     smoothMouse.current.y +=
       (mousePosition.current.y - smoothMouse.current.y) * CONFIG.mouse.smoothing;
 
-    if (meshRef.current && originalPositions.current) {
-      // Gentle rotation — runs every frame (cheap)
-      meshRef.current.rotation.y += delta * CONFIG.rotation.speed;
-      meshRef.current.rotation.x =
+    // --- Explosion trigger ---
+    if (shouldExplode.current) {
+      shouldExplode.current = false;
+      if (phase.current === "idle" && meshRef.current && pointsRef.current) {
+        phase.current = "exploding";
+        phaseTime.current = 0;
+
+        const meshPos = meshRef.current.geometry.attributes.position
+          .array as Float32Array;
+        const particlePos = pointsRef.current.geometry.attributes.position
+          .array as Float32Array;
+        particleVelocities.current = new Float32Array(meshPos.length);
+
+        for (let i = 0; i < meshPos.length; i += 3) {
+          particlePos[i] = meshPos[i];
+          particlePos[i + 1] = meshPos[i + 1];
+          particlePos[i + 2] = meshPos[i + 2];
+
+          const x = meshPos[i],
+            y = meshPos[i + 1],
+            z = meshPos[i + 2];
+          const len = Math.sqrt(x * x + y * y + z * z) || 1;
+          const speed =
+            CONFIG.explosion.minSpeed +
+            Math.random() *
+              (CONFIG.explosion.maxSpeed - CONFIG.explosion.minSpeed);
+
+          particleVelocities.current[i] =
+            (x / len) * speed +
+            (Math.random() - 0.5) * CONFIG.explosion.spread;
+          particleVelocities.current[i + 1] =
+            (y / len) * speed +
+            (Math.random() - 0.5) * CONFIG.explosion.spread;
+          particleVelocities.current[i + 2] =
+            (z / len) * speed +
+            (Math.random() - 0.5) * CONFIG.explosion.spread;
+        }
+
+        pointsRef.current.geometry.attributes.position.needsUpdate = true;
+      }
+    }
+
+    // --- Group rotation & breathing (always) ---
+    if (groupRef.current) {
+      groupRef.current.rotation.y += delta * CONFIG.rotation.speed;
+      groupRef.current.rotation.x =
         smoothMouse.current.y * CONFIG.mouse.influence;
-      meshRef.current.rotation.z =
+      groupRef.current.rotation.z =
         smoothMouse.current.x * CONFIG.mouse.influence * 0.5;
+      const breathe =
+        1 +
+        Math.sin(time.current * CONFIG.breathe.speed) *
+          CONFIG.breathe.amplitude;
+      groupRef.current.scale.setScalar(breathe);
+    }
 
-      // Subtle breathing scale
-      const breathe = 1 + Math.sin(time.current * CONFIG.breathe.speed) * CONFIG.breathe.amplitude;
-      meshRef.current.scale.setScalar(breathe);
+    // --- Helper: morph mesh vertices to current noise state ---
+    const morphMesh = () => {
+      if (!meshRef.current || !originalPositions.current) return;
+      const geometry = meshRef.current.geometry;
+      const positions = geometry.attributes.position.array as Float32Array;
+      const original = originalPositions.current;
 
-      // Morph vertices with noise — every 6th frame for better laptop perf
-      if (frameCount.current % 6 === 0) {
-        const geometry = meshRef.current.geometry as THREE.IcosahedronGeometry;
-        const positions = geometry.attributes.position.array as Float32Array;
-        const original = originalPositions.current;
+      for (let i = 0; i < positions.length; i += 3) {
+        const ox = original[i],
+          oy = original[i + 1],
+          oz = original[i + 2];
+        const length = Math.sqrt(ox * ox + oy * oy + oz * oz);
+        const nx = ox / length,
+          ny = oy / length,
+          nz = oz / length;
+
+        const noiseVal = noise3D(
+          nx * CONFIG.noise.scale + time.current * CONFIG.noise.speed,
+          ny * CONFIG.noise.scale + time.current * CONFIG.noise.speed * 0.8,
+          nz * CONFIG.noise.scale + time.current * CONFIG.noise.speed * 0.6
+        );
+
+        const displacement = CONFIG.radius + noiseVal * CONFIG.noise.amplitude;
+        positions[i] = nx * displacement;
+        positions[i + 1] = ny * displacement;
+        positions[i + 2] = nz * displacement;
+      }
+
+      geometry.attributes.position.needsUpdate = true;
+      geometry.computeVertexNormals();
+    };
+
+    // --- Phase logic ---
+    if (phase.current === "idle") {
+      if (meshRef.current) meshRef.current.visible = true;
+      if (pointsRef.current) pointsRef.current.visible = false;
+      shaderMaterial.uniforms.uOpacity.value = 1.0;
+
+      if (frameCount.current % 6 === 0) morphMesh();
+    } else {
+      phaseTime.current += delta;
+
+      if (
+        phase.current === "exploding" &&
+        pointsRef.current &&
+        particleVelocities.current
+      ) {
+        // Hide mesh, show particles at full
+        if (meshRef.current) meshRef.current.visible = false;
+        if (pointsRef.current) pointsRef.current.visible = true;
+        particleMaterial.uniforms.uOpacity.value = 1.0;
+
+        // Size swell: quick burst then settle
+        const et = phaseTime.current / CONFIG.explosion.duration;
+        const swell = et < 0.15 ? 1.0 + et / 0.15 * 0.6 : 1.6 - (et - 0.15) * 0.7;
+        particleMaterial.uniforms.uScale.value = Math.max(swell, 0.9);
+
+        const positions = pointsRef.current.geometry.attributes.position
+          .array as Float32Array;
 
         for (let i = 0; i < positions.length; i += 3) {
-          const ox = original[i];
-          const oy = original[i + 1];
-          const oz = original[i + 2];
+          positions[i] += particleVelocities.current[i] * delta;
+          positions[i + 1] += particleVelocities.current[i + 1] * delta;
+          positions[i + 2] += particleVelocities.current[i + 2] * delta;
 
-          // Normalize to get direction
-          const length = Math.sqrt(ox * ox + oy * oy + oz * oz);
-          const nx = ox / length;
-          const ny = oy / length;
-          const nz = oz / length;
+          particleVelocities.current[i] *= CONFIG.explosion.drag;
+          particleVelocities.current[i + 1] *= CONFIG.explosion.drag;
+          particleVelocities.current[i + 2] *= CONFIG.explosion.drag;
+        }
 
-          // Single octave noise — removed second octave for performance
+        pointsRef.current.geometry.attributes.position.needsUpdate = true;
+
+        if (phaseTime.current > CONFIG.explosion.duration) {
+          phase.current = "reforming";
+          phaseTime.current = 0;
+        }
+      } else if (
+        phase.current === "reforming" &&
+        pointsRef.current &&
+        originalPositions.current
+      ) {
+        const positions = pointsRef.current.geometry.attributes.position
+          .array as Float32Array;
+        // Ease-in: slow start, graceful acceleration
+        const t = Math.min(
+          phaseTime.current / CONFIG.explosion.reformDuration,
+          1
+        );
+        const eased = t * t * t; // cubic ease-in — slow start, snappy finish
+        const lerpFactor = 0.04 + eased * 0.45;
+
+        // Cross-fade: mesh fades in, particles fade out over last 40%
+        const crossFade = t < 0.6 ? 0 : (t - 0.6) / 0.4; // 0→1 from t=0.6→1.0
+        const meshOpacity = crossFade * crossFade; // ease-in for mesh appearance
+        const particleOpacity = 1 - crossFade;
+
+        // Show mesh once cross-fade begins, morph it to stay in sync
+        if (meshRef.current) {
+          meshRef.current.visible = crossFade > 0;
+          shaderMaterial.uniforms.uOpacity.value = meshOpacity;
+        }
+        particleMaterial.uniforms.uOpacity.value = particleOpacity;
+        pointsRef.current.visible = particleOpacity > 0;
+
+        // Shrink particles as they converge, mesh morphs during cross-fade
+        particleMaterial.uniforms.uScale.value = 1.0 - crossFade * 0.4;
+        if (crossFade > 0) morphMesh();
+
+        let maxDistSq = 0;
+
+        for (let i = 0; i < positions.length; i += 3) {
+          const ox = originalPositions.current[i],
+            oy = originalPositions.current[i + 1],
+            oz = originalPositions.current[i + 2];
+          const len = Math.sqrt(ox * ox + oy * oy + oz * oz) || 1;
+          const nx = ox / len,
+            ny = oy / len,
+            nz = oz / len;
+
           const noiseVal = noise3D(
             nx * CONFIG.noise.scale + time.current * CONFIG.noise.speed,
             ny * CONFIG.noise.scale + time.current * CONFIG.noise.speed * 0.8,
             nz * CONFIG.noise.scale + time.current * CONFIG.noise.speed * 0.6
           );
+          const displacement =
+            CONFIG.radius + noiseVal * CONFIG.noise.amplitude;
+          const tx = nx * displacement,
+            ty = ny * displacement,
+            tz = nz * displacement;
 
-          // Apply displacement along normal
-          const displacement = CONFIG.radius + noiseVal * CONFIG.noise.amplitude;
+          const dx = tx - positions[i],
+            dy = ty - positions[i + 1],
+            dz = tz - positions[i + 2];
+          positions[i] += dx * lerpFactor;
+          positions[i + 1] += dy * lerpFactor;
+          positions[i + 2] += dz * lerpFactor;
 
-          positions[i] = nx * displacement;
-          positions[i + 1] = ny * displacement;
-          positions[i + 2] = nz * displacement;
+          const distSq = dx * dx + dy * dy + dz * dz;
+          if (distSq > maxDistSq) maxDistSq = distSq;
         }
 
-        geometry.attributes.position.needsUpdate = true;
-        geometry.computeVertexNormals();
+        pointsRef.current.geometry.attributes.position.needsUpdate = true;
+
+        if (maxDistSq < CONFIG.explosion.reformThreshold || t >= 1) {
+          shaderMaterial.uniforms.uOpacity.value = 1.0;
+          phase.current = "idle";
+        }
       }
+
+      particleMaterial.uniforms.uTime.value = time.current;
     }
 
-    // Update shader time
-    shaderMaterial.uniforms.uTime.value = time.current;
+    // Always update mesh shader time
+    if (meshRef.current) {
+      shaderMaterial.uniforms.uTime.value = time.current;
+    }
   });
 
   return (
-    <mesh ref={meshRef} material={shaderMaterial}>
-      <icosahedronGeometry args={[CONFIG.radius, CONFIG.detail]} />
-    </mesh>
+    <group ref={groupRef}>
+      <mesh ref={meshRef} material={shaderMaterial}>
+        <icosahedronGeometry args={[CONFIG.radius, CONFIG.detail]} />
+      </mesh>
+      <points ref={pointsRef} material={particleMaterial} visible={false}>
+        <bufferGeometry />
+      </points>
+    </group>
   );
-}
-
-function Scene({ mousePosition }: BlobProps) {
-  const { camera } = useThree();
-
-  useEffect(() => {
-    camera.position.set(0, 0, 4);
-  }, [camera]);
-
-  return <Blob mousePosition={mousePosition} />;
 }
 
 export function MorphingBlob() {
   const containerRef = useRef<HTMLDivElement>(null);
   const mousePosition = useRef({ x: 0, y: 0 });
+  const shouldExplode = useRef(false);
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -281,22 +499,33 @@ export function MorphingBlob() {
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
 
+  const fallback = (
+    <div className="absolute inset-0 bg-radial-[ellipse_at_center] from-white/10 via-white/5 to-transparent" />
+  );
+
   return (
     <div
       ref={containerRef}
-      className="absolute inset-0 pointer-events-none"
-      style={{ opacity: 0.5 }}
+      className="absolute inset-0 cursor-pointer"
+      onClick={() => {
+        shouldExplode.current = true;
+      }}
     >
-      <Canvas
-        gl={{
-          antialias: false,
-          alpha: true,
-          powerPreference: "high-performance",
-        }}
-        dpr={1}
-      >
-        <Scene mousePosition={mousePosition} />
-      </Canvas>
+      <WebGLErrorBoundary fallback={fallback}>
+        <Canvas
+          gl={{
+            antialias: false,
+            alpha: true,
+            powerPreference: "high-performance",
+          }}
+          dpr={1}
+        >
+          <BlobScene
+            mousePosition={mousePosition}
+            shouldExplode={shouldExplode}
+          />
+        </Canvas>
+      </WebGLErrorBoundary>
     </div>
   );
 }

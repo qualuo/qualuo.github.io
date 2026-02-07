@@ -68,7 +68,6 @@ function MagneticText({ text }: { text: string }) {
           <MagneticLetter
             key={i}
             char={char}
-            index={i}
             mousePos={mousePos}
             isHovering={isHovering}
             containerRef={containerRef}
@@ -81,13 +80,11 @@ function MagneticText({ text }: { text: string }) {
 
 function MagneticLetter({
   char,
-  index,
   mousePos,
   isHovering,
   containerRef,
 }: {
   char: string;
-  index: number;
   mousePos: { x: number; y: number };
   isHovering: boolean;
   containerRef: React.RefObject<HTMLDivElement | null>;
@@ -145,26 +142,46 @@ function MagneticLetter({
 
 // Glitch Text Effect
 function GlitchText({ text }: { text: string }) {
-  const [isGlitching, setIsGlitching] = useState(false);
-  const [glitchIntensity, setGlitchIntensity] = useState(0);
+  const [glitch, setGlitch] = useState<{
+    active: boolean;
+    intensity: number;
+    translateX: number;
+    clips: number[];
+    chars: string;
+  }>({ active: false, intensity: 0, translateX: 0, clips: [0, 0, 0, 0], chars: text });
+
+  const startGlitch = useCallback((intensity: number) => {
+    setGlitch({
+      active: true,
+      intensity,
+      translateX: (Math.random() - 0.5) * 4,
+      clips: [Math.random() * 100, Math.random() * 100, Math.random() * 100, Math.random() * 100],
+      chars: text.split("").map(c =>
+        Math.random() > 0.7 ? String.fromCharCode(33 + Math.floor(Math.random() * 94)) : c
+      ).join(""),
+    });
+  }, [text]);
+
+  const stopGlitch = useCallback(() => {
+    setGlitch(prev => ({ ...prev, active: false }));
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
       if (Math.random() > 0.7) {
-        setIsGlitching(true);
-        setGlitchIntensity(Math.random());
-        setTimeout(() => setIsGlitching(false), 100 + Math.random() * 200);
+        startGlitch(Math.random());
+        setTimeout(stopGlitch, 100 + Math.random() * 200);
       }
     }, 200);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [startGlitch, stopGlitch]);
 
   return (
     <div
       className="relative flex justify-center items-center py-16 cursor-pointer"
-      onMouseEnter={() => { setIsGlitching(true); setGlitchIntensity(1); }}
-      onMouseLeave={() => setIsGlitching(false)}
+      onMouseEnter={() => startGlitch(1)}
+      onMouseLeave={stopGlitch}
     >
       <div className="relative">
         {/* Base text */}
@@ -173,13 +190,13 @@ function GlitchText({ text }: { text: string }) {
         </span>
 
         {/* Glitch layers */}
-        {isGlitching && (
+        {glitch.active && (
           <>
             <span
               className="absolute inset-0 text-7xl md:text-9xl font-black text-cyan-400 select-none mix-blend-screen"
               style={{
-                transform: `translate(${glitchIntensity * 8}px, ${glitchIntensity * -2}px)`,
-                clipPath: `polygon(0 ${20 + glitchIntensity * 30}%, 100% ${20 + glitchIntensity * 30}%, 100% ${40 + glitchIntensity * 20}%, 0 ${40 + glitchIntensity * 20}%)`,
+                transform: `translate(${glitch.intensity * 8}px, ${glitch.intensity * -2}px)`,
+                clipPath: `polygon(0 ${20 + glitch.intensity * 30}%, 100% ${20 + glitch.intensity * 30}%, 100% ${40 + glitch.intensity * 20}%, 0 ${40 + glitch.intensity * 20}%)`,
               }}
             >
               {text}
@@ -187,8 +204,8 @@ function GlitchText({ text }: { text: string }) {
             <span
               className="absolute inset-0 text-7xl md:text-9xl font-black text-red-400 select-none mix-blend-screen"
               style={{
-                transform: `translate(${glitchIntensity * -8}px, ${glitchIntensity * 2}px)`,
-                clipPath: `polygon(0 ${60 + glitchIntensity * 10}%, 100% ${60 + glitchIntensity * 10}%, 100% ${80 + glitchIntensity * 10}%, 0 ${80 + glitchIntensity * 10}%)`,
+                transform: `translate(${glitch.intensity * -8}px, ${glitch.intensity * 2}px)`,
+                clipPath: `polygon(0 ${60 + glitch.intensity * 10}%, 100% ${60 + glitch.intensity * 10}%, 100% ${80 + glitch.intensity * 10}%, 0 ${80 + glitch.intensity * 10}%)`,
               }}
             >
               {text}
@@ -196,14 +213,12 @@ function GlitchText({ text }: { text: string }) {
             <span
               className="absolute inset-0 text-7xl md:text-9xl font-black text-white select-none"
               style={{
-                transform: `translate(${(Math.random() - 0.5) * 4}px, 0)`,
-                clipPath: `polygon(0 ${Math.random() * 100}%, 100% ${Math.random() * 100}%, 100% ${Math.random() * 100}%, 0 ${Math.random() * 100}%)`,
+                transform: `translate(${glitch.translateX}px, 0)`,
+                clipPath: `polygon(0 ${glitch.clips[0]}%, 100% ${glitch.clips[1]}%, 100% ${glitch.clips[2]}%, 0 ${glitch.clips[3]}%)`,
                 opacity: 0.8,
               }}
             >
-              {text.split("").map((c, i) =>
-                Math.random() > 0.7 ? String.fromCharCode(33 + Math.floor(Math.random() * 94)) : c
-              ).join("")}
+              {glitch.chars}
             </span>
           </>
         )}
@@ -337,9 +352,9 @@ function ScrambleText({ text }: { text: string }) {
   }, [text, isScrambling, chars]);
 
   useEffect(() => {
-    scramble();
+    const timeout = setTimeout(scramble, 0);
     const interval = setInterval(scramble, 3000);
-    return () => clearInterval(interval);
+    return () => { clearTimeout(timeout); clearInterval(interval); };
   }, [scramble]);
 
   return (

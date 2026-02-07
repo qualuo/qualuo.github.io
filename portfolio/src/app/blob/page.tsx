@@ -1,12 +1,18 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { MorphingBlob } from "@/components/animations/MorphingBlob";
 
 export default function BlobPage() {
+  const [clicked, setClicked] = useState(false);
+
   return (
-    <main className="relative min-h-screen bg-black overflow-hidden">
+    <main
+      className="relative min-h-screen bg-black overflow-hidden"
+      onClick={() => setClicked(true)}
+    >
       {/* The blob - full spotlight */}
       <div className="absolute inset-0">
         <MorphingBlob />
@@ -20,11 +26,11 @@ export default function BlobPage() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1, duration: 1 }}
-        className="fixed top-0 left-0 right-0 z-40 p-6"
+        className="fixed top-0 left-0 right-0 z-40 p-6 pointer-events-none"
       >
         <Link
           href="/"
-          className="inline-flex items-center gap-2 text-white/40 hover:text-white/80 transition-colors text-sm"
+          className="pointer-events-auto inline-flex items-center gap-2 text-white/40 hover:text-white/80 transition-colors text-sm"
         >
           <svg
             className="w-4 h-4"
@@ -43,40 +49,28 @@ export default function BlobPage() {
         </Link>
       </motion.nav>
 
-      {/* Centered content */}
-      <div className="relative z-10 min-h-screen flex flex-col items-center justify-center px-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.5, duration: 0.8 }}
-          className="text-center"
-        >
-          <h1 className="text-4xl md:text-6xl font-light text-white/90 tracking-tight mb-4">
-            Iridescent
-          </h1>
-          <p className="text-white/40 text-sm md:text-base max-w-md mx-auto">
-            A morphing form rendered with custom GLSL shaders,
-            Perlin noise displacement, and Fresnel-based iridescence.
-          </p>
-        </motion.div>
-      </div>
-
-      {/* Tech credits - bottom */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 2, duration: 1 }}
-        className="fixed bottom-6 left-0 right-0 z-40 flex justify-center gap-4"
-      >
-        {["Three.js", "GLSL", "WebGL"].map((tech) => (
-          <span
-            key={tech}
-            className="px-3 py-1 text-xs text-white/30 border border-white/10 rounded-full"
+      {/* Centered content — disappears after first click */}
+      <AnimatePresence>
+        {!clicked && (
+          <motion.div
+            className="relative z-10 min-h-screen flex flex-col items-center justify-center px-6 pointer-events-none"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.6 }}
           >
-            {tech}
-          </span>
-        ))}
-      </motion.div>
+            <div className="text-center">
+              <h1 className="text-4xl md:text-6xl font-light text-white/90 tracking-tight mb-4">
+                Iridescent
+              </h1>
+              <p className="text-white/40 text-sm md:text-base max-w-md mx-auto">
+                A morphing form rendered with custom GLSL shaders,
+                Perlin noise displacement, and Fresnel-based iridescence.
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </main>
   );
 }

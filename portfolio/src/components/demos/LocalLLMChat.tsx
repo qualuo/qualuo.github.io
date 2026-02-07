@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMLModelCache } from "@/components/providers/MLModelCacheProvider";
 
 interface Message {
   role: "user" | "assistant";
   content: string;
+  timestamp: Date;
 }
 
 const AVAILABLE_MODELS = [
@@ -14,18 +15,27 @@ const AVAILABLE_MODELS = [
     id: "SmolLM2-360M-Instruct-q4f16_1-MLC",
     name: "SmolLM2 360M",
     description: "Tiny & fast, ~200MB",
+    contextSize: 4096,
   },
   {
     id: "Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
     name: "Qwen2.5 1.5B",
     description: "Balanced, ~900MB",
+    contextSize: 4096,
   },
   {
     id: "Llama-3.2-1B-Instruct-q4f16_1-MLC",
     name: "Llama 3.2 1B",
     description: "Meta's compact model, ~700MB",
+    contextSize: 4096,
   },
 ];
+
+const SYSTEM_PROMPT = "You are a helpful, friendly AI assistant. Provide clear, concise answers. Be direct and informative.";
+
+function estimateTokens(text: string): number {
+  return Math.ceil(text.length / 4);
+}
 
 type LoadingStatus = "idle" | "checking" | "loading" | "ready" | "error";
 
@@ -38,6 +48,7 @@ export function LocalLLMChat() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [webGPUSupported, setWebGPUSupported] = useState<boolean | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
+  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
 
   const { getLLMEngine, setLLMEngine } = useMLModelCache();
 
@@ -45,7 +56,14 @@ export function LocalLLMChat() {
   const engineRef = useRef<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const abortControllerRef = useRef<AbortController | null>(null);
+
+  const currentModel = AVAILABLE_MODELS.find((m) => m.id === selectedModel);
+  const tokenEstimate = useMemo(() => {
+    const allText = SYSTEM_PROMPT + messages.map((m) => m.content).join("") + input;
+    return estimateTokens(allText);
+  }, [messages, input]);
+  const contextSize = currentModel?.contextSize ?? 2048;
+  const tokenPct = Math.min(100, (tokenEstimate / contextSize) * 100);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -117,39 +135,30 @@ export function LocalLLMChat() {
     }
   };
 
-  const stopGeneration = () => {
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-      abortControllerRef.current = null;
-    }
-  };
+  const stopGeneration = useCallback(() => {
+    try { engineRef.current?.interruptGenerate?.(); } catch {}
+  }, []);
 
   const sendMessage = async () => {
-    if (!input.trim() || !engineRef.current) return;
-
-    // If currently generating, stop it first
-    if (isGenerating) {
-      stopGeneration();
-    }
+    if (!input.trim() || !engineRef.current || isGenerating) return;
 
     const userMessage = input.trim();
+    const now = new Date();
     setInput("");
-    setMessages((prev) => [...prev, { role: "user", content: userMessage }]);
-    setIsGenerating(true);
+    setMessages((prev) => [...prev, { role: "user", content: userMessage, timestamp: now }]);
 
-    // Create new abort controller for this generation
-    abortControllerRef.current = new AbortController();
-    const signal = abortControllerRef.current.signal;
+    setIsGenerating(true);
 
     try {
       const allMessages = [
-        { role: "system" as const, content: "You are a helpful, friendly AI assistant. Provide clear, concise answers. Be direct and informative." },
+        { role: "system" as const, content: SYSTEM_PROMPT },
         ...messages,
         { role: "user" as const, content: userMessage },
       ];
 
       // Add empty assistant message that we'll stream into
-      setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
+      const assistantTime = new Date();
+      setMessages((prev) => [...prev, { role: "assistant", content: "", timestamp: assistantTime }]);
 
       const response = await engineRef.current.chat.completions.create({
         messages: allMessages,
@@ -158,10 +167,6 @@ export function LocalLLMChat() {
 
       let fullResponse = "";
       for await (const chunk of response) {
-        // Check if aborted
-        if (signal.aborted) {
-          break;
-        }
         const delta = chunk.choices[0]?.delta?.content || "";
         fullResponse += delta;
         setMessages((prev) => {
@@ -169,42 +174,56 @@ export function LocalLLMChat() {
           newMessages[newMessages.length - 1] = {
             role: "assistant",
             content: fullResponse,
+            timestamp: assistantTime,
           };
           return newMessages;
         });
       }
 
-      // If aborted and no content, remove the empty message
-      if (signal.aborted && !fullResponse) {
+      // Remove empty assistant message if no content was generated
+      if (!fullResponse) {
         setMessages((prev) => prev.slice(0, -1));
       }
     } catch (error) {
-      // Don't show error for aborted requests
-      if (signal.aborted) {
-        return;
-      }
       console.error("Generation error:", error);
       setMessages((prev) => [
         ...prev.slice(0, -1),
         {
           role: "assistant",
           content: "Sorry, an error occurred while generating the response.",
+          timestamp: new Date(),
         },
       ]);
     } finally {
       setIsGenerating(false);
-      abortControllerRef.current = null;
     }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
+    if (e.key === "Escape") {
+      resetChat();
+    } else if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      sendMessage();
+      if (!isGenerating) {
+        sendMessage();
+      }
     }
   };
 
+  const copyMessage = useCallback((content: string, index: number) => {
+    navigator.clipboard.writeText(content);
+    setCopiedIndex(index);
+    setTimeout(() => setCopiedIndex(null), 1500);
+  }, []);
+
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false });
+  };
+
   const resetChat = () => {
+    if (isGenerating) {
+      stopGeneration();
+    }
     setMessages([]);
     inputRef.current?.focus();
   };
@@ -368,7 +387,7 @@ export function LocalLLMChat() {
 
   // Render chat interface
   return (
-    <div className="flex-1 flex flex-col rounded-2xl overflow-hidden bg-white/[0.02] border border-white/[0.08]">
+    <div className="flex-1 flex flex-col min-h-0 rounded-2xl overflow-hidden bg-white/[0.02] border border-white/[0.08]">
       {/* Chat header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-white/[0.02]">
         <div className="flex items-center gap-3">
@@ -377,7 +396,7 @@ export function LocalLLMChat() {
           </div>
           <div>
             <div className="text-sm font-medium text-white">
-              {AVAILABLE_MODELS.find((m) => m.id === selectedModel)?.name}
+              {currentModel?.name}
             </div>
             <div className="text-xs text-emerald-400">Running locally</div>
           </div>
@@ -391,7 +410,7 @@ export function LocalLLMChat() {
       </div>
 
       {/* Messages area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div data-lenis-prevent className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 && (
           <div className="flex-1 flex items-center justify-center h-full min-h-[200px]">
             <div className="text-center text-slate-500">
@@ -414,14 +433,35 @@ export function LocalLLMChat() {
                 message.role === "user" ? "justify-end" : "justify-start"
               }`}
             >
-              <div
-                className={`max-w-[80%] px-4 py-3 rounded-2xl ${
-                  message.role === "user"
-                    ? "bg-gradient-to-r from-emerald-500 to-cyan-500 text-white"
-                    : "bg-white/10 text-slate-200"
-                }`}
-              >
-                <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+              <div className={`max-w-[80%] group ${message.role === "user" ? "text-right" : ""}`}>
+                <div
+                  className={`px-4 py-3 rounded-2xl ${
+                    message.role === "user"
+                      ? "bg-gradient-to-r from-emerald-500 to-cyan-500 text-white"
+                      : "bg-white/10 text-slate-200"
+                  }`}
+                >
+                  <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
+                </div>
+                <div className={`flex items-center gap-2 mt-1 px-1 ${message.role === "user" ? "justify-end" : "justify-start"}`}>
+                  <span className="text-[10px] text-slate-600">{formatTime(message.timestamp)}</span>
+                  {message.role === "assistant" && message.content && (
+                    <button
+                      onClick={() => copyMessage(message.content, index)}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-600 hover:text-slate-400"
+                    >
+                      {copiedIndex === index ? (
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      ) : (
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                      )}
+                    </button>
+                  )}
+                </div>
               </div>
             </motion.div>
           ))}
@@ -460,7 +500,7 @@ export function LocalLLMChat() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={isGenerating ? "Type to interrupt..." : "Type a message..."}
+            placeholder="Type a message..."
             rows={1}
             className="flex-1 px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-slate-500 focus:outline-none focus:border-white/20 resize-none"
           />
@@ -500,9 +540,26 @@ export function LocalLLMChat() {
             </button>
           )}
         </div>
-        <p className="text-center text-slate-600 text-xs mt-2">
-          {isGenerating ? "Press Enter to send new message (interrupts current)" : "Press Enter to send, Shift+Enter for new line"}
-        </p>
+        <div className="flex items-center justify-between mt-2 px-1">
+          <p className="text-slate-600 text-xs">
+            Enter to send · Esc to clear · Shift+Enter for new line
+          </p>
+          <div className="flex items-center gap-2">
+            <div className="w-16 h-1 rounded-full bg-white/10 overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all ${
+                  tokenPct > 90 ? "bg-red-500" : tokenPct > 70 ? "bg-amber-500" : "bg-emerald-500"
+                }`}
+                style={{ width: `${tokenPct}%` }}
+              />
+            </div>
+            <span className={`text-[10px] tabular-nums ${
+              tokenPct > 90 ? "text-red-400" : "text-slate-600"
+            }`}>
+              ~{tokenEstimate}/{contextSize}
+            </span>
+          </div>
+        </div>
       </div>
     </div>
   );

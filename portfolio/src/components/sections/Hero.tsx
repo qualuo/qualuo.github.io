@@ -80,7 +80,7 @@ export function Hero() {
       id="hero"
       onPointerDown={onPointerDown}
       onPointerUp={onPointerUp}
-      className="relative min-h-dvh flex flex-col items-center justify-center overflow-hidden touch-pan-y"
+      className="relative z-10 min-h-dvh flex flex-col items-center justify-center overflow-hidden touch-pan-y pt-20 md:pt-0"
     >
       <motion.div
         style={{ opacity, y }}

@@ -1,8 +1,8 @@
 "use client";
 
-import { motion, useScroll, useMotionValueEvent } from "framer-motion";
+import { motion, useScroll, useMotionValueEvent, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useAudio } from "@/components/audio/MusicProvider";
 import { useTimeLapse } from "@/components/animations/TimeLapseProvider";
 
@@ -111,18 +111,17 @@ interface NavbarProps {
   hasStars?: boolean;
 }
 
+let hasAnimatedNavbar = false;
+
 export function Navbar({ isSubpage = false, hasStars = true }: NavbarProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [showLogo, setShowLogo] = useState(isSubpage);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { scrollY } = useScroll();
-  const hasAnimated = useRef(false);
 
   useEffect(() => {
-    // On subpages, always show the logo
-    if (isSubpage) {
-      setShowLogo(true);
-      return;
-    }
+    // On subpages, always show the logo (initialized via useState)
+    if (isSubpage) return;
 
     const heroSection = document.getElementById("hero");
     if (!heroSection) return;
@@ -172,10 +171,10 @@ export function Navbar({ isSubpage = false, hasStars = true }: NavbarProps) {
   };
 
   // Only animate on first mount, not on route changes
-  const [shouldAnimate] = useState(() => !hasAnimated.current);
+  const [shouldAnimate] = useState(() => !hasAnimatedNavbar);
 
   useEffect(() => {
-    hasAnimated.current = true;
+    hasAnimatedNavbar = true;
   }, []);
 
   return (
@@ -251,12 +250,72 @@ export function Navbar({ isSubpage = false, hasStars = true }: NavbarProps) {
             href={isSubpage ? "/#contact" : "#contact"}
             onClick={isSubpage ? undefined : (e) => scrollToSection(e, "#contact")}
             data-cursor="pointer"
-            className="px-4 py-2 text-sm bg-white text-black rounded-full hover:bg-white/90 transition-colors font-medium"
+            className="hidden md:inline-block px-4 py-2 text-sm bg-white text-black rounded-full hover:bg-white/90 transition-colors font-medium"
           >
             Contact
           </Link>
+          {/* Mobile hamburger */}
+          <motion.button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="md:hidden p-2.5 rounded-full bg-white/5 hover:bg-white/10 transition-colors cursor-pointer"
+            whileTap={{ scale: 0.95 }}
+            aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+          >
+            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5} strokeLinecap="round">
+              {mobileMenuOpen ? (
+                <>
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                  <line x1="6" y1="18" x2="18" y2="6" />
+                </>
+              ) : (
+                <>
+                  <line x1="4" y1="7" x2="20" y2="7" />
+                  <line x1="4" y1="12" x2="20" y2="12" />
+                  <line x1="4" y1="17" x2="20" y2="17" />
+                </>
+              )}
+            </svg>
+          </motion.button>
         </motion.div>
       </div>
+
+      {/* Mobile menu */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
+            className="md:hidden overflow-hidden border-t border-white/5"
+          >
+            <div className="px-6 py-4 flex flex-col gap-1">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  data-cursor="pointer"
+                  className="py-3 text-sm text-slate-400 hover:text-white transition-colors"
+                >
+                  {link.label}
+                </Link>
+              ))}
+              <Link
+                href={isSubpage ? "/#contact" : "#contact"}
+                onClick={(e) => {
+                  setMobileMenuOpen(false);
+                  if (!isSubpage) scrollToSection(e, "#contact");
+                }}
+                data-cursor="pointer"
+                className="py-3 text-sm text-white font-medium"
+              >
+                Contact
+              </Link>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.nav>
   );
 }

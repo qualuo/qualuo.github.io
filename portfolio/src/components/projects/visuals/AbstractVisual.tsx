@@ -1,9 +1,21 @@
 "use client";
 
-import { useRef, useEffect, useMemo, useState } from "react";
+import { useRef, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { MotionValue } from "framer-motion";
 import * as THREE from "three";
+import { WebGLErrorBoundary } from "@/components/ui/WebGLErrorBoundary";
+
+// Deterministic pseudo-random number generator (Park-Miller)
+function createPRNG(seed = 1) {
+  let s = seed;
+  return () => {
+    s = (s * 16807) % 2147483647;
+    return (s - 1) / 2147483646;
+  };
+}
+
+const emptySubscribe = () => () => {};
 
 interface AbstractVisualProps {
   type: "neural" | "grid" | "flow" | "city" | "chess" | "circuit";
@@ -14,18 +26,16 @@ interface AbstractVisualProps {
   scrollProgress: MotionValue<number>;
 }
 
-function useIsActive(scrollProgress: MotionValue<number>) {
-  const ref = useRef(false);
-  useFrame(() => {
-    const v = scrollProgress.get();
-    ref.current = v > 0.15 && v < 0.85;
-  });
+function useIsActive(_scrollProgress: MotionValue<number>) {
+  // Always animate — gating caused a visible jump when scrolling into range
+  const ref = useRef(true);
   return ref;
 }
 
-// Drag-to-rotate hook — attaches pointer listeners to the WebGL canvas
-function useDragRotation() {
+// Wrapper that applies drag rotation as a parent transform
+function DragRotateWrapper({ children }: { children: React.ReactNode }) {
   const { gl } = useThree();
+  const groupRef = useRef<THREE.Group>(null);
   const state = useRef({
     isDragging: false,
     prevX: 0,
@@ -38,7 +48,6 @@ function useDragRotation() {
 
   useEffect(() => {
     const el = gl.domElement;
-    el.style.cursor = "grab";
 
     const onDown = (e: PointerEvent) => {
       state.current.isDragging = true;
@@ -46,7 +55,6 @@ function useDragRotation() {
       state.current.prevY = e.clientY;
       state.current.velocityX = 0;
       state.current.velocityY = 0;
-      el.style.cursor = "grabbing";
     };
 
     const onMove = (e: PointerEvent) => {
@@ -64,7 +72,6 @@ function useDragRotation() {
 
     const onUp = () => {
       state.current.isDragging = false;
-      el.style.cursor = "grab";
     };
 
     el.addEventListener("pointerdown", onDown);
@@ -75,21 +82,12 @@ function useDragRotation() {
       el.removeEventListener("pointerdown", onDown);
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", onUp);
-      el.style.cursor = "";
     };
   }, [gl]);
 
-  return state;
-}
-
-// Wrapper that applies drag rotation as a parent transform
-function DragRotateWrapper({ children }: { children: React.ReactNode }) {
-  const groupRef = useRef<THREE.Group>(null);
-  const drag = useDragRotation();
-
   useFrame(() => {
     if (!groupRef.current) return;
-    const s = drag.current;
+    const s = state.current;
 
     if (!s.isDragging) {
       s.velocityX *= 0.95;
@@ -116,11 +114,10 @@ function NeuralNetworkVisual({ colors, scrollProgress }: { colors: AbstractVisua
   const materialRef = useRef<THREE.LineBasicMaterial>(null);
   const time = useRef(0);
 
-  const nodeCount = 32;
-  const connectionDistance = 2.5;
-  const spread = { x: 6, y: 4, z: 3 };
-
   const { nodes, connections, basePositions } = useMemo(() => {
+    const nodeCount = 32;
+    const connectionDistance = 2.5;
+    const spread = { x: 6, y: 4, z: 3 };
     const nodes: THREE.Vector3[] = [];
     const phi = Math.PI * (3 - Math.sqrt(5));
 
@@ -293,6 +290,7 @@ function FlowVisual({ colors, scrollProgress }: { colors: AbstractVisualProps["c
 
   // Generate hierarchical org network
   const { nodes, connections } = useMemo(() => {
+    const rand = createPRNG(101);
     const nodes: { pos: THREE.Vector3; size: number; tier: number }[] = [];
     const connections: { from: number; to: number }[] = [];
 
@@ -322,7 +320,7 @@ function FlowVisual({ colors, scrollProgress }: { colors: AbstractVisualProps["c
         const offset = new THREE.Vector3(
           Math.cos(angle) * radius,
           Math.sin(angle) * radius,
-          (Math.random() - 0.5) * 0.5
+          (rand() - 0.5) * 0.5
         );
         nodes.push({
           pos: deptPos.clone().add(offset),
@@ -332,8 +330,8 @@ function FlowVisual({ colors, scrollProgress }: { colors: AbstractVisualProps["c
         connections.push({ from: dept, to: nodes.length - 1 });
 
         // Some cross-team connections
-        if (Math.random() > 0.7 && nodes.length > 10) {
-          const randomNode = Math.floor(Math.random() * (nodes.length - 5)) + 5;
+        if (rand() > 0.7 && nodes.length > 10) {
+          const randomNode = Math.floor(rand() * (nodes.length - 5)) + 5;
           if (randomNode !== nodes.length - 1) {
             connections.push({ from: randomNode, to: nodes.length - 1 });
           }
@@ -344,15 +342,15 @@ function FlowVisual({ colors, scrollProgress }: { colors: AbstractVisualProps["c
     // Tier 3: Individual employees (scattered around teams)
     const tier3Count = 20;
     for (let i = 0; i < tier3Count; i++) {
-      const parentIdx = Math.floor(Math.random() * (nodes.length - tier1Count - 1)) + tier1Count + 1;
+      const parentIdx = Math.floor(rand() * (nodes.length - tier1Count - 1)) + tier1Count + 1;
       const parent = nodes[parentIdx];
-      const angle = Math.random() * Math.PI * 2;
-      const radius = 0.6 + Math.random() * 0.4;
+      const angle = rand() * Math.PI * 2;
+      const radius = 0.6 + rand() * 0.4;
       nodes.push({
         pos: parent.pos.clone().add(new THREE.Vector3(
           Math.cos(angle) * radius,
           Math.sin(angle) * radius,
-          (Math.random() - 0.5) * 0.3
+          (rand() - 0.5) * 0.3
         )),
         size: 0.08,
         tier: 3,
@@ -468,26 +466,29 @@ function CityVisual({ colors, scrollProgress }: { colors: AbstractVisualProps["c
   const time = useRef(0);
 
   const buildings = useMemo(() => {
-    const result: { x: number; z: number; height: number; width: number; depth: number }[] = [];
+    const rand = createPRNG(202);
+    const result: { x: number; z: number; height: number; width: number; depth: number; lightXOffset: number }[] = [];
     const gridSize = 6;
     const spacing = 0.8;
 
     for (let x = -gridSize; x <= gridSize; x++) {
       for (let z = -gridSize; z <= gridSize; z++) {
         // Skip some spots for variety
-        if (Math.random() > 0.7) continue;
+        if (rand() > 0.7) continue;
 
         // Taller buildings toward center
         const distFromCenter = Math.sqrt(x * x + z * z);
         const maxHeight = Math.max(0.5, 3 - distFromCenter * 0.3);
-        const height = 0.3 + Math.random() * maxHeight;
+        const height = 0.3 + rand() * maxHeight;
+        const width = 0.2 + rand() * 0.3;
 
         result.push({
-          x: x * spacing + (Math.random() - 0.5) * 0.2,
-          z: z * spacing + (Math.random() - 0.5) * 0.2,
+          x: x * spacing + (rand() - 0.5) * 0.2,
+          z: z * spacing + (rand() - 0.5) * 0.2,
           height,
-          width: 0.2 + Math.random() * 0.3,
-          depth: 0.2 + Math.random() * 0.3,
+          width,
+          depth: 0.2 + rand() * 0.3,
+          lightXOffset: (rand() - 0.5) * width * 0.5,
         });
       }
     }
@@ -548,7 +549,7 @@ function CityVisual({ colors, scrollProgress }: { colors: AbstractVisualProps["c
         <mesh
           key={`light-${i}`}
           position={[
-            building.x + (Math.random() - 0.5) * building.width * 0.5,
+            building.x + building.lightXOffset,
             building.height * 0.7,
             building.z + building.depth / 2 + 0.01,
           ]}
@@ -1434,31 +1435,6 @@ function CircuitVisual({ colors, scrollProgress }: { colors: AbstractVisualProps
           </mesh>
         </>
       )}
-      {/* Bogies with wheel sets */}
-      {[-0.35, 0.35].map((xo, bi) => (
-        <group key={bi} position={[len * xo, 0, -0.16]}>
-          <mesh>
-            <boxGeometry args={[0.25, 0.18, 0.04]} />
-            <meshBasicMaterial color={colors.secondary} transparent opacity={0.7} />
-          </mesh>
-          {[-0.08, 0.08].map((wx, wi) => (
-            <group key={wi} position={[wx, 0, -0.02]}>
-              <mesh position={[0, 0.1, 0]} rotation={[Math.PI / 2, 0, 0]}>
-                <cylinderGeometry args={[0.055, 0.055, 0.02, 16]} />
-                <meshBasicMaterial color={colors.secondary} transparent opacity={0.85} />
-              </mesh>
-              <mesh position={[0, -0.1, 0]} rotation={[Math.PI / 2, 0, 0]}>
-                <cylinderGeometry args={[0.055, 0.055, 0.02, 16]} />
-                <meshBasicMaterial color={colors.secondary} transparent opacity={0.85} />
-              </mesh>
-              <mesh rotation={[Math.PI / 2, 0, 0]}>
-                <cylinderGeometry args={[0.015, 0.015, 0.2, 8]} />
-                <meshBasicMaterial color={colors.secondary} transparent opacity={0.6} />
-              </mesh>
-            </group>
-          ))}
-        </group>
-      ))}
     </group>
   );
 
@@ -1599,11 +1575,11 @@ function CircuitVisual({ colors, scrollProgress }: { colors: AbstractVisualProps
 function Scene({ type, colors, scrollProgress }: AbstractVisualProps) {
   const { camera, size } = useThree();
 
-  useEffect(() => {
-    // Pull camera closer on narrow viewports so visuals fill the screen
+  // Runs before each render — camera is always correct before the frame paints
+  useFrame(() => {
     const z = size.width < 640 ? 6.5 : size.width < 1024 ? 7 : 8;
-    camera.position.set(0, 0, z);
-  }, [camera, size.width]);
+    if (camera.position.z !== z) camera.position.setZ(z);
+  });
 
   let visual: React.JSX.Element;
   switch (type) {
@@ -1633,26 +1609,25 @@ function Scene({ type, colors, scrollProgress }: AbstractVisualProps) {
 }
 
 export function AbstractVisual({ type, colors, scrollProgress }: AbstractVisualProps) {
-  const [mounted, setMounted] = useState(false);
+  const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
+  const [ready, setReady] = useState(false);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const fallback = (
+    <div
+      className="absolute inset-0"
+      style={{
+        background: `radial-gradient(ellipse at center, ${colors.primary}20, ${colors.secondary}10, transparent)`,
+      }}
+    />
+  );
 
   if (!mounted) {
-    return (
-      <div
-        className="absolute inset-0"
-        style={{
-          background: `radial-gradient(ellipse at center, ${colors.primary}20, ${colors.secondary}10, transparent)`,
-        }}
-      />
-    );
+    return fallback;
   }
 
   return (
     <div className="absolute inset-0">
-      {/* Background gradient */}
+      {/* Background gradient — always visible, sits behind the canvas */}
       <div
         className="absolute inset-0"
         style={{
@@ -1660,16 +1635,35 @@ export function AbstractVisual({ type, colors, scrollProgress }: AbstractVisualP
                        radial-gradient(ellipse at 70% 50%, ${colors.secondary}10, transparent 50%)`,
         }}
       />
-      <Canvas
-        gl={{
-          antialias: true,
-          alpha: true,
-          powerPreference: "high-performance",
-        }}
-        dpr={[1, 1.5]}
+      <div
+        className="absolute inset-0 transition-opacity duration-700 ease-out"
+        style={{ opacity: ready ? 1 : 0 }}
       >
-        <Scene type={type} colors={colors} scrollProgress={scrollProgress} />
-      </Canvas>
+        <WebGLErrorBoundary fallback={fallback}>
+          <Canvas
+            camera={{ position: [0, 0, 8] }}
+            gl={{
+              antialias: true,
+              alpha: true,
+              powerPreference: "high-performance",
+            }}
+            dpr={[1, 1.5]}
+            className="cursor-grab active:cursor-grabbing"
+            onCreated={() => {
+              // GL context + scene created. Wait a few frames for
+              // useEffects to fire and position all geometry, then reveal.
+              let f = 0;
+              const settle = () => {
+                if (++f >= 30) setReady(true);
+                else requestAnimationFrame(settle);
+              };
+              requestAnimationFrame(settle);
+            }}
+          >
+            <Scene type={type} colors={colors} scrollProgress={scrollProgress} />
+          </Canvas>
+        </WebGLErrorBoundary>
+      </div>
     </div>
   );
 }

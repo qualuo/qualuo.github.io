@@ -1,11 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Experience } from "@/lib/experiences";
 
+function createPRNG(seed = 1) {
+  let s = seed;
+  return () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; };
+}
+
 // Simple animated background for cards
 function AnimatedBackground({ color, isActive }: { color: string; isActive: boolean }) {
+  const particleData = useMemo(() => {
+    const rand = createPRNG(33);
+    return Array.from({ length: 6 }, () => ({
+      x: rand() * 100 + "%",
+      duration: 2 + rand() * 2,
+    }));
+  }, []);
+
   return (
     <div className="absolute inset-0 overflow-hidden">
       {/* Animated gradient orbs */}
@@ -35,13 +48,13 @@ function AnimatedBackground({ color, isActive }: { color: string; isActive: bool
       {/* Floating particles */}
       {isActive && (
         <>
-          {[...Array(6)].map((_, i) => (
+          {particleData.map((p, i) => (
             <motion.div
               key={i}
               className="absolute w-1 h-1 rounded-full"
               style={{ backgroundColor: color }}
               initial={{
-                x: Math.random() * 100 + "%",
+                x: p.x,
                 y: "100%",
                 opacity: 0
               }}
@@ -50,7 +63,7 @@ function AnimatedBackground({ color, isActive }: { color: string; isActive: bool
                 opacity: [0, 0.8, 0],
               }}
               transition={{
-                duration: 2 + Math.random() * 2,
+                duration: p.duration,
                 repeat: Infinity,
                 delay: i * 0.3,
                 ease: "easeOut"

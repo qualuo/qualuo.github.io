@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, Suspense, useMemo, useEffect } from "react";
+import { useRef, useState, useCallback, Suspense, useMemo, useEffect } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import {
   OrbitControls,
@@ -500,7 +500,7 @@ export function ThreeDSandbox() {
 
   const selectedObject = objects.find((o) => o.id === selectedId);
 
-  const addObject = (type: ObjectType) => {
+  const addObject = useCallback((type: ObjectType) => {
     const isSpecial = isSpecialType(type);
     const newObject: SceneObject = {
       id: Date.now().toString(),
@@ -515,9 +515,9 @@ export function ThreeDSandbox() {
       roughness: isSpecial ? 0.2 : 0.5,
       scale: isSpecial ? 1.2 : 0.7 + Math.random() * 0.6,
     };
-    setObjects([...objects, newObject]);
+    setObjects(prev => [...prev, newObject]);
     setSelectedId(newObject.id);
-  };
+  }, []);
 
   const updateObject = (id: string, updates: Partial<SceneObject>) => {
     setObjects(

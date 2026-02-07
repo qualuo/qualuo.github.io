@@ -2,10 +2,14 @@
 
 import { useRef, useState, useEffect } from "react";
 import { motion, useScroll } from "framer-motion";
+import Image from "next/image";
 import { projects, Project, categoryThemes } from "@/lib/projects";
 import { ProjectHero } from "@/components/projects/ProjectHero";
 import { ProjectProgress } from "@/components/projects/ProjectProgress";
 import { AbstractVisual } from "@/components/projects/visuals/AbstractVisual";
+
+const AUTO_SCROLL_SPEED = 0.8; // pixels per frame (~48px/s at 60fps)
+const IDLE_RESUME_MS = 30_000; // 30 seconds
 
 // Mobile project card component
 function MobileProjectCard({ project, index, onActive }: { project: Project; index: number; onActive?: () => void }) {
@@ -47,10 +51,12 @@ function MobileProjectCard({ project, index, onActive }: { project: Project; ind
               autoPlay
             />
           ) : (
-            <img
+            <Image
               src={project.media.src}
               alt={project.title}
-              className="w-full h-full object-cover"
+              fill
+              className="object-cover"
+              unoptimized
             />
           )
         ) : project.visualConfig ? (
@@ -134,6 +140,65 @@ export function Projects() {
     offset: ["start start", "end end"],
   });
 
+  // Auto-scroll with loop — pauses on user interaction, resumes after 30s idle
+  useEffect(() => {
+    let rafId: number | null = null;
+    let idleTimer: ReturnType<typeof setTimeout> | null = null;
+    let paused = false;
+    let looping = false; // true while smooth-scrolling back to top
+
+    const tick = () => {
+      if (paused || looping) return;
+
+      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+
+      if (window.scrollY >= maxScroll - 2) {
+        // Reached bottom — loop to top
+        looping = true;
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        // Resume auto-scroll after the smooth scroll finishes
+        setTimeout(() => {
+          looping = false;
+          if (!paused) rafId = requestAnimationFrame(tick);
+        }, 1500);
+        return;
+      }
+
+      window.scrollBy(0, AUTO_SCROLL_SPEED);
+      rafId = requestAnimationFrame(tick);
+    };
+
+    const start = () => {
+      paused = false;
+      looping = false;
+      rafId = requestAnimationFrame(tick);
+    };
+
+    const pause = () => {
+      paused = true;
+      if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+      if (idleTimer) clearTimeout(idleTimer);
+      idleTimer = setTimeout(start, IDLE_RESUME_MS);
+    };
+
+    // Start after a brief delay so the page can settle
+    const initTimer = setTimeout(start, 2000);
+
+    // User-initiated events that pause auto-scroll
+    const events: (keyof WindowEventMap)[] = [
+      "wheel", "touchstart", "touchmove", "pointerdown", "keydown",
+    ];
+    events.forEach((e) => window.addEventListener(e, pause, { passive: true }));
+
+    return () => {
+      clearTimeout(initTimer);
+      paused = true;
+      if (rafId) cancelAnimationFrame(rafId);
+      if (idleTimer) clearTimeout(idleTimer);
+      events.forEach((e) => window.removeEventListener(e, pause));
+    };
+  }, []);
+
   return (
     <section ref={sectionRef} id="projects" className="relative bg-black">
       {/* Section Header */}
@@ -198,9 +263,7 @@ export function Projects() {
             key={project.id}
             project={project}
             index={index}
-            totalProjects={projects.length}
             onActive={() => setActiveIndex(index)}
-            globalProgress={scrollYProgress}
           />
         ))}
       </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, useScroll, useTransform } from "framer-motion";
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useCallback, useSyncExternalStore } from "react";
 import { useTimeLapse } from "./TimeLapseProvider";
 
 // Stellar spectral types - astronomically accurate colors
@@ -409,6 +409,18 @@ function drawMeteor(ctx: CanvasRenderingContext2D, meteor: Meteor, globalOpacity
   ctx.restore();
 }
 
+const emptySubscribe = () => () => {};
+
+// Calculate edge fade factor for smooth star entry/exit
+function getEdgeFade(x: number, y: number, width: number, height: number): number {
+  let fade = 1;
+  if (x < FADE_MARGIN) fade = Math.min(fade, x / FADE_MARGIN);
+  if (x > width - FADE_MARGIN) fade = Math.min(fade, (width - x) / FADE_MARGIN);
+  if (y < FADE_MARGIN) fade = Math.min(fade, y / FADE_MARGIN);
+  if (y > height - FADE_MARGIN) fade = Math.min(fade, (height - y) / FADE_MARGIN);
+  return Math.max(0, Math.min(1, fade));
+}
+
 export function StarsBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const starsRef = useRef<Star[]>([]);
@@ -431,14 +443,16 @@ export function StarsBackground() {
   // Time-lapse: controlled via context (use ref to avoid recreating animate callback)
   const { isActive: isTimeLapse } = useTimeLapse();
   const isTimeLapseRef = useRef(isTimeLapse);
-  isTimeLapseRef.current = isTimeLapse; // Keep ref in sync
+  useEffect(() => {
+    isTimeLapseRef.current = isTimeLapse;
+  }, [isTimeLapse]);
   const timeLapseMultiplierRef = useRef(1); // Smoothly interpolates to target
 
   // Aurora phase for wave animation
   const auroraPhaseRef = useRef(0);
 
   const { scrollYProgress } = useScroll();
-  const [mounted, setMounted] = useState(false);
+  const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
 
   const blurAmount = useTransform(scrollYProgress, [0, 0.5], [0, 0.5]);
   const canvasFilter = useTransform(blurAmount, (b) => `blur(${b}px)`);
@@ -448,23 +462,7 @@ export function StarsBackground() {
     starsRef.current = createStarsWithPoissonDistribution();
   }, []);
 
-  // Calculate edge fade factor for smooth star entry/exit
-  const getEdgeFade = useCallback((x: number, y: number, width: number, height: number): number => {
-    let fade = 1;
-
-    // Fade near left edge
-    if (x < FADE_MARGIN) fade = Math.min(fade, x / FADE_MARGIN);
-    // Fade near right edge
-    if (x > width - FADE_MARGIN) fade = Math.min(fade, (width - x) / FADE_MARGIN);
-    // Fade near top edge
-    if (y < FADE_MARGIN) fade = Math.min(fade, y / FADE_MARGIN);
-    // Fade near bottom edge
-    if (y > height - FADE_MARGIN) fade = Math.min(fade, (height - y) / FADE_MARGIN);
-
-    return Math.max(0, Math.min(1, fade));
-  }, []);
-
-  const animate = useCallback((currentTime: number) => {
+  const animateStars = useCallback((currentTime: number) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -545,7 +543,6 @@ export function StarsBackground() {
     }
 
     if (width === 0 || height === 0) {
-      animationRef.current = requestAnimationFrame(animate);
       return;
     }
 
@@ -780,8 +777,7 @@ export function StarsBackground() {
       return false;
     });
 
-    animationRef.current = requestAnimationFrame(animate);
-  }, [getEdgeFade]);
+  }, []);
 
   const handleResize = useCallback(() => {
     const canvas = canvasRef.current;
@@ -820,11 +816,6 @@ export function StarsBackground() {
     initStars();
   }, [initStars]);
 
-  // Set up canvas and animation after mount
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
   // Initialize canvas dimensions and start animation after canvas is rendered
   useEffect(() => {
     if (!mounted) return;
@@ -836,7 +827,11 @@ export function StarsBackground() {
     window.addEventListener("mousemove", handleMouseMove, { passive: true });
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
-    animationRef.current = requestAnimationFrame(animate);
+    const loop = (t: number) => {
+      animateStars(t);
+      animationRef.current = requestAnimationFrame(loop);
+    };
+    animationRef.current = requestAnimationFrame(loop);
 
     return () => {
       window.removeEventListener("resize", handleResize);
@@ -844,7 +839,7 @@ export function StarsBackground() {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       cancelAnimationFrame(animationRef.current);
     };
-  }, [mounted, handleResize, handleMouseMove, handleVisibilityChange, animate]);
+  }, [mounted, handleResize, handleMouseMove, handleVisibilityChange, animateStars]);
 
   if (!mounted) {
     return <div className="fixed inset-0" style={{ zIndex: -100, background: "#0a0a0f" }} />;

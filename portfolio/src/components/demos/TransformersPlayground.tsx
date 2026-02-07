@@ -307,7 +307,7 @@ export function TransformersPlayground() {
     }
   };
 
-  const useExample = (example: string) => {
+  const handleExample = (example: string) => {
     setInput(example);
     setResults(null);
   };
@@ -441,7 +441,7 @@ export function TransformersPlayground() {
                 {selectedTask.examples.map((example, i) => (
                   <button
                     key={i}
-                    onClick={() => useExample(example)}
+                    onClick={() => handleExample(example)}
                     className="px-3 py-1.5 text-xs rounded-full bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white transition-colors border border-white/10"
                   >
                     {example.length > 50 ? example.slice(0, 47) + "..." : example}

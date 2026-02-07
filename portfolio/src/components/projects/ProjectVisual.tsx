@@ -2,6 +2,7 @@
 
 import { useRef, useEffect } from "react";
 import { MotionValue } from "framer-motion";
+import Image from "next/image";
 import { Project } from "@/lib/projects";
 import { AbstractVisual } from "./visuals/AbstractVisual";
 
@@ -48,10 +49,12 @@ export function ProjectVisual({ project, scrollProgress }: ProjectVisualProps) {
 
     if (project.media.type === "image") {
       return (
-        <img
+        <Image
           src={project.media.src}
           alt={project.title}
-          className="absolute inset-0 w-full h-full object-cover"
+          fill
+          className="object-cover"
+          unoptimized
         />
       );
     }

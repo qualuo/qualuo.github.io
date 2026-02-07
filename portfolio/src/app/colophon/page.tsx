@@ -324,8 +324,8 @@ export default function Colophon() {
           </RevealText>
           <p className="text-slate-400 leading-relaxed">
             The aurora is barely there—a breath of green near the pole, a hint of
-            blue. Sometimes a whisper of violet. Most people won't notice it.
-            That's intentional. The northern lights are often more felt than seen.
+            blue. Sometimes a whisper of violet. Most people won&apos;t notice it.
+            That&apos;s intentional. The northern lights are often more felt than seen.
           </p>
         </Section>
 
