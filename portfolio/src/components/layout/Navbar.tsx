@@ -108,9 +108,10 @@ function TimeLapseControl() {
 
 interface NavbarProps {
   isSubpage?: boolean;
+  hasStars?: boolean;
 }
 
-export function Navbar({ isSubpage = false }: NavbarProps) {
+export function Navbar({ isSubpage = false, hasStars = true }: NavbarProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [showLogo, setShowLogo] = useState(isSubpage);
   const { scrollY } = useScroll();
@@ -123,18 +124,35 @@ export function Navbar({ isSubpage = false }: NavbarProps) {
       return;
     }
 
-    const heroTitle = document.getElementById("hero-title");
-    if (!heroTitle) return;
+    const heroSection = document.getElementById("hero");
+    if (!heroSection) return;
+
+    let heroInView = true;
+    let nameVisible = true;
+
+    const updateLogo = () => setShowLogo(!heroInView || !nameVisible);
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        setShowLogo(!entry.isIntersecting);
+        heroInView = entry.isIntersecting;
+        updateLogo();
       },
       { threshold: 0 }
     );
 
-    observer.observe(heroTitle);
-    return () => observer.disconnect();
+    observer.observe(heroSection);
+
+    const onSlideChange = (e: Event) => {
+      nameVisible = (e as CustomEvent).detail.slide !== 2;
+      updateLogo();
+    };
+
+    window.addEventListener('hero-slide-change', onSlideChange);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('hero-slide-change', onSlideChange);
+    };
   }, [isSubpage]);
 
   useMotionValueEvent(scrollY, "change", (latest) => {
@@ -227,7 +245,7 @@ export function Navbar({ isSubpage = false }: NavbarProps) {
           transition={{ duration: 0.3, delay: shouldAnimate ? 0.2 : 0 }}
           className="flex items-center gap-3"
         >
-          <TimeLapseControl />
+          {hasStars && <TimeLapseControl />}
           <AudioControl />
           <Link
             href={isSubpage ? "/#contact" : "#contact"}

@@ -4,11 +4,12 @@ import { motion, useScroll, useTransform, useInView } from "framer-motion";
 import Link from "next/link";
 import { useRef, useEffect, useState } from "react";
 import { StarsBackground } from "@/components/animations/StarsBackground";
+import { useTimeLapse } from "@/components/animations/TimeLapseProvider";
 
 // Animated counter component
 function AnimatedNumber({ value, suffix = "", duration = 2 }: { value: number; suffix?: string; duration?: number }) {
   const ref = useRef<HTMLSpanElement>(null);
-  const isInView = useInView(ref, { once: true, margin: "-100px" });
+  const isInView = useInView(ref, { once: true, margin: "-20px" });
   const [displayValue, setDisplayValue] = useState(0);
 
   useEffect(() => {
@@ -111,7 +112,7 @@ function RevealText({ children, className = "", delay = 0 }: { children: React.R
 // Section component with fade-in
 function Section({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   const ref = useRef<HTMLElement>(null);
-  const isInView = useInView(ref, { once: true, margin: "-100px" });
+  const isInView = useInView(ref, { once: true, margin: "-20px" });
 
   return (
     <motion.section
@@ -138,6 +139,34 @@ function Stat({ value, label, suffix = "" }: { value: number; label: string; suf
   );
 }
 
+function TimeLapsePrompt() {
+  const ref = useRef<HTMLElement>(null);
+  const isInView = useInView(ref, { once: true, margin: "-20px" });
+  const { isActive, toggle } = useTimeLapse();
+
+  return (
+    <motion.section
+      ref={ref}
+      className="mb-20 py-8 border-y border-white/10"
+      initial={{ opacity: 0, y: 30 }}
+      animate={isInView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.8, ease: [0.23, 1, 0.32, 1] }}
+    >
+      <button
+        onClick={toggle}
+        className="w-full text-center cursor-pointer group"
+      >
+        <p className="text-slate-500 text-sm mb-2 group-hover:text-slate-300 transition-colors">
+          {isActive ? "Hours compressed into seconds" : "Watch hours compress into seconds"}
+        </p>
+        <p className="text-slate-600 text-xs group-hover:text-slate-500 transition-colors">
+          {isActive ? "Slow down" : "Accelerate"}
+        </p>
+      </button>
+    </motion.section>
+  );
+}
+
 export default function Colophon() {
   const containerRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
@@ -153,7 +182,7 @@ export default function Colophon() {
       <StarsBackground />
       <main ref={containerRef} className="min-h-screen text-white">
       <motion.div
-        className="h-screen flex flex-col items-center justify-center relative"
+        className="h-dvh flex flex-col items-center justify-center relative"
         style={{ opacity: headerOpacity, scale: headerScale }}
       >
         <motion.div
@@ -336,16 +365,7 @@ export default function Colophon() {
         </Section>
 
         {/* Time Lapse */}
-        <Section className="mb-20 py-8 border-y border-white/10">
-          <div className="text-center">
-            <p className="text-slate-500 text-sm mb-2">
-              Click <span className="text-slate-300">Stars</span> in the navigation
-            </p>
-            <p className="text-slate-600 text-xs">
-              Watch hours compress into seconds
-            </p>
-          </div>
-        </Section>
+        <TimeLapsePrompt />
 
         {/* Closing */}
         <Section className="text-center">

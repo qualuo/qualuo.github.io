@@ -2,7 +2,7 @@
 
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 import { MagneticButton } from "@/components/animations/MagneticButton";
 
 const ease: [number, number, number, number] = [0.25, 0.1, 0.25, 1];
@@ -52,13 +52,15 @@ export function Hero() {
     }
   };
 
-  const isZen = slide === 2;
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent('hero-slide-change', { detail: { slide } }));
+  }, [slide]);
 
   return (
     <section
       ref={containerRef}
       id="hero"
-      className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden"
+      className="relative min-h-dvh flex flex-col items-center justify-center overflow-hidden"
     >
       <motion.div
         style={{ opacity, y }}
@@ -85,7 +87,6 @@ export function Hero() {
               </motion.p>
 
               <motion.h1
-                id="hero-title"
                 initial={{ opacity: 0, scale: 0.96 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.8, delay: 0.2, ease }}
@@ -173,7 +174,7 @@ export function Hero() {
                 transition={{ duration: 0.6, delay: 0.1, ease }}
                 className="text-purple-400 text-sm md:text-base font-medium tracking-widest uppercase mb-6"
               >
-                Creative Technologist · Visual Designer
+                Creative Technologist · Interaction Design
               </motion.p>
 
               <motion.h1
@@ -222,13 +223,13 @@ export function Hero() {
                 className="flex flex-col sm:flex-row gap-4 justify-center"
               >
                 <MagneticButton strength={0.15}>
-                  <Link href="/demos" data-cursor="pointer">
+                  <Link href="/work" data-cursor="pointer">
                     <motion.span
                       className="inline-block px-8 py-4 bg-white text-black font-medium rounded-full hover:bg-gray-100 transition-colors"
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                     >
-                      View Work
+                      Engage
                     </motion.span>
                   </Link>
                 </MagneticButton>
@@ -261,26 +262,6 @@ export function Hero() {
             />
           )}
         </AnimatePresence>
-      </motion.div>
-
-      {/* Scroll indicator */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: isZen ? 0 : 0.5 }}
-        transition={{ delay: isZen ? 0 : 2.5, duration: 1 }}
-        className="absolute bottom-12 left-1/2 -translate-x-1/2"
-      >
-        <motion.div
-          animate={{ y: [0, 6, 0] }}
-          transition={{
-            duration: 2.5,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
-          className="flex flex-col items-center gap-3 text-slate-600"
-        >
-          <div className="w-px h-10 bg-linear-to-b from-transparent via-slate-600 to-transparent" />
-        </motion.div>
       </motion.div>
 
       {/* Left arrow */}

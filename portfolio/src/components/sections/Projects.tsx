@@ -144,22 +144,19 @@ export function Projects() {
 
           {/* Scroll indicator */}
           <motion.div
-            className="absolute bottom-12 left-1/2 -translate-x-1/2"
+            className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-slate-600"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 1 }}
+            transition={{ delay: 1.5 }}
           >
+            <span className="text-xs uppercase tracking-widest">Scroll</span>
             <motion.div
-              className="w-6 h-10 rounded-full border-2 border-white/20 flex justify-center pt-2"
-              initial={{ opacity: 0.5 }}
-              animate={{ opacity: [0.5, 1, 0.5] }}
-              transition={{ duration: 2, repeat: Infinity }}
+              animate={{ y: [0, 6, 0] }}
+              transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
             >
-              <motion.div
-                className="w-1 h-2 bg-white/50 rounded-full"
-                animate={{ y: [0, 12, 0] }}
-                transition={{ duration: 2, repeat: Infinity }}
-              />
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <path d="M12 5v14M5 12l7 7 7-7" />
+              </svg>
             </motion.div>
           </motion.div>
         </div>
