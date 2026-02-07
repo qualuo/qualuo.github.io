@@ -90,26 +90,28 @@ export function ProjectHero({
         </motion.div>
 
         {/* Gradient overlay for text readability */}
-        <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent" />
-        <div className="absolute inset-0 bg-linear-to-r from-black/60 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-linear-to-r from-black/60 via-transparent to-transparent pointer-events-none" />
+
+        {/* Project number indicator — top left, clear of right-side progress */}
+        <motion.div
+          className="absolute top-20 left-8 text-8xl md:text-9xl font-bold select-none pointer-events-none"
+          style={{ opacity: contentOpacity, color: `${theme.primary}20` }}
+        >
+          {String(index + 1).padStart(2, "0")}
+        </motion.div>
 
         {/* Content */}
         <motion.div
-          className="absolute inset-0 flex items-end"
+          className="absolute inset-0 flex items-end pointer-events-none"
           style={{
             opacity: contentOpacity,
             y: contentY,
           }}
         >
-          <ProjectContent project={project} theme={theme} />
-        </motion.div>
-
-        {/* Project number indicator */}
-        <motion.div
-          className="absolute top-8 right-8 text-white/20 font-light text-8xl md:text-9xl select-none"
-          style={{ opacity: contentOpacity }}
-        >
-          {String(index + 1).padStart(2, "0")}
+          <div className="pointer-events-auto">
+            <ProjectContent project={project} theme={theme} />
+          </div>
         </motion.div>
       </div>
     </div>

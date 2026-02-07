@@ -44,6 +44,24 @@ export function Hero() {
     });
   }, []);
 
+  // Swipe handling
+  const pointerStart = useRef<{ x: number; y: number } | null>(null);
+
+  const onPointerDown = useCallback((e: React.PointerEvent) => {
+    pointerStart.current = { x: e.clientX, y: e.clientY };
+  }, []);
+
+  const onPointerUp = useCallback((e: React.PointerEvent) => {
+    if (!pointerStart.current) return;
+    const dx = e.clientX - pointerStart.current.x;
+    const dy = e.clientY - pointerStart.current.y;
+    pointerStart.current = null;
+    // Only trigger if horizontal swipe is dominant and exceeds threshold
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
+      navigate(dx < 0 ? 1 : -1);
+    }
+  }, [navigate]);
+
   const scrollToContact = (e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
     const element = document.querySelector("#contact");
@@ -60,7 +78,9 @@ export function Hero() {
     <section
       ref={containerRef}
       id="hero"
-      className="relative min-h-dvh flex flex-col items-center justify-center overflow-hidden"
+      onPointerDown={onPointerDown}
+      onPointerUp={onPointerUp}
+      className="relative min-h-dvh flex flex-col items-center justify-center overflow-hidden touch-pan-y"
     >
       <motion.div
         style={{ opacity, y }}

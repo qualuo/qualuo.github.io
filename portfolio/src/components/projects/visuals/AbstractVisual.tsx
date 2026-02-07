@@ -23,6 +23,90 @@ function useIsActive(scrollProgress: MotionValue<number>) {
   return ref;
 }
 
+// Drag-to-rotate hook — attaches pointer listeners to the WebGL canvas
+function useDragRotation() {
+  const { gl } = useThree();
+  const state = useRef({
+    isDragging: false,
+    prevX: 0,
+    prevY: 0,
+    velocityX: 0,
+    velocityY: 0,
+    rotationX: 0,
+    rotationY: 0,
+  });
+
+  useEffect(() => {
+    const el = gl.domElement;
+    el.style.cursor = "grab";
+
+    const onDown = (e: PointerEvent) => {
+      state.current.isDragging = true;
+      state.current.prevX = e.clientX;
+      state.current.prevY = e.clientY;
+      state.current.velocityX = 0;
+      state.current.velocityY = 0;
+      el.style.cursor = "grabbing";
+    };
+
+    const onMove = (e: PointerEvent) => {
+      if (!state.current.isDragging) return;
+      const s = state.current;
+      const dx = e.clientX - s.prevX;
+      const dy = e.clientY - s.prevY;
+      s.velocityX = dx * 0.005;
+      s.velocityY = dy * 0.005;
+      s.rotationY += s.velocityX;
+      s.rotationX += s.velocityY;
+      s.prevX = e.clientX;
+      s.prevY = e.clientY;
+    };
+
+    const onUp = () => {
+      state.current.isDragging = false;
+      el.style.cursor = "grab";
+    };
+
+    el.addEventListener("pointerdown", onDown);
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+
+    return () => {
+      el.removeEventListener("pointerdown", onDown);
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      el.style.cursor = "";
+    };
+  }, [gl]);
+
+  return state;
+}
+
+// Wrapper that applies drag rotation as a parent transform
+function DragRotateWrapper({ children }: { children: React.ReactNode }) {
+  const groupRef = useRef<THREE.Group>(null);
+  const drag = useDragRotation();
+
+  useFrame(() => {
+    if (!groupRef.current) return;
+    const s = drag.current;
+
+    if (!s.isDragging) {
+      s.velocityX *= 0.95;
+      s.velocityY *= 0.95;
+      s.rotationY += s.velocityX;
+      s.rotationX += s.velocityY;
+    }
+
+    s.rotationX = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, s.rotationX));
+
+    groupRef.current.rotation.y = s.rotationY;
+    groupRef.current.rotation.x = s.rotationX;
+  });
+
+  return <group ref={groupRef}>{children}</group>;
+}
+
 // Neural Network Visual (for AI & Innovation)
 function NeuralNetworkVisual({ colors, scrollProgress }: { colors: AbstractVisualProps["colors"]; scrollProgress: MotionValue<number> }) {
   const isActive = useIsActive(scrollProgress);
@@ -477,414 +561,896 @@ function CityVisual({ colors, scrollProgress }: { colors: AbstractVisualProps["c
   );
 }
 
-// Chess Visual (for Game Development) - 3D chess board with pieces
+// ===== Chess Visual — The Immortal Game (Anderssen vs Kieseritzky, 1851) =====
+
+const CHESS_PIECES = [
+  // White back row (0-7)
+  { type: "rook", isWhite: true, col: 0, row: 0 },
+  { type: "knight", isWhite: true, col: 1, row: 0 },
+  { type: "bishop", isWhite: true, col: 2, row: 0 },
+  { type: "queen", isWhite: true, col: 3, row: 0 },
+  { type: "king", isWhite: true, col: 4, row: 0 },
+  { type: "bishop", isWhite: true, col: 5, row: 0 },
+  { type: "knight", isWhite: true, col: 6, row: 0 },
+  { type: "rook", isWhite: true, col: 7, row: 0 },
+  // White pawns (8-15)
+  ...[0,1,2,3,4,5,6,7].map(c => ({ type: "pawn", isWhite: true, col: c, row: 1 })),
+  // Black back row (16-23)
+  { type: "rook", isWhite: false, col: 0, row: 7 },
+  { type: "knight", isWhite: false, col: 1, row: 7 },
+  { type: "bishop", isWhite: false, col: 2, row: 7 },
+  { type: "queen", isWhite: false, col: 3, row: 7 },
+  { type: "king", isWhite: false, col: 4, row: 7 },
+  { type: "bishop", isWhite: false, col: 5, row: 7 },
+  { type: "knight", isWhite: false, col: 6, row: 7 },
+  { type: "rook", isWhite: false, col: 7, row: 7 },
+  // Black pawns (24-31)
+  ...[0,1,2,3,4,5,6,7].map(c => ({ type: "pawn", isWhite: false, col: c, row: 6 })),
+];
+
+const PIECE_H: Record<string, number> = {
+  king: 1.3, queen: 1.15, bishop: 0.9, knight: 0.8, rook: 0.75, pawn: 0.55,
+};
+
+// The Immortal Game — 23 moves, 46 half-moves
+const IMMORTAL_GAME: { p: number; c: number; r: number; x?: number }[] = [
+  { p: 12, c: 4, r: 3 },             // 1.  e4
+  { p: 28, c: 4, r: 4 },             // 1... e5
+  { p: 13, c: 5, r: 3 },             // 2.  f4
+  { p: 28, c: 5, r: 3, x: 13 },     // 2... exf4
+  { p: 5,  c: 2, r: 3 },             // 3.  Bc4
+  { p: 19, c: 7, r: 3 },             // 3... Qh4+
+  { p: 4,  c: 5, r: 0 },             // 4.  Kf1
+  { p: 25, c: 1, r: 4 },             // 4... b5
+  { p: 5,  c: 1, r: 4, x: 25 },     // 5.  Bxb5
+  { p: 22, c: 5, r: 5 },             // 5... Nf6
+  { p: 6,  c: 5, r: 2 },             // 6.  Nf3
+  { p: 19, c: 7, r: 5 },             // 6... Qh6
+  { p: 11, c: 3, r: 2 },             // 7.  d3
+  { p: 22, c: 7, r: 4 },             // 7... Nh5
+  { p: 6,  c: 7, r: 3 },             // 8.  Nh4
+  { p: 19, c: 6, r: 4 },             // 8... Qg5
+  { p: 6,  c: 5, r: 4 },             // 9.  Nf5
+  { p: 26, c: 2, r: 5 },             // 9... c6
+  { p: 14, c: 6, r: 3 },             // 10. g4
+  { p: 22, c: 5, r: 5 },             // 10... Nf6
+  { p: 7,  c: 6, r: 0 },             // 11. Rg1
+  { p: 26, c: 1, r: 4, x: 5 },      // 11... cxb5
+  { p: 15, c: 7, r: 3 },             // 12. h4
+  { p: 19, c: 6, r: 5 },             // 12... Qg6
+  { p: 15, c: 7, r: 4 },             // 13. h5
+  { p: 19, c: 6, r: 4 },             // 13... Qg5
+  { p: 3,  c: 5, r: 2 },             // 14. Qf3
+  { p: 22, c: 6, r: 7 },             // 14... Ng8
+  { p: 2,  c: 5, r: 3, x: 28 },     // 15. Bxf4
+  { p: 19, c: 5, r: 5 },             // 15... Qf6
+  { p: 1,  c: 2, r: 2 },             // 16. Nc3
+  { p: 21, c: 2, r: 4 },             // 16... Bc5
+  { p: 1,  c: 3, r: 4 },             // 17. Nd5
+  { p: 19, c: 1, r: 1, x: 9 },      // 17... Qxb2
+  { p: 2,  c: 3, r: 5 },             // 18. Bd6
+  { p: 21, c: 6, r: 0, x: 7 },      // 18... Bxg1
+  { p: 12, c: 4, r: 4 },             // 19. e5
+  { p: 19, c: 0, r: 0, x: 0 },      // 19... Qxa1+
+  { p: 4,  c: 4, r: 1 },             // 20. Ke2
+  { p: 17, c: 0, r: 5 },             // 20... Na6
+  { p: 6,  c: 6, r: 6, x: 30 },     // 21. Nxg7+
+  { p: 20, c: 3, r: 7 },             // 21... Kd8
+  { p: 3,  c: 5, r: 5 },             // 22. Qf6+
+  { p: 22, c: 5, r: 5, x: 3 },      // 22... Nxf6
+  { p: 2,  c: 4, r: 6 },             // 23. Be7#
+];
+
+const MOVE_INTERVAL = 1.4;   // seconds between moves
+const SLIDE_DURATION = 0.55; // seconds for a piece to slide
+const END_PAUSE = 4.0;       // seconds to admire the checkmate
+const FADE_DURATION = 0.8;   // fade out/in between loops
+
+function chessEase(t: number): number {
+  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+}
+
 function ChessVisual({ colors, scrollProgress }: { colors: AbstractVisualProps["colors"]; scrollProgress: MotionValue<number> }) {
   const isActive = useIsActive(scrollProgress);
   const groupRef = useRef<THREE.Group>(null);
-  const pieceRefs = useRef<THREE.Mesh[]>([]);
-  const time = useRef(0);
+  const pieceGroupRefs = useRef<(THREE.Group | null)[]>([]);
+  const highlightRefs = useRef<(THREE.Mesh | null)[]>([]);
 
-  // Chess piece positions (simplified)
-  const pieces = useMemo(() => {
-    const result: { x: number; z: number; height: number; isKing: boolean; isWhite: boolean }[] = [];
 
-    // Back row white pieces
-    for (let i = 0; i < 8; i++) {
-      const isKing = i === 4;
-      const isQueen = i === 3;
-      result.push({
-        x: i - 3.5,
-        z: -3.5,
-        height: isKing ? 0.9 : isQueen ? 0.8 : i === 0 || i === 7 ? 0.5 : i === 1 || i === 6 ? 0.55 : 0.6,
-        isKing,
-        isWhite: true,
-      });
-    }
-    // White pawns
-    for (let i = 0; i < 8; i++) {
-      result.push({ x: i - 3.5, z: -2.5, height: 0.4, isKing: false, isWhite: true });
-    }
-    // Black pawns
-    for (let i = 0; i < 8; i++) {
-      result.push({ x: i - 3.5, z: 2.5, height: 0.4, isKing: false, isWhite: false });
-    }
-    // Back row black pieces
-    for (let i = 0; i < 8; i++) {
-      const isKing = i === 4;
-      const isQueen = i === 3;
-      result.push({
-        x: i - 3.5,
-        z: 3.5,
-        height: isKing ? 0.9 : isQueen ? 0.8 : i === 0 || i === 7 ? 0.5 : i === 1 || i === 6 ? 0.55 : 0.6,
-        isKing,
-        isWhite: false,
-      });
-    }
+  const state = useRef({
+    time: 0,
+    moveIndex: 0,
+    moveTimer: MOVE_INTERVAL, // start with first move ready
+    movingPiece: -1,
+    phase: "playing" as "playing" | "ending" | "fading" | "resetting",
+    phaseTimer: 0,
+    mateTime: 0,
+    pieces: CHESS_PIECES.map(p => ({
+      col: p.col, row: p.row,
+      prevCol: p.col, prevRow: p.row,
+      captured: false, captureTime: 0,
+    })),
+    highlights: [] as { x: number; z: number; time: number }[],
+  });
 
-    return result;
-  }, []);
+  const resetGame = () => {
+    const s = state.current;
+    s.moveIndex = 0;
+    s.moveTimer = MOVE_INTERVAL;
+    s.movingPiece = -1;
+    s.mateTime = 0;
+    s.highlights = [];
+    s.pieces = CHESS_PIECES.map(p => ({
+      col: p.col, row: p.row,
+      prevCol: p.col, prevRow: p.row,
+      captured: false, captureTime: 0,
+    }));
+  };
 
   useFrame((_, delta) => {
     if (!isActive.current) return;
-    time.current += delta;
+    const s = state.current;
+    s.time += delta;
 
-    if (groupRef.current) {
-      groupRef.current.rotation.y = -0.4 + Math.sin(time.current * 0.15) * 0.2;
-      groupRef.current.rotation.x = -0.6 + Math.sin(time.current * 0.1) * 0.05;
+    // --- Phase machine ---
+    if (s.phase === "ending") {
+      s.phaseTimer += delta;
+      if (s.phaseTimer >= END_PAUSE) {
+        s.phase = "fading";
+        s.phaseTimer = 0;
+      }
+    } else if (s.phase === "fading") {
+      s.phaseTimer += delta;
+      if (s.phaseTimer >= FADE_DURATION) {
+        resetGame();
+        s.phase = "resetting";
+        s.phaseTimer = 0;
+      }
+    } else if (s.phase === "resetting") {
+      s.phaseTimer += delta;
+      if (s.phaseTimer >= FADE_DURATION) {
+        s.phase = "playing";
+        s.phaseTimer = 0;
+      }
+    } else {
+      // --- Playing ---
+      s.moveTimer += delta;
+
+      // Slow down the final 3 moves for dramatic buildup
+      const isFinale = s.moveIndex >= IMMORTAL_GAME.length - 3;
+      const interval = isFinale ? MOVE_INTERVAL * 2 : MOVE_INTERVAL;
+
+      if (s.moveTimer >= interval && s.moveIndex < IMMORTAL_GAME.length) {
+        const move = IMMORTAL_GAME[s.moveIndex];
+        const piece = s.pieces[move.p];
+        piece.prevCol = piece.col;
+        piece.prevRow = piece.row;
+        piece.col = move.c;
+        piece.row = move.r;
+        s.movingPiece = move.p;
+
+        if (move.x !== undefined) {
+          s.pieces[move.x].captured = true;
+          s.pieces[move.x].captureTime = s.time;
+        }
+
+        // Only highlight the destination square
+        s.highlights.push(
+          { x: move.c - 3.5, z: 3.5 - move.r, time: s.time },
+        );
+
+        s.moveTimer = 0;
+        s.moveIndex++;
+
+        // Checkmate — trigger flash + piece pulse (handled in render loop)
+        if (s.moveIndex >= IMMORTAL_GAME.length) {
+          s.mateTime = s.time;
+        }
+      }
+
+      if (s.moveIndex >= IMMORTAL_GAME.length && s.moveTimer > 0.5) {
+        s.phase = "ending";
+        s.phaseTimer = 0;
+      }
     }
 
-    // Subtle piece animation
-    pieceRefs.current.forEach((mesh, i) => {
-      if (mesh && pieces[i]) {
-        const hover = Math.sin(time.current * 2 + i * 0.3) * 0.02;
-        mesh.position.y = pieces[i].height / 2 + 0.05 + hover;
+    // --- Compute global opacity for fade transitions ---
+    let globalOpacity = 1;
+    if (s.phase === "fading") {
+      globalOpacity = Math.max(0, 1 - s.phaseTimer / FADE_DURATION);
+    } else if (s.phase === "resetting") {
+      globalOpacity = Math.min(1, s.phaseTimer / FADE_DURATION);
+    }
+
+    // --- Update piece positions ---
+    const slideT = Math.min(s.moveTimer / SLIDE_DURATION, 1);
+    const eased = chessEase(slideT);
+
+    s.pieces.forEach((piece, i) => {
+      const group = pieceGroupRefs.current[i];
+      if (!group) return;
+      const def = CHESS_PIECES[i];
+      const h = PIECE_H[def.type];
+
+      if (piece.captured) {
+        const dt = s.time - piece.captureTime;
+        const cx = piece.col - 3.5;
+        const cz = 3.5 - piece.row;
+        const flyDir = def.isWhite ? 1 : -1;
+        group.position.x = cx + flyDir * dt * 1.5;
+        group.position.z = cz;
+        group.position.y = h / 2 + dt * 3 - dt * dt * 4;
+        group.rotation.x = dt * 4;
+        group.rotation.z = dt * 2.5;
+        // Fade captured piece
+        const capOpacity = Math.max(0, 1 - dt * 1.8) * globalOpacity;
+        group.traverse((child) => {
+          const m = child as THREE.Mesh;
+          if (m.isMesh && m.material) {
+            (m.material as THREE.MeshBasicMaterial).opacity = capOpacity;
+          }
+        });
+        return;
+      }
+
+      const wx = piece.col - 3.5;
+      const wz = 3.5 - piece.row;
+
+      if (i === s.movingPiece && slideT < 1 && s.phase === "playing") {
+        const fx = piece.prevCol - 3.5;
+        const fz = 3.5 - piece.prevRow;
+        group.position.x = fx + (wx - fx) * eased;
+        group.position.z = fz + (wz - fz) * eased;
+        // Arc — piece lifts off the board mid-slide
+        group.position.y = h / 2 + Math.sin(eased * Math.PI) * 0.35;
+      } else {
+        group.position.x = wx;
+        group.position.z = wz;
+        group.position.y = h / 2;
+      }
+
+      group.rotation.x = 0;
+      group.rotation.z = 0;
+
+      // Pulse mating pieces + mated king during checkmate hold
+      const isMatingPiece = (s.phase === "ending") && (i === 2 || i === 1 || i === 6);
+      const isMatedKing = (s.phase === "ending") && i === 20; // black king
+      const baseOpacity = def.type === "king" ? 1 : 0.8;
+      const pulse = isMatingPiece ? 0.85 + Math.sin(s.time * 4) * 0.15
+        : isMatedKing ? 0.4 + Math.sin(s.time * 3) * 0.3
+        : baseOpacity;
+      group.traverse((child) => {
+        const m = child as THREE.Mesh;
+        if (m.isMesh && m.material) {
+          (m.material as THREE.MeshBasicMaterial).opacity = pulse * globalOpacity;
+        }
+      });
+    });
+
+    // --- Board rotation ---
+    if (groupRef.current) {
+      groupRef.current.rotation.y = -0.15 + Math.sin(s.time * 0.1) * 0.1;
+      groupRef.current.rotation.x = 0.8 + Math.sin(s.time * 0.08) * 0.03;
+    }
+
+    // --- Highlights ---
+    s.highlights = s.highlights.filter(hl => s.time - hl.time < 2.5);
+    highlightRefs.current.forEach((mesh, i) => {
+      if (!mesh) return;
+      const hl = s.highlights[i];
+      if (hl) {
+        mesh.visible = true;
+        mesh.position.x = hl.x;
+        mesh.position.z = hl.z;
+        const age = s.time - hl.time;
+        (mesh.material as THREE.MeshBasicMaterial).opacity =
+          Math.max(0, 0.45 * (1 - age / 2.5)) * globalOpacity;
+      } else {
+        mesh.visible = false;
       }
     });
   });
 
   return (
-    <group ref={groupRef} position={[0, 0.5, 0]} scale={0.6}>
-      {/* Chess board */}
-      {[...Array(8)].map((_, row) =>
-        [...Array(8)].map((_, col) => {
-          const isLight = (row + col) % 2 === 0;
-          return (
-            <mesh
-              key={`${row}-${col}`}
-              position={[col - 3.5, 0, row - 3.5]}
-              rotation={[-Math.PI / 2, 0, 0]}
-            >
-              <planeGeometry args={[0.95, 0.95]} />
-              <meshBasicMaterial
-                color={isLight ? colors.primary : colors.secondary}
-                transparent
-                opacity={isLight ? 0.3 : 0.5}
-              />
-            </mesh>
-          );
-        })
-      )}
-
-      {/* Board edge glow */}
-      <mesh position={[0, -0.05, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[8.5, 8.5]} />
-        <meshBasicMaterial color={colors.secondary} transparent opacity={0.1} />
+    <group ref={groupRef} position={[0, 0.1, 0]} scale={0.85}>
+      {/* Board surface — single translucent plane */}
+      <mesh position={[0, 0, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[8, 8]} />
+        <meshBasicMaterial color={colors.secondary} transparent opacity={0.15} />
       </mesh>
 
-      {/* Chess pieces */}
-      {pieces.map((piece, i) => (
+      {/* Grid lines — 9 horizontal + 9 vertical */}
+      {[...Array(9)].map((_, i) => {
+        const pos = i - 4;
+        const edge = i === 0 || i === 8;
+        return (
+          <group key={`grid-${i}`}>
+            <mesh position={[0, 0.005, pos]}>
+              <boxGeometry args={[8, 0.004, edge ? 0.04 : 0.02]} />
+              <meshBasicMaterial color={colors.secondary} transparent opacity={edge ? 0.45 : 0.25} />
+            </mesh>
+            <mesh position={[pos, 0.005, 0]}>
+              <boxGeometry args={[edge ? 0.04 : 0.02, 0.004, 8]} />
+              <meshBasicMaterial color={colors.secondary} transparent opacity={edge ? 0.45 : 0.25} />
+            </mesh>
+          </group>
+        );
+      })}
+
+
+      {/* Move trail highlights (pool of 20) */}
+      {[...Array(20)].map((_, i) => (
         <mesh
-          key={i}
-          ref={(el) => { if (el) pieceRefs.current[i] = el; }}
-          position={[piece.x, piece.height / 2 + 0.05, piece.z]}
+          key={`hl-${i}`}
+          ref={el => { highlightRefs.current[i] = el; }}
+          position={[0, 0.01, 0]}
+          rotation={[-Math.PI / 2, 0, 0]}
+          visible={false}
         >
-          <cylinderGeometry args={[0.2, 0.25, piece.height, 8]} />
-          <meshBasicMaterial
-            color={piece.isWhite ? colors.primary : colors.secondary}
-            transparent
-            opacity={piece.isKing ? 1 : 0.8}
-          />
+          <planeGeometry args={[0.96, 0.96]} />
+          <meshBasicMaterial color={colors.primary} transparent opacity={0} />
         </mesh>
       ))}
 
-      {/* King crowns */}
-      {pieces.filter(p => p.isKing).map((piece, i) => (
-        <mesh
-          key={`crown-${i}`}
-          position={[piece.x, piece.height + 0.15, piece.z]}
-        >
-          <boxGeometry args={[0.15, 0.2, 0.15]} />
-          <meshBasicMaterial
-            color={piece.isWhite ? colors.primary : colors.secondary}
-            transparent
-            opacity={0.9}
-          />
-        </mesh>
-      ))}
+      {/* Pieces */}
+      {CHESS_PIECES.map((piece, i) => {
+        const c = piece.isWhite ? colors.primary : colors.secondary;
+        const h = PIECE_H[piece.type];
+        const op = piece.type === "king" ? 1 : 0.85;
+        // Shared sub-components
+        const base = (
+          <mesh position={[0, -h / 2 + 0.03, 0]}>
+            <cylinderGeometry args={[0.26, 0.28, 0.06, 16]} />
+            <meshBasicMaterial color={c} transparent opacity={op * 0.7} />
+          </mesh>
+        );
+        const collar = (yOff: number) => (
+          <mesh position={[0, yOff, 0]}>
+            <cylinderGeometry args={[0.19, 0.16, 0.05, 16]} />
+            <meshBasicMaterial color={c} transparent opacity={op * 0.8} />
+          </mesh>
+        );
+        return (
+          <group
+            key={i}
+            ref={el => { pieceGroupRefs.current[i] = el; }}
+            position={[piece.col - 3.5, h / 2, 3.5 - piece.row]}
+          >
+            {piece.type === "pawn" && (<>
+              {base}
+              {/* Body */}
+              <mesh position={[0, -0.06, 0]}>
+                <cylinderGeometry args={[0.13, 0.2, h * 0.5, 16]} />
+                <meshBasicMaterial color={c} transparent opacity={op} />
+              </mesh>
+              {/* Collar */}
+              {collar(0.05)}
+              {/* Head */}
+              <mesh position={[0, 0.15, 0]}>
+                <sphereGeometry args={[0.13, 16, 12]} />
+                <meshBasicMaterial color={c} transparent opacity={op} />
+              </mesh>
+            </>)}
+            {piece.type === "rook" && (<>
+              {base}
+              {/* Tower body */}
+              <mesh position={[0, -0.02, 0]}>
+                <cylinderGeometry args={[0.18, 0.22, h * 0.6, 16]} />
+                <meshBasicMaterial color={c} transparent opacity={op} />
+              </mesh>
+              {/* Rim */}
+              <mesh position={[0, h * 0.32, 0]}>
+                <cylinderGeometry args={[0.22, 0.2, 0.06, 16]} />
+                <meshBasicMaterial color={c} transparent opacity={op} />
+              </mesh>
+              {/* Battlements — 3 merlons */}
+              {[-0.13, 0, 0.13].map((xOff, j) => (
+                <mesh key={j} position={[xOff, h * 0.42, 0]}>
+                  <boxGeometry args={[0.08, 0.12, 0.2]} />
+                  <meshBasicMaterial color={c} transparent opacity={op} />
+                </mesh>
+              ))}
+            </>)}
+            {piece.type === "knight" && (<>
+              {base}
+              {/* Body */}
+              <mesh position={[0, -0.08, 0]}>
+                <cylinderGeometry args={[0.14, 0.2, h * 0.3, 16]} />
+                <meshBasicMaterial color={c} transparent opacity={op} />
+              </mesh>
+              {/* Neck/head — tall flat slab, angled forward */}
+              <mesh position={[0, 0.14, 0.04]} rotation={[0.25, 0, 0]}>
+                <boxGeometry args={[0.14, 0.45, 0.1]} />
+                <meshBasicMaterial color={c} transparent opacity={op} />
+              </mesh>
+              {/* Muzzle — horizontal protrusion */}
+              <mesh position={[0, 0.05, 0.16]}>
+                <boxGeometry args={[0.12, 0.1, 0.2]} />
+                <meshBasicMaterial color={c} transparent opacity={op} />
+              </mesh>
+              {/* Left ear */}
+              <mesh position={[-0.06, 0.38, 0.08]}>
+                <coneGeometry args={[0.04, 0.12, 8]} />
+                <meshBasicMaterial color={c} transparent opacity={op} />
+              </mesh>
+              {/* Right ear */}
+              <mesh position={[0.06, 0.38, 0.08]}>
+                <coneGeometry args={[0.04, 0.12, 8]} />
+                <meshBasicMaterial color={c} transparent opacity={op} />
+              </mesh>
+            </>)}
+            {piece.type === "bishop" && (<>
+              {base}
+              {/* Body */}
+              <mesh position={[0, -0.02, 0]}>
+                <cylinderGeometry args={[0.1, 0.2, h * 0.55, 16]} />
+                <meshBasicMaterial color={c} transparent opacity={op} />
+              </mesh>
+              {/* Collar */}
+              {collar(h * 0.22)}
+              {/* Mitre */}
+              <mesh position={[0, h * 0.35, 0]}>
+                <coneGeometry args={[0.13, 0.35, 16]} />
+                <meshBasicMaterial color={c} transparent opacity={op} />
+              </mesh>
+              {/* Ball finial */}
+              <mesh position={[0, h * 0.52, 0]}>
+                <sphereGeometry args={[0.05, 12, 8]} />
+                <meshBasicMaterial color={c} transparent opacity={op} />
+              </mesh>
+            </>)}
+            {piece.type === "queen" && (<>
+              {base}
+              {/* Body */}
+              <mesh position={[0, -0.02, 0]}>
+                <cylinderGeometry args={[0.12, 0.22, h * 0.6, 16]} />
+                <meshBasicMaterial color={c} transparent opacity={op} />
+              </mesh>
+              {/* Collar */}
+              {collar(h * 0.25)}
+              {/* Crown ring */}
+              <mesh position={[0, h * 0.35, 0]} rotation={[Math.PI / 2, 0, 0]}>
+                <torusGeometry args={[0.14, 0.035, 12, 24]} />
+                <meshBasicMaterial color={c} transparent opacity={op} />
+              </mesh>
+              {/* Orb */}
+              <mesh position={[0, h * 0.44, 0]}>
+                <sphereGeometry args={[0.09, 14, 10]} />
+                <meshBasicMaterial color={c} transparent opacity={op} />
+              </mesh>
+            </>)}
+            {piece.type === "king" && (<>
+              {base}
+              {/* Body */}
+              <mesh position={[0, -0.02, 0]}>
+                <cylinderGeometry args={[0.13, 0.23, h * 0.55, 16]} />
+                <meshBasicMaterial color={c} transparent opacity={1} />
+              </mesh>
+              {/* Collar */}
+              {collar(h * 0.22)}
+              {/* Crown ring */}
+              <mesh position={[0, h * 0.3, 0]} rotation={[Math.PI / 2, 0, 0]}>
+                <torusGeometry args={[0.15, 0.035, 12, 24]} />
+                <meshBasicMaterial color={c} transparent opacity={1} />
+              </mesh>
+              {/* Cross — vertical */}
+              <mesh position={[0, h * 0.45, 0]}>
+                <boxGeometry args={[0.06, 0.35, 0.06]} />
+                <meshBasicMaterial color={c} transparent opacity={1} />
+              </mesh>
+              {/* Cross — horizontal */}
+              <mesh position={[0, h * 0.5, 0]}>
+                <boxGeometry args={[0.24, 0.06, 0.06]} />
+                <meshBasicMaterial color={c} transparent opacity={1} />
+              </mesh>
+            </>)}
+          </group>
+        );
+      })}
     </group>
   );
 }
 
-// Helper component for track lines
-function TrackLine({ points, color, opacity }: { points: THREE.Vector3[]; color: string; opacity: number }) {
-  const lineRef = useRef<THREE.Line>(null);
+// ===== Railway Simulation Helpers =====
 
-  const geometry = useMemo(() => {
-    return new THREE.BufferGeometry().setFromPoints(points);
-  }, [points]);
-
-  return (
-    <primitive
-      ref={lineRef}
-      object={new THREE.Line(
-        geometry,
-        new THREE.LineBasicMaterial({ color, transparent: true, opacity })
-      )}
-    />
-  );
+function railLen(pts: THREE.Vector2[]): number {
+  let l = 0;
+  for (let i = 0; i < pts.length - 1; i++) l += pts[i].distanceTo(pts[i + 1]);
+  return l;
 }
 
-// Circuit Visual (for Critical Infrastructure) - Railway Network with realistic trains
+function railPos(pts: THREE.Vector2[], len: number, prog: number) {
+  const target = Math.max(0, Math.min(1, prog)) * len;
+  let acc = 0;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const a = pts[i], b = pts[i + 1], seg = a.distanceTo(b);
+    if (acc + seg >= target || i === pts.length - 2) {
+      const t = seg > 0 ? Math.min(1, (target - acc) / seg) : 0;
+      return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t, angle: Math.atan2(b.y - a.y, b.x - a.x) };
+    }
+    acc += seg;
+  }
+  const a = pts[pts.length - 2], b = pts[pts.length - 1];
+  return { x: b.x, y: b.y, angle: Math.atan2(b.y - a.y, b.x - a.x) };
+}
+
+function railCarWorldPos(
+  route: number[], rIdx: number, hProg: number,
+  secs: { pts: THREE.Vector2[]; len: number }[], behind: number
+) {
+  if (behind <= 0) { const s = secs[route[rIdx]]; return railPos(s.pts, s.len, hProg); }
+  let rem = behind, idx = rIdx;
+  const hDist = hProg * secs[route[idx]].len;
+  if (rem <= hDist) { const s = secs[route[idx]]; return railPos(s.pts, s.len, (hDist - rem) / s.len); }
+  rem -= hDist;
+  for (let i = 0; i < route.length; i++) {
+    idx = (idx - 1 + route.length) % route.length;
+    const s = secs[route[idx]];
+    if (rem <= s.len) return railPos(s.pts, s.len, 1 - rem / s.len);
+    rem -= s.len;
+  }
+  return railPos(secs[route[0]].pts, secs[route[0]].len, 0);
+}
+
+function RailLine({ points, color, opacity }: { points: THREE.Vector3[]; color: string; opacity: number }) {
+  const geo = useMemo(() => new THREE.BufferGeometry().setFromPoints(points), [points]);
+  const obj = useMemo(() => new THREE.Line(geo, new THREE.LineBasicMaterial({ color, transparent: true, opacity })), [geo, color, opacity]);
+  return <primitive object={obj} />;
+}
+
+// Circuit Visual — Railway Network with block signalling, interlocking & realistic train physics
 function CircuitVisual({ colors, scrollProgress }: { colors: AbstractVisualProps["colors"]; scrollProgress: MotionValue<number> }) {
   const isActive = useIsActive(scrollProgress);
   const groupRef = useRef<THREE.Group>(null);
-  const trainRefs = useRef<THREE.Group[]>([]);
-  const signalRefs = useRef<THREE.Mesh[]>([]);
-  const glowRefs = useRef<THREE.Mesh[]>([]);
   const time = useRef(0);
+  const carRefs = useRef<(THREE.Group | null)[][]>([]);
+  const sigLightRefs = useRef<(THREE.Mesh | null)[][]>([]);
+  const sigGlowRefs = useRef<(THREE.Mesh | null)[]>([]);
 
-  // Smooth easing function
-  const ease = (t: number) => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+  // ─── Static layout: track sections, stations, signals, train routes ───
+  const layout = useMemo(() => {
+    type Sec = { id: number; pts: THREE.Vector2[]; len: number; maxSpd: number; staId: number; stopProg: number };
+    const secs: Sec[] = [];
+    const add = (id: number, c: [number, number][], sp: number, sid = -1, spg = 0.5) => {
+      const pts = c.map(([x, y]) => new THREE.Vector2(x, y));
+      secs.push({ id, pts, len: railLen(pts), maxSpd: sp, staId: sid, stopProg: spg });
+    };
 
-  // Enhanced track layout with stations
-  const { tracks, signals, trains, stations, pylons } = useMemo(() => {
-    const tracks: { points: THREE.Vector2[]; isMainLine: boolean }[] = [];
+    // Main oval loop (clockwise: north line L→R, east curve, south line R→L, west curve)
+    add(0, [[-5.5, 1.2], [-2, 1.2]], 1.0);
+    add(1, [[-2, 1.2], [1, 1.2]], 1.0, 0, 0.55);                                         // Station B
+    add(2, [[1, 1.2], [5.5, 1.2]], 1.0);
+    add(3, [[5.5, 1.2], [5.85, 0.7], [6.05, 0], [5.85, -0.7], [5.5, -1.2]], 0.45);       // East curve
+    add(4, [[5.5, -1.2], [2, -1.2]], 1.0);
+    add(5, [[2, -1.2], [-1, -1.2]], 1.0, 1, 0.5);                                         // Station A
+    add(6, [[-1, -1.2], [-5.5, -1.2]], 1.0);
+    add(7, [[-5.5, -1.2], [-5.85, -0.7], [-6.05, 0], [-5.85, 0.7], [-5.5, 1.2]], 0.45);  // West curve
+    // Siding branch (diverges from north line at switch SW0, merges back at SW1)
+    add(8, [[-2, 1.2], [-1.3, 2.1]], 0.55);
+    add(9, [[-1.3, 2.1], [0.7, 2.1]], 0.55, 2, 0.5);                                     // Station C
+    add(10, [[0.7, 2.1], [1, 1.2]], 0.55);
 
-    // Main line - top
-    tracks.push({
-      points: [
-        new THREE.Vector2(-7, 1.2),
-        new THREE.Vector2(-3, 1.2),
-        new THREE.Vector2(0, 1.2),
-        new THREE.Vector2(3, 1.2),
-        new THREE.Vector2(7, 1.2),
-      ],
-      isMainLine: true,
-    });
-
-    // Main line - bottom
-    tracks.push({
-      points: [
-        new THREE.Vector2(-7, -1.2),
-        new THREE.Vector2(-3, -1.2),
-        new THREE.Vector2(0, -1.2),
-        new THREE.Vector2(3, -1.2),
-        new THREE.Vector2(7, -1.2),
-      ],
-      isMainLine: true,
-    });
-
-    // Crossover left
-    tracks.push({
-      points: [
-        new THREE.Vector2(-4, 1.2),
-        new THREE.Vector2(-3, -1.2),
-      ],
-      isMainLine: false,
-    });
-
-    // Crossover right
-    tracks.push({
-      points: [
-        new THREE.Vector2(3, 1.2),
-        new THREE.Vector2(4, -1.2),
-      ],
-      isMainLine: false,
-    });
-
-    // Siding/platform track
-    tracks.push({
-      points: [
-        new THREE.Vector2(-2, 1.2),
-        new THREE.Vector2(-1, 2.2),
-        new THREE.Vector2(1, 2.2),
-        new THREE.Vector2(2, 1.2),
-      ],
-      isMainLine: false,
-    });
-
-    // Signals
-    const signals = [
-      { pos: new THREE.Vector2(-5, 0.85) },
-      { pos: new THREE.Vector2(-1.5, 0.85) },
-      { pos: new THREE.Vector2(2, 0.85) },
-      { pos: new THREE.Vector2(5, 0.85) },
-      { pos: new THREE.Vector2(-5, -1.55) },
-      { pos: new THREE.Vector2(-1.5, -1.55) },
-      { pos: new THREE.Vector2(2, -1.55) },
-      { pos: new THREE.Vector2(5, -1.55) },
-    ];
-
-    // Stations/platforms
     const stations = [
-      { pos: new THREE.Vector2(0, 2.6), width: 2.5 },
-      { pos: new THREE.Vector2(-5.5, 0), width: 1.5 },
-      { pos: new THREE.Vector2(5.5, 0), width: 1.5 },
+      { id: 0, pos: new THREE.Vector2(-0.2, 1.55), width: 2.0 },
+      { id: 1, pos: new THREE.Vector2(0.5, -1.55), width: 2.2 },
+      { id: 2, pos: new THREE.Vector2(-0.3, 2.45), width: 1.6 },
     ];
 
-    // Overhead line pylons
+    // Block signals — each protects entry to its block; nextBlock for yellow lookahead
+    const sigs = [
+      { protects: 0, next: 1, pos: new THREE.Vector2(-5.4, 0.82) },
+      { protects: 1, next: 2, pos: new THREE.Vector2(-1.9, 0.82) },
+      { protects: 2, next: 3, pos: new THREE.Vector2(1.1, 0.82) },
+      { protects: 3, next: 4, pos: new THREE.Vector2(5.7, 1.5) },
+      { protects: 4, next: 5, pos: new THREE.Vector2(5.4, -1.58) },
+      { protects: 5, next: 6, pos: new THREE.Vector2(1.9, -1.58) },
+      { protects: 6, next: 7, pos: new THREE.Vector2(-1.1, -1.58) },
+      { protects: 7, next: 0, pos: new THREE.Vector2(-5.7, -1.5) },
+      { protects: 8, next: 9, pos: new THREE.Vector2(-1.7, 1.65) },
+      { protects: 9, next: 10, pos: new THREE.Vector2(-1.2, 2.45) },
+    ];
+
+    const sigForBlock: Record<number, number> = {};
+    sigs.forEach((s, i) => { sigForBlock[s.protects] = i; });
+
     const pylons: THREE.Vector2[] = [];
-    for (let x = -6; x <= 6; x += 2) {
+    for (let x = -5; x <= 5; x += 2.5) {
       pylons.push(new THREE.Vector2(x, 1.2));
       pylons.push(new THREE.Vector2(x, -1.2));
     }
 
-    // Trains with multiple cars
-    const trains = [
-      { trackIndex: 0, speed: 0.04, offset: 0, cars: 3 },
-      { trackIndex: 1, speed: 0.035, offset: 0.5, cars: 2 },
-      { trackIndex: 0, speed: 0.03, offset: 0.65, cars: 2 },
+    const mainRoute = [0, 1, 2, 3, 4, 5, 6, 7];
+    const sidingRoute = [0, 8, 9, 10, 2, 3, 4, 5, 6, 7];
+    const trainDefs = [
+      { route: mainRoute, rIdx: 0, prog: 0.3, cars: 3 },
+      { route: mainRoute, rIdx: 4, prog: 0.4, cars: 3 },
+      { route: sidingRoute, rIdx: 0, prog: 0.8, cars: 2 },
     ];
 
-    return { tracks, signals, trains, stations, pylons };
+    const trackPts3 = secs.map(s => {
+      const r: THREE.Vector3[] = [];
+      for (let i = 0; i < s.pts.length - 1; i++) {
+        const a = s.pts[i], b = s.pts[i + 1];
+        const n = Math.max(1, Math.ceil(a.distanceTo(b) * 12));
+        for (let j = 0; j <= n; j++) {
+          const t = j / n;
+          r.push(new THREE.Vector3(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, 0));
+        }
+      }
+      return r;
+    });
+
+    return { secs, stations, sigs, sigForBlock, pylons, trainDefs, trackPts3 };
   }, []);
 
-  // Signal color states
-  const signalColors = useRef(signals.map(() => new THREE.Color(0x22cc66)));
-  const targetColors = useRef(signals.map(() => new THREE.Color(0x22cc66)));
+  const ASPECT = useMemo(() => [
+    new THREE.Color(0xee4444), // red
+    new THREE.Color(0xddaa33), // yellow
+    new THREE.Color(0x22cc66), // green
+  ], []);
 
+  // ─── Mutable simulation state (ref-based, no re-renders) ───
+  type Train = {
+    route: number[]; rIdx: number; prog: number; speed: number;
+    dwell: number; cars: number; canDwell: boolean;
+  };
+  type Sim = {
+    trains: Train[];
+    blockOcc: boolean[];
+    blockOwner: number[];
+    sigAspect: number[];
+    sigColor: THREE.Color[];
+    targetColor: THREE.Color[];
+  };
+  const sim = useRef<Sim | null>(null);
+
+  // ─── Simulation tick ───
   useFrame((_, delta) => {
     if (!isActive.current) return;
-    time.current += delta;
+    const dt = Math.min(delta, 0.05);
+    time.current += dt;
 
-    // Subtle perspective rotation
     if (groupRef.current) {
       groupRef.current.rotation.x = -0.5 + Math.sin(time.current * 0.06) * 0.02;
       groupRef.current.rotation.y = Math.sin(time.current * 0.04) * 0.04;
     }
 
-    // Update trains
-    trainRefs.current.forEach((group, i) => {
-      if (group && trains[i]) {
-        const train = trains[i];
-        const track = tracks[train.trackIndex];
-        if (track) {
-          const rawProgress = (time.current * train.speed + train.offset) % 1;
-          const smoothProgress = ease(rawProgress);
+    if (!sim.current) {
+      sim.current = {
+        trains: layout.trainDefs.map(d => ({
+          route: [...d.route], rIdx: d.rIdx, prog: d.prog,
+          speed: 0.15 + Math.random() * 0.1, dwell: 0, cars: d.cars, canDwell: true,
+        })),
+        blockOcc: layout.secs.map(() => false),
+        blockOwner: layout.secs.map(() => -1),
+        sigAspect: layout.sigs.map(() => 2),
+        sigColor: layout.sigs.map(() => new THREE.Color(0x22cc66)),
+        targetColor: layout.sigs.map(() => new THREE.Color(0x22cc66)),
+      };
+    }
+    const S = sim.current;
+    const { secs, sigs, sigForBlock } = layout;
+    const CAR_SPACE = 0.78;
 
-          const totalSegments = track.points.length - 1;
-          const segmentProgress = smoothProgress * totalSegments;
-          const segmentIndex = Math.min(Math.floor(segmentProgress), totalSegments - 1);
-          const t = segmentProgress - segmentIndex;
-
-          const p1 = track.points[segmentIndex];
-          const p2 = track.points[segmentIndex + 1];
-
-          const x = p1.x + (p2.x - p1.x) * t;
-          const y = p1.y + (p2.y - p1.y) * t;
-          group.position.set(x, y, 0.08);
-
-          const angle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
-          group.rotation.z = angle;
-
-          // Update signals
-          signals.forEach((signal, si) => {
-            const dist = Math.sqrt(Math.pow(signal.pos.x - x, 2) + Math.pow(signal.pos.y - y, 2));
-            if (dist < 1.2) {
-              targetColors.current[si].setHex(0xee4444);
-            } else if (dist < 2.5) {
-              targetColors.current[si].setHex(0xddaa33);
-            } else {
-              targetColors.current[si].setHex(0x22cc66);
-            }
-          });
+    // ── 1. Block occupancy ──
+    S.blockOcc.fill(false);
+    S.blockOwner.fill(-1);
+    S.trains.forEach((tr, ti) => {
+      const headSec = tr.route[tr.rIdx];
+      S.blockOcc[headSec] = true;
+      S.blockOwner[headSec] = ti;
+      // Tail: walk backward to find which block the last car occupies
+      const tailDist = (tr.cars - 1) * CAR_SPACE;
+      let rem = tailDist, idx = tr.rIdx;
+      const hDist = tr.prog * secs[tr.route[idx]].len;
+      if (rem > hDist) {
+        rem -= hDist;
+        for (let i = 0; i < tr.route.length; i++) {
+          idx = (idx - 1 + tr.route.length) % tr.route.length;
+          if (rem <= secs[tr.route[idx]].len) break;
+          rem -= secs[tr.route[idx]].len;
         }
+      }
+      const tailSec = tr.route[idx];
+      if (tailSec !== headSec) {
+        S.blockOcc[tailSec] = true;
+        if (S.blockOwner[tailSec] === -1) S.blockOwner[tailSec] = ti;
       }
     });
 
-    // Smooth signal color interpolation
-    signalRefs.current.forEach((mesh, i) => {
-      if (mesh) {
-        signalColors.current[i].lerp(targetColors.current[i], delta * 3);
-        (mesh.material as THREE.MeshBasicMaterial).color.copy(signalColors.current[i]);
+    // ── 2. Signal aspects (3-aspect colour-light block signalling) ──
+    sigs.forEach((sig, si) => {
+      if (S.blockOcc[sig.protects]) {
+        S.sigAspect[si] = 0; // RED — block occupied
+      } else if (S.blockOcc[sig.next]) {
+        S.sigAspect[si] = 1; // YELLOW — next block occupied
+      } else {
+        S.sigAspect[si] = 2; // GREEN — clear
+      }
+      S.targetColor[si].copy(ASPECT[S.sigAspect[si]]);
+    });
+
+    // ── 3. Train movement with realistic physics ──
+    S.trains.forEach((tr, ti) => {
+      const sec = secs[tr.route[tr.rIdx]];
+
+      // Dwelling at station
+      if (tr.dwell > 0) {
+        tr.dwell -= dt;
+        tr.speed = Math.max(0, tr.speed - 0.4 * dt);
+        updateCars(tr, ti);
+        return;
+      }
+
+      let targetSpd = sec.maxSpd;
+
+      // Station approach & stop
+      if (sec.staId >= 0 && tr.canDwell) {
+        const distToStop = (sec.stopProg - tr.prog) * sec.len;
+        if (distToStop > 0 && distToStop < 2.0) {
+          // Smooth braking curve toward station
+          targetSpd = Math.min(targetSpd, Math.max(0.05, distToStop * 0.2));
+        }
+        if (distToStop > -0.08 && distToStop < 0.12 && tr.speed < 0.2) {
+          tr.dwell = 2.5 + Math.random() * 2;
+          tr.canDwell = false;
+          tr.speed = 0;
+          updateCars(tr, ti);
+          return;
+        }
+      }
+
+      // Signal awareness — check signal protecting next block in our route
+      const nextRIdx = (tr.rIdx + 1) % tr.route.length;
+      const nextSecId = tr.route[nextRIdx];
+      const si = sigForBlock[nextSecId];
+      if (si !== undefined) {
+        const aspect = S.sigAspect[si];
+        const distToEnd = (1 - tr.prog) * sec.len;
+        const bDist = (tr.speed * tr.speed) / 0.8 + 0.4;
+        if (aspect === 0) { // RED
+          if (distToEnd <= bDist) targetSpd = 0;
+          if (distToEnd < 0.15) { targetSpd = 0; tr.speed = 0; }
+        } else if (aspect === 1) { // YELLOW — caution, reduce speed
+          targetSpd = Math.min(targetSpd, 0.35);
+        }
+      }
+
+      // Kinematic physics: accelerate or brake toward target
+      if (targetSpd > tr.speed) {
+        tr.speed = Math.min(targetSpd, tr.speed + 0.22 * dt);
+      } else {
+        tr.speed = Math.max(targetSpd, tr.speed - 0.4 * dt);
+      }
+      tr.speed = Math.max(0, tr.speed);
+
+      // Advance position
+      if (tr.speed > 0) {
+        tr.prog += (tr.speed * dt) / sec.len;
+      }
+
+      // Section transition
+      if (tr.prog >= 1.0) {
+        const nextOcc = S.blockOcc[nextSecId];
+        const ownBlock = S.blockOwner[nextSecId] === ti;
+        if (!nextOcc || ownBlock) {
+          const overflow = (tr.prog - 1.0) * sec.len;
+          tr.rIdx = nextRIdx;
+          tr.prog = Math.min(0.95, overflow / secs[tr.route[tr.rIdx]].len);
+          tr.canDwell = true; // can dwell at next station
+        } else {
+          tr.prog = 0.999;
+          tr.speed = 0;
+        }
+      }
+
+      updateCars(tr, ti);
+    });
+
+    // ── 4. Visual updates ──
+    // Smooth signal colour interpolation
+    S.sigColor.forEach((c, i) => { c.lerp(S.targetColor[i], dt * 4); });
+
+    // Update 3-aspect signal lights
+    sigLightRefs.current.forEach((lights, si) => {
+      if (!lights) return;
+      const aspect = S.sigAspect[si];
+      for (let li = 0; li < 3; li++) {
+        const mesh = lights[li];
+        if (!mesh) continue;
+        const mat = mesh.material as THREE.MeshBasicMaterial;
+        if (li === aspect) {
+          mat.color.copy(S.sigColor[si]);
+          mat.opacity = 0.95;
+        } else {
+          mat.color.copy(ASPECT[li]);
+          mat.opacity = 0.08;
+        }
       }
     });
 
     // Signal glow pulse
-    glowRefs.current.forEach((mesh, i) => {
-      if (mesh) {
-        const pulse = 0.85 + Math.sin(time.current * 2 + i * 0.4) * 0.15;
-        mesh.scale.setScalar(pulse);
-      }
+    sigGlowRefs.current.forEach((mesh, i) => {
+      if (!mesh) return;
+      const pulse = 0.85 + Math.sin(time.current * 2 + i * 0.4) * 0.15;
+      mesh.scale.setScalar(pulse);
+      (mesh.material as THREE.MeshBasicMaterial).color.copy(S.sigColor[i]);
     });
+
+    // Car positioning helper
+    function updateCars(tr: Train, ti: number) {
+      for (let ci = 0; ci < tr.cars; ci++) {
+        const ref = carRefs.current[ti]?.[ci];
+        if (!ref) continue;
+        const wp = railCarWorldPos(tr.route, tr.rIdx, tr.prog, secs, ci * CAR_SPACE);
+        ref.position.set(wp.x, wp.y, 0.08);
+        // Derive facing from a point slightly ahead
+        const ahead = railCarWorldPos(tr.route, tr.rIdx, tr.prog, secs, Math.max(0, ci * CAR_SPACE - 0.1));
+        const dx = ahead.x - wp.x, dy = ahead.y - wp.y;
+        ref.rotation.z = (Math.abs(dx) > 0.001 || Math.abs(dy) > 0.001)
+          ? Math.atan2(dy, dx) : wp.angle;
+      }
+    }
   });
 
-  // Track curves
-  const trackCurves = useMemo(() => {
-    return tracks.map(track => {
-      const points: THREE.Vector3[] = [];
-      for (let i = 0; i < track.points.length - 1; i++) {
-        const p1 = track.points[i];
-        const p2 = track.points[i + 1];
-        const segments = 24;
-        for (let j = 0; j <= segments; j++) {
-          const t = j / segments;
-          points.push(new THREE.Vector3(p1.x + (p2.x - p1.x) * t, p1.y + (p2.y - p1.y) * t, 0));
-        }
-      }
-      return points;
-    });
-  }, [tracks]);
-
-  // Train car component
-  const TrainCar = ({ isLocomotive, length, color }: { isLocomotive: boolean; length: number; color: string }) => (
+  // Train car sub-component
+  const TrainCar = ({ isLoco, len, color }: { isLoco: boolean; len: number; color: string }) => (
     <group>
-      {/* Main body */}
+      {/* Body */}
       <mesh>
-        <boxGeometry args={[length, 0.22, 0.28]} />
+        <boxGeometry args={[len, 0.22, 0.28]} />
         <meshBasicMaterial color={color} transparent opacity={0.92} />
       </mesh>
-
       {/* Roof */}
       <mesh position={[0, 0, 0.17]}>
-        <boxGeometry args={[length * 0.92, 0.18, 0.06]} />
+        <boxGeometry args={[len * 0.92, 0.18, 0.06]} />
         <meshBasicMaterial color={color} transparent opacity={0.75} />
       </mesh>
-
       {/* Windows */}
-      {[-0.3, -0.15, 0, 0.15, 0.3].map((xPos, wi) => (
-        <mesh key={wi} position={[length * xPos, 0.112, 0.06]}>
-          <boxGeometry args={[length * 0.12, 0.005, 0.12]} />
+      {[-0.3, -0.15, 0, 0.15, 0.3].map((xp, wi) => (
+        <mesh key={wi} position={[len * xp, 0.112, 0.06]}>
+          <boxGeometry args={[len * 0.12, 0.005, 0.12]} />
           <meshBasicMaterial color="#aaddff" transparent opacity={0.5} />
         </mesh>
       ))}
-
-      {/* Locomotive front */}
-      {isLocomotive && (
+      {/* Locomotive front + headlights + pantograph */}
+      {isLoco && (
         <>
-          <mesh position={[length * 0.52, 0, 0]}>
+          <mesh position={[len * 0.52, 0, 0]}>
             <boxGeometry args={[0.08, 0.2, 0.26]} />
             <meshBasicMaterial color={color} transparent opacity={0.95} />
           </mesh>
-          {/* Headlights */}
-          <mesh position={[length * 0.56, 0.06, 0.08]}>
+          <mesh position={[len * 0.56, 0.06, 0.08]}>
             <sphereGeometry args={[0.025, 12, 12]} />
             <meshBasicMaterial color="#ffffff" transparent opacity={0.95} />
           </mesh>
-          <mesh position={[length * 0.56, -0.06, 0.08]}>
+          <mesh position={[len * 0.56, -0.06, 0.08]}>
             <sphereGeometry args={[0.025, 12, 12]} />
             <meshBasicMaterial color="#ffffff" transparent opacity={0.95} />
           </mesh>
-          {/* Pantograph base */}
           <mesh position={[0, 0, 0.22]}>
             <boxGeometry args={[0.15, 0.08, 0.04]} />
             <meshBasicMaterial color={colors.secondary} transparent opacity={0.6} />
           </mesh>
         </>
       )}
-
-      {/* Bogies (wheel trucks) - proper train style */}
-      {[-0.35, 0.35].map((xOffset, bi) => (
-        <group key={bi} position={[length * xOffset, 0, -0.16]}>
-          {/* Bogie frame */}
+      {/* Bogies with wheel sets */}
+      {[-0.35, 0.35].map((xo, bi) => (
+        <group key={bi} position={[len * xo, 0, -0.16]}>
           <mesh>
             <boxGeometry args={[0.25, 0.18, 0.04]} />
             <meshBasicMaterial color={colors.secondary} transparent opacity={0.7} />
           </mesh>
-          {/* Wheel sets - pairs of wheels on axles */}
-          {[-0.08, 0.08].map((wheelX, wi) => (
-            <group key={wi} position={[wheelX, 0, -0.02]}>
-              {/* Left wheel */}
+          {[-0.08, 0.08].map((wx, wi) => (
+            <group key={wi} position={[wx, 0, -0.02]}>
               <mesh position={[0, 0.1, 0]} rotation={[Math.PI / 2, 0, 0]}>
                 <cylinderGeometry args={[0.055, 0.055, 0.02, 16]} />
                 <meshBasicMaterial color={colors.secondary} transparent opacity={0.85} />
               </mesh>
-              {/* Right wheel */}
               <mesh position={[0, -0.1, 0]} rotation={[Math.PI / 2, 0, 0]}>
                 <cylinderGeometry args={[0.055, 0.055, 0.02, 16]} />
                 <meshBasicMaterial color={colors.secondary} transparent opacity={0.85} />
               </mesh>
-              {/* Axle */}
               <mesh rotation={[Math.PI / 2, 0, 0]}>
                 <cylinderGeometry args={[0.015, 0.015, 0.2, 8]} />
                 <meshBasicMaterial color={colors.secondary} transparent opacity={0.6} />
@@ -899,59 +1465,101 @@ function CircuitVisual({ colors, scrollProgress }: { colors: AbstractVisualProps
   return (
     <group ref={groupRef} position={[0, 0, 0]}>
       {/* Ground */}
-      <mesh position={[0, 0, -0.08]} rotation={[0, 0, 0]}>
+      <mesh position={[0, 0, -0.08]}>
         <planeGeometry args={[16, 7]} />
         <meshBasicMaterial color={colors.secondary} transparent opacity={0.04} />
       </mesh>
 
-      {/* Track ballast/bed */}
-      {tracks.slice(0, 2).map((track, i) => (
-        <mesh key={`ballast-${i}`} position={[0, track.points[0].y, -0.02]}>
-          <planeGeometry args={[14, 0.4]} />
+      {/* Track ballast for main lines */}
+      {[1.2, -1.2].map((y, i) => (
+        <mesh key={`bal-${i}`} position={[0, y, -0.02]}>
+          <planeGeometry args={[12, 0.4]} />
           <meshBasicMaterial color={colors.secondary} transparent opacity={0.08} />
         </mesh>
       ))}
 
       {/* Track lines */}
-      {trackCurves.map((points, i) => (
-        <TrackLine
-          key={`track-${i}`}
-          points={points}
-          color={colors.primary}
-          opacity={tracks[i].isMainLine ? 0.5 : 0.25}
-        />
+      {layout.trackPts3.map((pts, i) => (
+        <RailLine key={`tk-${i}`} points={pts} color={colors.primary} opacity={i < 8 ? 0.5 : 0.3} />
       ))}
 
-      {/* Stations/Platforms */}
-      {stations.map((station, i) => (
-        <group key={`station-${i}`} position={[station.pos.x, station.pos.y, 0]}>
-          {/* Platform */}
+      {/* Stations */}
+      {layout.stations.map((sta, i) => (
+        <group key={`sta-${i}`} position={[sta.pos.x, sta.pos.y, 0]}>
           <mesh>
-            <boxGeometry args={[station.width, 0.3, 0.08]} />
+            <boxGeometry args={[sta.width, 0.3, 0.08]} />
             <meshBasicMaterial color={colors.secondary} transparent opacity={0.3} />
           </mesh>
-          {/* Platform edge */}
           <mesh position={[0, -0.12, 0.02]}>
-            <boxGeometry args={[station.width, 0.04, 0.06]} />
+            <boxGeometry args={[sta.width, 0.04, 0.06]} />
             <meshBasicMaterial color={colors.primary} transparent opacity={0.4} />
           </mesh>
-          {/* Shelter */}
           <mesh position={[0, 0.08, 0.15]}>
-            <boxGeometry args={[station.width * 0.6, 0.15, 0.02]} />
+            <boxGeometry args={[sta.width * 0.6, 0.15, 0.02]} />
             <meshBasicMaterial color={colors.secondary} transparent opacity={0.2} />
           </mesh>
         </group>
       ))}
 
-      {/* Overhead line pylons */}
-      {pylons.map((pylon, i) => (
-        <group key={`pylon-${i}`} position={[pylon.x, pylon.y, 0]}>
-          {/* Pylon */}
+      {/* 3-aspect colour-light signals */}
+      {layout.sigs.map((sig, si) => (
+        <group key={`sig-${si}`} position={[sig.pos.x, sig.pos.y, 0]}>
+          {/* Post */}
+          <mesh position={[0, 0, 0.2]}>
+            <boxGeometry args={[0.025, 0.025, 0.4]} />
+            <meshBasicMaterial color={colors.secondary} transparent opacity={0.4} />
+          </mesh>
+          {/* Signal head housing */}
+          <mesh position={[0, 0, 0.42]}>
+            <boxGeometry args={[0.06, 0.04, 0.18]} />
+            <meshBasicMaterial color={colors.secondary} transparent opacity={0.5} />
+          </mesh>
+          {/* Three aspect lights: [0]=red(top), [1]=yellow(mid), [2]=green(bottom) */}
+          {[0.48, 0.42, 0.36].map((z, li) => (
+            <mesh
+              key={li}
+              ref={(el) => {
+                if (!sigLightRefs.current[si]) sigLightRefs.current[si] = [];
+                sigLightRefs.current[si][li] = el;
+              }}
+              position={[0.035, 0, z]}
+            >
+              <sphereGeometry args={[0.022, 12, 12]} />
+              <meshBasicMaterial
+                color={li === 0 ? 0xee4444 : li === 1 ? 0xddaa33 : 0x22cc66}
+                transparent
+                opacity={li === 2 ? 0.95 : 0.08}
+              />
+            </mesh>
+          ))}
+          {/* Glow halo around active aspect */}
+          <mesh
+            ref={(el) => { sigGlowRefs.current[si] = el; }}
+            position={[0, 0, 0.42]}
+          >
+            <sphereGeometry args={[0.08, 16, 16]} />
+            <meshBasicMaterial color={0x22cc66} transparent opacity={0.12} />
+          </mesh>
+        </group>
+      ))}
+
+      {/* Switch indicators at junction points */}
+      {[new THREE.Vector2(-2, 1.2), new THREE.Vector2(1, 1.2)].map((pos, i) => (
+        <group key={`sw-${i}`} position={[pos.x, pos.y, 0]}>
+          <mesh position={[0, 0.22, 0.03]}>
+            <boxGeometry args={[0.1, 0.05, 0.03]} />
+            <meshBasicMaterial color={colors.primary} transparent opacity={0.35} />
+          </mesh>
+        </group>
+      ))}
+
+      {/* Overhead pylons */}
+      {layout.pylons.map((p, i) => (
+        <group key={`py-${i}`} position={[p.x, p.y, 0]}>
           <mesh position={[0, 0.25, 0.3]}>
             <boxGeometry args={[0.03, 0.03, 0.6]} />
             <meshBasicMaterial color={colors.secondary} transparent opacity={0.35} />
           </mesh>
-          {/* Arm */}
           <mesh position={[0, 0, 0.55]}>
             <boxGeometry args={[0.02, 0.4, 0.02]} />
             <meshBasicMaterial color={colors.secondary} transparent opacity={0.3} />
@@ -959,98 +1567,69 @@ function CircuitVisual({ colors, scrollProgress }: { colors: AbstractVisualProps
         </group>
       ))}
 
-      {/* Overhead catenary wires */}
-      {tracks.slice(0, 2).map((track, i) => (
-        <mesh key={`wire-${i}`} position={[0, track.points[0].y, 0.55]}>
-          <boxGeometry args={[14, 0.008, 0.008]} />
+      {/* Catenary wires */}
+      {[1.2, -1.2].map((y, i) => (
+        <mesh key={`cat-${i}`} position={[0, y, 0.55]}>
+          <boxGeometry args={[12, 0.008, 0.008]} />
           <meshBasicMaterial color={colors.primary} transparent opacity={0.2} />
         </mesh>
       ))}
 
-      {/* Signal posts with lights */}
-      {signals.map((signal, i) => (
-        <group key={`signal-group-${i}`} position={[signal.pos.x, signal.pos.y, 0]}>
-          {/* Post */}
-          <mesh position={[0, 0, 0.2]}>
-            <boxGeometry args={[0.025, 0.025, 0.4]} />
-            <meshBasicMaterial color={colors.secondary} transparent opacity={0.4} />
-          </mesh>
-          {/* Signal head */}
-          <mesh position={[0, 0, 0.42]}>
-            <boxGeometry args={[0.06, 0.04, 0.12]} />
-            <meshBasicMaterial color={colors.secondary} transparent opacity={0.5} />
-          </mesh>
-          {/* Glow */}
-          <mesh
-            ref={(el) => { if (el) glowRefs.current[i] = el; }}
-            position={[0, 0, 0.42]}
-          >
-            <sphereGeometry args={[0.08, 16, 16]} />
-            <meshBasicMaterial color={colors.primary} transparent opacity={0.15} />
-          </mesh>
-          {/* Light */}
-          <mesh
-            ref={(el) => { if (el) signalRefs.current[i] = el; }}
-            position={[0.035, 0, 0.42]}
-          >
-            <sphereGeometry args={[0.035, 16, 16]} />
-            <meshBasicMaterial color={0x22cc66} transparent opacity={0.95} />
-          </mesh>
+      {/* Trains */}
+      {layout.trainDefs.map((tDef, ti) => (
+        <group key={`tr-${ti}`}>
+          {Array.from({ length: tDef.cars }).map((_, ci) => (
+            <group
+              key={ci}
+              ref={(el) => {
+                if (!carRefs.current[ti]) carRefs.current[ti] = [];
+                carRefs.current[ti][ci] = el;
+              }}
+            >
+              <TrainCar isLoco={ci === 0} len={0.7} color={colors.primary} />
+            </group>
+          ))}
         </group>
       ))}
-
-      {/* Trains */}
-      {trains.map((train, i) => {
-        const track = tracks[train.trackIndex];
-        const carLength = 0.7;
-        const gap = 0.08;
-        return (
-          <group
-            key={`train-${i}`}
-            ref={(el) => { if (el) trainRefs.current[i] = el; }}
-            position={[track.points[0].x, track.points[0].y, 0.08]}
-          >
-            {/* Multiple cars */}
-            {Array.from({ length: train.cars }).map((_, ci) => (
-              <group key={ci} position={[-(ci * (carLength + gap)), 0, 0]}>
-                <TrainCar
-                  isLocomotive={ci === 0}
-                  length={carLength}
-                  color={colors.primary}
-                />
-              </group>
-            ))}
-          </group>
-        );
-      })}
     </group>
   );
 }
 
 // Scene wrapper
 function Scene({ type, colors, scrollProgress }: AbstractVisualProps) {
-  const { camera } = useThree();
+  const { camera, size } = useThree();
 
   useEffect(() => {
-    camera.position.set(0, 0, 8);
-  }, [camera]);
+    // Pull camera closer on narrow viewports so visuals fill the screen
+    const z = size.width < 640 ? 6.5 : size.width < 1024 ? 7 : 8;
+    camera.position.set(0, 0, z);
+  }, [camera, size.width]);
 
+  let visual: React.JSX.Element;
   switch (type) {
     case "neural":
-      return <NeuralNetworkVisual colors={colors} scrollProgress={scrollProgress} />;
+      visual = <NeuralNetworkVisual colors={colors} scrollProgress={scrollProgress} />;
+      break;
     case "grid":
-      return <GridVisual colors={colors} scrollProgress={scrollProgress} />;
+      visual = <GridVisual colors={colors} scrollProgress={scrollProgress} />;
+      break;
     case "flow":
-      return <FlowVisual colors={colors} scrollProgress={scrollProgress} />;
+      visual = <FlowVisual colors={colors} scrollProgress={scrollProgress} />;
+      break;
     case "city":
-      return <CityVisual colors={colors} scrollProgress={scrollProgress} />;
+      visual = <CityVisual colors={colors} scrollProgress={scrollProgress} />;
+      break;
     case "chess":
-      return <ChessVisual colors={colors} scrollProgress={scrollProgress} />;
+      visual = <ChessVisual colors={colors} scrollProgress={scrollProgress} />;
+      break;
     case "circuit":
-      return <CircuitVisual colors={colors} scrollProgress={scrollProgress} />;
+      visual = <CircuitVisual colors={colors} scrollProgress={scrollProgress} />;
+      break;
     default:
-      return <NeuralNetworkVisual colors={colors} scrollProgress={scrollProgress} />;
+      visual = <NeuralNetworkVisual colors={colors} scrollProgress={scrollProgress} />;
   }
+
+  return <DragRotateWrapper>{visual}</DragRotateWrapper>;
 }
 
 export function AbstractVisual({ type, colors, scrollProgress }: AbstractVisualProps) {

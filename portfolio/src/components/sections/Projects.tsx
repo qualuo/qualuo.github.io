@@ -1,17 +1,33 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { motion, useScroll } from "framer-motion";
 import { projects, Project, categoryThemes } from "@/lib/projects";
 import { ProjectHero } from "@/components/projects/ProjectHero";
 import { ProjectProgress } from "@/components/projects/ProjectProgress";
+import { AbstractVisual } from "@/components/projects/visuals/AbstractVisual";
 
 // Mobile project card component
-function MobileProjectCard({ project, index }: { project: Project; index: number }) {
+function MobileProjectCard({ project, index, onActive }: { project: Project; index: number; onActive?: () => void }) {
   const theme = categoryThemes[project.category] || categoryThemes["AI & Innovation"];
+  const cardRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: cardRef,
+    offset: ["start end", "end start"],
+  });
+
+  useEffect(() => {
+    const unsubscribe = scrollYProgress.on("change", (value) => {
+      if (value > 0.3 && value < 0.7 && onActive) {
+        onActive();
+      }
+    });
+    return () => unsubscribe();
+  }, [scrollYProgress, onActive]);
 
   return (
     <motion.div
+      ref={cardRef}
       initial={{ opacity: 0, y: 50 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-100px" }}
@@ -37,6 +53,12 @@ function MobileProjectCard({ project, index }: { project: Project; index: number
               className="w-full h-full object-cover"
             />
           )
+        ) : project.visualConfig ? (
+          <AbstractVisual
+            type={project.visualConfig.type}
+            colors={project.visualConfig.colors}
+            scrollProgress={scrollYProgress}
+          />
         ) : (
           <div
             className="w-full h-full"
@@ -46,7 +68,7 @@ function MobileProjectCard({ project, index }: { project: Project; index: number
           />
         )}
         {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-linear-to-b from-transparent via-transparent to-black" />
+        <div className="absolute inset-0 bg-linear-to-b from-transparent via-transparent to-black pointer-events-none" />
       </div>
 
       {/* Content - Bottom portion */}
@@ -144,7 +166,7 @@ export function Projects() {
 
           {/* Scroll indicator */}
           <motion.div
-            className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-slate-600"
+            className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-white/30"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 1.5 }}
@@ -162,16 +184,15 @@ export function Projects() {
         </div>
       </motion.div>
 
+      {/* Progress Indicator (both mobile + desktop) */}
+      <ProjectProgress
+        projects={projects}
+        scrollProgress={scrollYProgress}
+        activeIndex={activeIndex}
+      />
+
       {/* Desktop: Cinematic scroll experience */}
       <div className="hidden lg:block">
-        {/* Progress Indicator */}
-        <ProjectProgress
-          projects={projects}
-          scrollProgress={scrollYProgress}
-          activeIndex={activeIndex}
-        />
-
-        {/* Projects */}
         {projects.map((project, index) => (
           <ProjectHero
             key={project.id}
@@ -187,7 +208,7 @@ export function Projects() {
       {/* Mobile: Simplified card layout */}
       <div className="lg:hidden">
         {projects.map((project, index) => (
-          <MobileProjectCard key={project.id} project={project} index={index} />
+          <MobileProjectCard key={project.id} project={project} index={index} onActive={() => setActiveIndex(index)} />
         ))}
       </div>
     </section>

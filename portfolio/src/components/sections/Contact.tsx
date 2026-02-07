@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useState } from "react";
+import Script from "next/script";
 import Link from "next/link";
 
 export function Contact() {
@@ -18,13 +19,28 @@ export function Contact() {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch("https://getform.io/f/blljokra", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formState),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const forminit = new (window as any).Forminit();
+      const { error } = await forminit.submit("ihnc3t6iqob", {
+        blocks: [
+          {
+            type: "sender",
+            properties: {
+              fullName: formState.name,
+              email: formState.email,
+            },
+          },
+          {
+            type: "text",
+            name: "message",
+            value: formState.message,
+          },
+        ],
       });
 
-      if (response.ok) {
+      if (error) {
+        console.error("Form submission error:", error.message);
+      } else {
         setIsSubmitted(true);
         setFormState({ name: "", email: "", message: "" });
       }
@@ -41,6 +57,7 @@ export function Contact() {
 
   return (
     <section id="contact" className="relative min-h-screen pt-32 lg:pt-48 pb-12 px-6 flex flex-col justify-center">
+      <Script src="https://forminit.com/sdk/v1/forminit.js" strategy="lazyOnload" />
       <div className="max-w-7xl mx-auto">
         <div className="grid lg:grid-cols-2 gap-16 lg:gap-24">
           {/* Left column - Content */}
