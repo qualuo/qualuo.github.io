@@ -367,6 +367,21 @@ export default function Colophon() {
         {/* Time Lapse */}
         <TimeLapsePrompt />
 
+        {/* Uniqueness */}
+        <Section className="mb-20">
+          <RevealText>
+            <h2 className="text-xs uppercase tracking-[0.2em] text-slate-500 mb-4">This Sky Is Yours</h2>
+          </RevealText>
+          <p className="text-slate-400 leading-relaxed">
+            Each visit generates a new sky. Sixty-eight stars are placed by Poisson
+            disk sampling, each assigned a spectral type, magnitude, and a twinkle
+            signature built from three overlapping frequencies. With over seven
+            hundred degrees of randomness, the number of possible skies exceeds the
+            atoms in the observable universe. The one above you right now has never
+            existed before, and when you leave, it won&apos;t exist again.
+          </p>
+        </Section>
+
         {/* Closing */}
         <Section className="text-center">
           <motion.p

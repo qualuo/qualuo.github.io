@@ -1,10 +1,11 @@
 "use client";
 
-import { useRef, useEffect, useMemo, useState, useSyncExternalStore } from "react";
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { useRef, useEffect, useMemo, useSyncExternalStore } from "react";
+import { useFrame, useThree } from "@react-three/fiber";
+import { View } from "@react-three/drei";
+
 import { MotionValue } from "framer-motion";
 import * as THREE from "three";
-import { WebGLErrorBoundary } from "@/components/ui/WebGLErrorBoundary";
 
 // Deterministic pseudo-random number generator (Park-Miller)
 function createPRNG(seed = 1) {
@@ -17,103 +18,61 @@ function createPRNG(seed = 1) {
 
 const emptySubscribe = () => () => {};
 
+// Respect OS-level motion preference
+function useReducedMotion() {
+  return useSyncExternalStore(
+    (cb) => {
+      const mql = window.matchMedia("(prefers-reduced-motion: reduce)");
+      mql.addEventListener("change", cb);
+      return () => mql.removeEventListener("change", cb);
+    },
+    () => window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+    () => false,
+  );
+}
+
 interface AbstractVisualProps {
   type: "neural" | "grid" | "flow" | "city" | "chess" | "circuit";
   colors: {
     primary: string;
     secondary: string;
   };
-  scrollProgress: MotionValue<number>;
+  scrollProgress?: MotionValue<number>;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function useIsActive(_: MotionValue<number>) {
-  // Always animate — gating caused a visible jump when scrolling into range
-  const ref = useRef(true);
-  return ref;
-}
+// Pointer position — normalised to -1..1, written by DOM handlers, consumed by R3F
+type PointerPos = { x: number; y: number };
 
-// Wrapper that applies drag rotation as a parent transform
-function DragRotateWrapper({ children }: { children: React.ReactNode }) {
-  const { gl } = useThree();
+const HORIZ_MAX = 0.3;  // max horizontal tilt (radians)
+const VERT_MAX  = 0.08; // max vertical tilt (radians)
+const LERP_SPD  = 3;    // interpolation speed (higher = snappier)
+
+// Smoothly rotates children toward the pointer position each frame
+function PointerRotateGroup({ children, ptrRef }: { children: React.ReactNode; ptrRef: React.RefObject<PointerPos> }) {
   const groupRef = useRef<THREE.Group>(null);
-  const state = useRef({
-    isDragging: false,
-    prevX: 0,
-    prevY: 0,
-    velocityX: 0,
-    velocityY: 0,
-    rotationX: 0,
-    rotationY: 0,
-  });
 
-  useEffect(() => {
-    const el = gl.domElement;
-
-    const onDown = (e: PointerEvent) => {
-      state.current.isDragging = true;
-      state.current.prevX = e.clientX;
-      state.current.prevY = e.clientY;
-      state.current.velocityX = 0;
-      state.current.velocityY = 0;
-    };
-
-    const onMove = (e: PointerEvent) => {
-      if (!state.current.isDragging) return;
-      const s = state.current;
-      const dx = e.clientX - s.prevX;
-      const dy = e.clientY - s.prevY;
-      s.velocityX = dx * 0.005;
-      s.velocityY = dy * 0.005;
-      s.rotationY += s.velocityX;
-      s.rotationX += s.velocityY;
-      s.prevX = e.clientX;
-      s.prevY = e.clientY;
-    };
-
-    const onUp = () => {
-      state.current.isDragging = false;
-    };
-
-    el.addEventListener("pointerdown", onDown);
-    window.addEventListener("pointermove", onMove);
-    window.addEventListener("pointerup", onUp);
-
-    return () => {
-      el.removeEventListener("pointerdown", onDown);
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onUp);
-    };
-  }, [gl]);
-
-  useFrame(() => {
+  useFrame((_, delta) => {
     if (!groupRef.current) return;
-    const s = state.current;
-
-    if (!s.isDragging) {
-      s.velocityX *= 0.95;
-      s.velocityY *= 0.95;
-      s.rotationY += s.velocityX;
-      s.rotationX += s.velocityY;
-    }
-
-    s.rotationX = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, s.rotationX));
-
-    groupRef.current.rotation.y = s.rotationY;
-    groupRef.current.rotation.x = s.rotationX;
+    const targetY = ptrRef.current.x * HORIZ_MAX;
+    const targetX = ptrRef.current.y * -VERT_MAX;
+    const t = 1 - Math.exp(-LERP_SPD * delta);
+    groupRef.current.rotation.y += (targetY - groupRef.current.rotation.y) * t;
+    groupRef.current.rotation.x += (targetX - groupRef.current.rotation.x) * t;
   });
 
   return <group ref={groupRef}>{children}</group>;
 }
 
+
 // Neural Network Visual (for AI & Innovation)
-function NeuralNetworkVisual({ colors, scrollProgress }: { colors: AbstractVisualProps["colors"]; scrollProgress: MotionValue<number> }) {
-  const isActive = useIsActive(scrollProgress);
+function NeuralNetworkVisual({ colors }: { colors: AbstractVisualProps["colors"] }) {
+
   const groupRef = useRef<THREE.Group>(null);
   const nodesRef = useRef<THREE.InstancedMesh>(null);
   const linesRef = useRef<THREE.LineSegments>(null);
   const materialRef = useRef<THREE.LineBasicMaterial>(null);
   const time = useRef(0);
+  const dummy = useMemo(() => new THREE.Object3D(), []);
 
   const { nodes, connections, basePositions } = useMemo(() => {
     const nodeCount = 32;
@@ -150,17 +109,16 @@ function NeuralNetworkVisual({ colors, scrollProgress }: { colors: AbstractVisua
 
   useEffect(() => {
     if (!nodesRef.current) return;
-    const dummy = new THREE.Object3D();
     nodes.forEach((node, i) => {
       dummy.position.copy(node);
       dummy.updateMatrix();
       nodesRef.current!.setMatrixAt(i, dummy.matrix);
     });
     nodesRef.current.instanceMatrix.needsUpdate = true;
-  }, [nodes]);
+  }, [nodes, dummy]);
 
   useFrame((_, delta) => {
-    if (!isActive.current) return;
+
     time.current += delta;
 
     if (groupRef.current) {
@@ -169,7 +127,6 @@ function NeuralNetworkVisual({ colors, scrollProgress }: { colors: AbstractVisua
     }
 
     if (nodesRef.current) {
-      const dummy = new THREE.Object3D();
       nodes.forEach((node, i) => {
         const base = basePositions[i];
         const phase = i * 0.5;
@@ -234,8 +191,8 @@ function NeuralNetworkVisual({ colors, scrollProgress }: { colors: AbstractVisua
 }
 
 // Grid Visual (for Architecture)
-function GridVisual({ colors, scrollProgress }: { colors: AbstractVisualProps["colors"]; scrollProgress: MotionValue<number> }) {
-  const isActive = useIsActive(scrollProgress);
+function GridVisual({ colors }: { colors: AbstractVisualProps["colors"] }) {
+
   const groupRef = useRef<THREE.Group>(null);
   const time = useRef(0);
 
@@ -243,7 +200,7 @@ function GridVisual({ colors, scrollProgress }: { colors: AbstractVisualProps["c
   const gridDivisions = 20;
 
   useFrame((_, delta) => {
-    if (!isActive.current) return;
+
     time.current += delta;
 
     if (groupRef.current) {
@@ -282,12 +239,13 @@ function GridVisual({ colors, scrollProgress }: { colors: AbstractVisualProps["c
 }
 
 // Flow Visual (for Data Engineering) - Org Network with pulsing connections
-function FlowVisual({ colors, scrollProgress }: { colors: AbstractVisualProps["colors"]; scrollProgress: MotionValue<number> }) {
-  const isActive = useIsActive(scrollProgress);
+function FlowVisual({ colors }: { colors: AbstractVisualProps["colors"] }) {
+
   const groupRef = useRef<THREE.Group>(null);
   const nodeRefs = useRef<THREE.Mesh[]>([]);
   const pulseRefs = useRef<THREE.Mesh[]>([]);
   const time = useRef(0);
+  const drift = useMemo(() => new THREE.Vector3(), []);
 
   // Generate hierarchical org network
   const { nodes, connections } = useMemo(() => {
@@ -363,7 +321,7 @@ function FlowVisual({ colors, scrollProgress }: { colors: AbstractVisualProps["c
   }, []);
 
   useFrame((_, delta) => {
-    if (!isActive.current) return;
+
     time.current += delta;
 
     // Gentle rotation
@@ -379,8 +337,8 @@ function FlowVisual({ colors, scrollProgress }: { colors: AbstractVisualProps["c
         const breathe = 1 + Math.sin(time.current * 2 + i * 0.5) * 0.15;
         mesh.scale.setScalar(node.size * breathe);
 
-        // Gentle position drift
-        const drift = new THREE.Vector3(
+        // Gentle position drift (reuse hoisted vector)
+        drift.set(
           Math.sin(time.current * 0.5 + i) * 0.05,
           Math.cos(time.current * 0.4 + i * 0.7) * 0.05,
           Math.sin(time.current * 0.3 + i * 0.5) * 0.02
@@ -460,8 +418,8 @@ function FlowVisual({ colors, scrollProgress }: { colors: AbstractVisualProps["c
 }
 
 // City Visual (for Web & Visualization) - Isometric city with buildings
-function CityVisual({ colors, scrollProgress }: { colors: AbstractVisualProps["colors"]; scrollProgress: MotionValue<number> }) {
-  const isActive = useIsActive(scrollProgress);
+function CityVisual({ colors }: { colors: AbstractVisualProps["colors"] }) {
+
   const groupRef = useRef<THREE.Group>(null);
   const buildingRefs = useRef<THREE.Mesh[]>([]);
   const time = useRef(0);
@@ -497,7 +455,7 @@ function CityVisual({ colors, scrollProgress }: { colors: AbstractVisualProps["c
   }, []);
 
   useFrame((_, delta) => {
-    if (!isActive.current) return;
+
     time.current += delta;
 
     if (groupRef.current) {
@@ -652,8 +610,8 @@ function chessEase(t: number): number {
   return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 }
 
-function ChessVisual({ colors, scrollProgress }: { colors: AbstractVisualProps["colors"]; scrollProgress: MotionValue<number> }) {
-  const isActive = useIsActive(scrollProgress);
+function ChessVisual({ colors }: { colors: AbstractVisualProps["colors"] }) {
+
   const groupRef = useRef<THREE.Group>(null);
   const pieceGroupRefs = useRef<(THREE.Group | null)[]>([]);
   const highlightRefs = useRef<(THREE.Mesh | null)[]>([]);
@@ -690,7 +648,7 @@ function ChessVisual({ colors, scrollProgress }: { colors: AbstractVisualProps["
   };
 
   useFrame((_, delta) => {
-    if (!isActive.current) return;
+
     const s = state.current;
     s.time += delta;
 
@@ -1101,8 +1059,8 @@ function RailLine({ points, color, opacity }: { points: THREE.Vector3[]; color: 
 }
 
 // Circuit Visual — Railway Network with block signalling, interlocking & realistic train physics
-function CircuitVisual({ colors, scrollProgress }: { colors: AbstractVisualProps["colors"]; scrollProgress: MotionValue<number> }) {
-  const isActive = useIsActive(scrollProgress);
+function CircuitVisual({ colors }: { colors: AbstractVisualProps["colors"] }) {
+
   const groupRef = useRef<THREE.Group>(null);
   const time = useRef(0);
   const carRefs = useRef<(THREE.Group | null)[][]>([]);
@@ -1208,7 +1166,7 @@ function CircuitVisual({ colors, scrollProgress }: { colors: AbstractVisualProps
 
   // ─── Simulation tick ───
   useFrame((_, delta) => {
-    if (!isActive.current) return;
+
     const dt = Math.min(delta, 0.05);
     time.current += dt;
 
@@ -1572,63 +1530,98 @@ function CircuitVisual({ colors, scrollProgress }: { colors: AbstractVisualProps
   );
 }
 
-// Scene wrapper
-function Scene({ type, colors, scrollProgress }: AbstractVisualProps) {
+// Scene wrapper — runs inside the View portal (has access to R3F context)
+function Scene({ type, colors, pointer, scroll }: AbstractVisualProps & { pointer: React.RefObject<PointerPos>; scroll: React.RefObject<number | null> }) {
   const { camera, size } = useThree();
 
-  // Runs before each render — camera is always correct before the frame paints
   useFrame(() => {
-    const z = size.width < 640 ? 6.5 : size.width < 1024 ? 7 : 8;
-    if (camera.position.z !== z) camera.position.setZ(z);
+    const baseZ = size.width < 640 ? 6.5 : size.width < 1024 ? 7 : 8;
+
+    if (scroll.current === null) {
+      if (camera.position.z !== baseZ) camera.position.set(0, 0, baseZ);
+      return;
+    }
+
+    const t = Math.max(0, Math.min(1, (scroll.current - 0.2) / 0.6));
+    camera.position.set((t - 0.5) * 0.8, (t - 0.5) * 0.3, baseZ - t * 0.5);
+    camera.lookAt(0, 0, 0);
   });
 
   let visual: React.JSX.Element;
   switch (type) {
     case "neural":
-      visual = <NeuralNetworkVisual colors={colors} scrollProgress={scrollProgress} />;
+      visual = <NeuralNetworkVisual colors={colors} />;
       break;
     case "grid":
-      visual = <GridVisual colors={colors} scrollProgress={scrollProgress} />;
+      visual = <GridVisual colors={colors} />;
       break;
     case "flow":
-      visual = <FlowVisual colors={colors} scrollProgress={scrollProgress} />;
+      visual = <FlowVisual colors={colors} />;
       break;
     case "city":
-      visual = <CityVisual colors={colors} scrollProgress={scrollProgress} />;
+      visual = <CityVisual colors={colors} />;
       break;
     case "chess":
-      visual = <ChessVisual colors={colors} scrollProgress={scrollProgress} />;
+      visual = <ChessVisual colors={colors} />;
       break;
     case "circuit":
-      visual = <CircuitVisual colors={colors} scrollProgress={scrollProgress} />;
+      visual = <CircuitVisual colors={colors} />;
       break;
     default:
-      visual = <NeuralNetworkVisual colors={colors} scrollProgress={scrollProgress} />;
+      visual = <NeuralNetworkVisual colors={colors} />;
   }
 
-  return <DragRotateWrapper>{visual}</DragRotateWrapper>;
+  return <PointerRotateGroup ptrRef={pointer}>{visual}</PointerRotateGroup>;
 }
 
 export function AbstractVisual({ type, colors, scrollProgress }: AbstractVisualProps) {
   const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
-  const [ready, setReady] = useState(false);
+  const reducedMotion = useReducedMotion();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const pointer = useRef<PointerPos>({ x: 0, y: 0 });
+  const scroll = useRef<number | null>(scrollProgress ? 0 : null);
 
-  const fallback = (
-    <div
-      className="absolute inset-0"
-      style={{
-        background: `radial-gradient(ellipse at center, ${colors.primary}20, ${colors.secondary}10, transparent)`,
-      }}
-    />
-  );
+  useEffect(() => {
+    if (!scrollProgress) return;
+    return scrollProgress.on("change", (v) => { scroll.current = v; });
+  }, [scrollProgress]);
+
+  // Window-level pointer tracking — bypasses DOM stacking/event issues
+  useEffect(() => {
+    if (reducedMotion) return;
+    const handler = (e: PointerEvent) => {
+      const el = containerRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      if (
+        e.clientX < rect.left || e.clientX > rect.right ||
+        e.clientY < rect.top || e.clientY > rect.bottom
+      ) {
+        pointer.current.x = 0;
+        pointer.current.y = 0;
+        return;
+      }
+      pointer.current.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      pointer.current.y = ((e.clientY - rect.top) / rect.height) * 2 - 1;
+    };
+    window.addEventListener("pointermove", handler, { passive: true });
+    return () => window.removeEventListener("pointermove", handler);
+  }, [reducedMotion]);
 
   if (!mounted) {
-    return fallback;
+    return (
+      <div
+        className="absolute inset-0"
+        style={{
+          background: `radial-gradient(ellipse at center, ${colors.primary}20, ${colors.secondary}10, transparent)`,
+        }}
+      />
+    );
   }
 
   return (
-    <div className="absolute inset-0">
-      {/* Background gradient — always visible, sits behind the canvas */}
+    <div ref={containerRef} className="absolute inset-0">
+      {/* Background gradient — always visible behind the 3D scene */}
       <div
         className="absolute inset-0"
         style={{
@@ -1636,35 +1629,19 @@ export function AbstractVisual({ type, colors, scrollProgress }: AbstractVisualP
                        radial-gradient(ellipse at 70% 50%, ${colors.secondary}10, transparent 50%)`,
         }}
       />
+
+      {/* Shimmer placeholder — visible until View renders */}
       <div
-        className="absolute inset-0 transition-opacity duration-700 ease-out"
-        style={{ opacity: ready ? 1 : 0 }}
-      >
-        <WebGLErrorBoundary fallback={fallback}>
-          <Canvas
-            camera={{ position: [0, 0, 8] }}
-            gl={{
-              antialias: true,
-              alpha: true,
-              powerPreference: "high-performance",
-            }}
-            dpr={[1, 1.5]}
-            className="cursor-grab active:cursor-grabbing"
-            onCreated={() => {
-              // GL context + scene created. Wait a few frames for
-              // useEffects to fire and position all geometry, then reveal.
-              let f = 0;
-              const settle = () => {
-                if (++f >= 30) setReady(true);
-                else requestAnimationFrame(settle);
-              };
-              requestAnimationFrame(settle);
-            }}
-          >
-            <Scene type={type} colors={colors} scrollProgress={scrollProgress} />
-          </Canvas>
-        </WebGLErrorBoundary>
-      </div>
+        className="absolute inset-0 animate-pulse"
+        style={{
+          background: `radial-gradient(ellipse at center, ${colors.primary}12, transparent 70%)`,
+        }}
+      />
+
+      {/* View — renders into the shared Canvas via tunnel-rat */}
+      <View className="absolute inset-0">
+        <Scene type={type} colors={colors} pointer={pointer} scroll={scroll} />
+      </View>
     </div>
   );
 }

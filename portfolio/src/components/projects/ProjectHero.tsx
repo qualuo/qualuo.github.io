@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useEffect } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll, useTransform, useSpring } from "framer-motion";
 import { Project, categoryThemes } from "@/lib/projects";
 import { ProjectVisual } from "./ProjectVisual";
 import { ProjectContent } from "./ProjectContent";
@@ -35,31 +35,23 @@ export function ProjectHero({
     return () => unsubscribe();
   }, [scrollYProgress, onActive]);
 
-  // Visual transforms
-  const visualOpacity = useTransform(
-    scrollYProgress,
-    [0, 0.2, 0.8, 1],
-    [0, 1, 1, 0]
-  );
+  // Spring configs
+  const snappy = { stiffness: 300, damping: 30, mass: 0.8 };
+  const smooth = { stiffness: 120, damping: 20, mass: 0.8 };
 
-  const visualScale = useTransform(
-    scrollYProgress,
-    [0, 0.2, 0.8, 1],
-    [1.1, 1, 1, 0.95]
-  );
+  // Visual transforms — spring-wrapped for organic feel
+  const rawVisualOpacity = useTransform(scrollYProgress, [0, 0.2, 0.8, 1], [0, 1, 1, 0]);
+  const visualOpacity = useSpring(rawVisualOpacity, snappy);
+
+  const rawVisualScale = useTransform(scrollYProgress, [0, 0.2, 0.8, 1], [1.1, 1, 1, 0.95]);
+  const visualScale = useSpring(rawVisualScale, smooth);
 
   // Content transforms
-  const contentOpacity = useTransform(
-    scrollYProgress,
-    [0.15, 0.35, 0.65, 0.85],
-    [0, 1, 1, 0]
-  );
+  const rawContentOpacity = useTransform(scrollYProgress, [0.15, 0.35, 0.65, 0.85], [0, 1, 1, 0]);
+  const contentOpacity = useSpring(rawContentOpacity, snappy);
 
-  const contentY = useTransform(
-    scrollYProgress,
-    [0.15, 0.35],
-    [60, 0]
-  );
+  const rawContentY = useTransform(scrollYProgress, [0.15, 0.35], [60, 0]);
+  const contentY = useSpring(rawContentY, smooth);
 
   return (
     <div
@@ -105,7 +97,7 @@ export function ProjectHero({
             y: contentY,
           }}
         >
-          <div className="pointer-events-auto">
+          <div>
             <ProjectContent project={project} theme={theme} />
           </div>
         </motion.div>

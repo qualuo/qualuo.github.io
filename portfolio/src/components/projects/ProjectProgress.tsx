@@ -7,12 +7,14 @@ interface ProjectProgressProps {
   projects: Project[];
   scrollProgress: MotionValue<number>;
   activeIndex: number;
+  onNavigate?: (index: number) => void;
 }
 
 export function ProjectProgress({
   projects,
   scrollProgress,
   activeIndex,
+  onNavigate,
 }: ProjectProgressProps) {
   // Calculate overall progress bar height (desktop) / width (mobile)
   const progressSize = useTransform(scrollProgress, [0, 1], ["0%", "100%"]);
@@ -60,25 +62,31 @@ export function ProjectProgress({
               </motion.span>
 
               {/* Dot */}
-              <motion.div
-                className="w-2 h-2 rounded-full relative z-10"
-                animate={{
-                  scale: isActive ? 1.5 : 1,
-                  backgroundColor: isActive ? theme.primary : "rgba(255,255,255,0.3)",
-                }}
-                transition={{ duration: 0.3 }}
+              <button
+                onClick={() => onNavigate?.(index)}
+                aria-label={`Navigate to ${project.title}`}
+                className="cursor-pointer p-1 -m-1 group"
               >
-                {/* Active glow */}
-                {isActive && (
-                  <motion.div
-                    className="absolute inset-0 rounded-full"
-                    initial={{ scale: 1, opacity: 0.5 }}
-                    animate={{ scale: 2, opacity: 0 }}
-                    transition={{ duration: 1, repeat: Infinity }}
-                    style={{ backgroundColor: theme.primary }}
-                  />
-                )}
-              </motion.div>
+                <motion.div
+                  className="w-2 h-2 rounded-full relative z-10 group-hover:scale-150 transition-transform"
+                  animate={{
+                    scale: isActive ? 1.5 : 1,
+                    backgroundColor: isActive ? theme.primary : "rgba(255,255,255,0.3)",
+                  }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {/* Active glow */}
+                  {isActive && (
+                    <motion.div
+                      className="absolute inset-0 rounded-full"
+                      initial={{ scale: 1, opacity: 0.5 }}
+                      animate={{ scale: 2, opacity: 0 }}
+                      transition={{ duration: 1, repeat: Infinity }}
+                      style={{ backgroundColor: theme.primary }}
+                    />
+                  )}
+                </motion.div>
+              </button>
             </motion.div>
           );
         })}
@@ -94,31 +102,36 @@ export function ProjectProgress({
           const isActive = activeIndex === index;
 
           return (
-            <motion.div
+            <button
               key={project.id}
-              className="relative z-10"
-              animate={{
-                scale: isActive ? 1.4 : 1,
-              }}
-              transition={{ duration: 0.3 }}
+              onClick={() => onNavigate?.(index)}
+              aria-label={`Navigate to ${project.title}`}
+              className="relative z-10 cursor-pointer p-1.5 -m-1"
             >
               <motion.div
-                className="w-1.5 h-1.5 rounded-full"
                 animate={{
-                  backgroundColor: isActive ? theme.primary : "rgba(255,255,255,0.25)",
+                  scale: isActive ? 1.4 : 1,
                 }}
                 transition={{ duration: 0.3 }}
-              />
-              {isActive && (
+              >
                 <motion.div
-                  className="absolute inset-0 rounded-full"
-                  initial={{ scale: 1, opacity: 0.5 }}
-                  animate={{ scale: 3, opacity: 0 }}
-                  transition={{ duration: 1, repeat: Infinity }}
-                  style={{ backgroundColor: theme.primary }}
+                  className="w-1.5 h-1.5 rounded-full"
+                  animate={{
+                    backgroundColor: isActive ? theme.primary : "rgba(255,255,255,0.25)",
+                  }}
+                  transition={{ duration: 0.3 }}
                 />
-              )}
-            </motion.div>
+                {isActive && (
+                  <motion.div
+                    className="absolute inset-0 rounded-full"
+                    initial={{ scale: 1, opacity: 0.5 }}
+                    animate={{ scale: 3, opacity: 0 }}
+                    transition={{ duration: 1, repeat: Infinity }}
+                    style={{ backgroundColor: theme.primary }}
+                  />
+                )}
+              </motion.div>
+            </button>
           );
         })}
       </div>

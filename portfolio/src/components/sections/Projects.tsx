@@ -1,12 +1,15 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useCallback, useSyncExternalStore } from "react";
+import { Canvas } from "@react-three/fiber";
+import { View } from "@react-three/drei";
 import { motion, useScroll } from "framer-motion";
 import Image from "next/image";
 import { projects, Project, categoryThemes } from "@/lib/projects";
 import { ProjectHero } from "@/components/projects/ProjectHero";
 import { ProjectProgress } from "@/components/projects/ProjectProgress";
 import { AbstractVisual } from "@/components/projects/visuals/AbstractVisual";
+import { WebGLErrorBoundary } from "@/components/ui/WebGLErrorBoundary";
 
 const AUTO_SCROLL_SPEED = 0.8; // desktop: pixels per frame (~48px/s at 60fps)
 const AUTO_SCROLL_SPEED_MOBILE = 1.6; // mobile: faster (~96px/s at 60fps)
@@ -64,7 +67,6 @@ function MobileProjectCard({ project, index, onActive }: { project: Project; ind
           <AbstractVisual
             type={project.visualConfig.type}
             colors={project.visualConfig.colors}
-            scrollProgress={scrollYProgress}
           />
         ) : (
           <div
@@ -132,9 +134,24 @@ function MobileProjectCard({ project, index, onActive }: { project: Project; ind
   );
 }
 
+const emptySubscribe = () => () => {};
+
 export function Projects() {
   const sectionRef = useRef<HTMLElement>(null);
+  const desktopRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const mobileRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const pauseAutoScroll = useRef<(() => void) | null>(null);
+  const loopOverlayRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
+  const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
+
+  const handleNavigate = useCallback((index: number) => {
+    const isMobile = window.innerWidth < 1024;
+    const el = isMobile ? mobileRefs.current[index] : desktopRefs.current[index];
+    if (!el) return;
+    pauseAutoScroll.current?.();
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
 
   const { scrollYProgress } = useScroll({
     target: sectionRef,
@@ -154,14 +171,26 @@ export function Projects() {
       const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
 
       if (window.scrollY >= maxScroll - 2) {
-        // Reached bottom — loop to top
+        // Reached bottom — fade to black, jump to top, fade back in
         looping = true;
-        window.scrollTo({ top: 0, behavior: "smooth" });
-        // Resume auto-scroll after the smooth scroll finishes
+        const overlay = loopOverlayRef.current;
+        if (overlay) {
+          overlay.style.transition = "opacity 0.6s ease-in";
+          overlay.style.opacity = "1";
+        }
         setTimeout(() => {
-          looping = false;
-          if (!paused) rafId = requestAnimationFrame(tick);
-        }, 1500);
+          window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
+          setTimeout(() => {
+            if (overlay) {
+              overlay.style.transition = "opacity 0.6s ease-out";
+              overlay.style.opacity = "0";
+            }
+            setTimeout(() => {
+              looping = false;
+              if (!paused) rafId = requestAnimationFrame(tick);
+            }, 600);
+          }, 100);
+        }, 600);
         return;
       }
 
@@ -182,6 +211,7 @@ export function Projects() {
       if (idleTimer) clearTimeout(idleTimer);
       idleTimer = setTimeout(start, IDLE_RESUME_MS);
     };
+    pauseAutoScroll.current = pause;
 
     // Start after a brief delay so the page can settle
     const initTimer = setTimeout(start, 2000);
@@ -195,6 +225,7 @@ export function Projects() {
     return () => {
       clearTimeout(initTimer);
       paused = true;
+      pauseAutoScroll.current = null;
       if (rafId) cancelAnimationFrame(rafId);
       if (idleTimer) clearTimeout(idleTimer);
       events.forEach((e) => window.removeEventListener(e, pause));
@@ -209,7 +240,7 @@ export function Projects() {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
-        className="h-screen flex items-center justify-center relative"
+        className="h-screen flex items-center justify-center relative z-2"
       >
         <div className="text-center max-w-4xl px-6">
           <motion.h2
@@ -256,26 +287,64 @@ export function Projects() {
         projects={projects}
         scrollProgress={scrollYProgress}
         activeIndex={activeIndex}
+        onNavigate={handleNavigate}
       />
 
       {/* Desktop: Cinematic scroll experience */}
-      <div className="hidden lg:block">
+      <div className="hidden lg:block relative z-2">
         {projects.map((project, index) => (
-          <ProjectHero
-            key={project.id}
-            project={project}
-            index={index}
-            onActive={() => setActiveIndex(index)}
-          />
+          <div key={project.id} ref={(el) => { desktopRefs.current[index] = el; }}>
+            <ProjectHero
+              project={project}
+              index={index}
+              onActive={() => setActiveIndex(index)}
+            />
+          </div>
         ))}
       </div>
 
       {/* Mobile: Simplified card layout */}
-      <div className="lg:hidden">
+      <div className="lg:hidden relative z-2">
         {projects.map((project, index) => (
-          <MobileProjectCard key={project.id} project={project} index={index} onActive={() => setActiveIndex(index)} />
+          <div key={project.id} ref={(el) => { mobileRefs.current[index] = el; }}>
+            <MobileProjectCard project={project} index={index} onActive={() => setActiveIndex(index)} />
+          </div>
         ))}
       </div>
+
+      {/* Shared WebGL Canvas — all View portals render here (single GL context) */}
+      {mounted && (
+        <WebGLErrorBoundary fallback={null}>
+          <Canvas
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              width: "100vw",
+              height: "100vh",
+              pointerEvents: "none",
+              zIndex: 1,
+            }}
+            eventSource={sectionRef as React.RefObject<HTMLElement>}
+            eventPrefix="client"
+            gl={{
+              antialias: true,
+              alpha: true,
+              powerPreference: "high-performance",
+            }}
+            dpr={[1, 1.5]}
+            camera={{ position: [0, 0, 8] }}
+          >
+            <View.Port />
+          </Canvas>
+        </WebGLErrorBoundary>
+      )}
+      {/* Fade overlay for seamless auto-scroll loop */}
+      <div
+        ref={loopOverlayRef}
+        className="fixed inset-0 bg-black pointer-events-none z-50"
+        style={{ opacity: 0 }}
+      />
     </section>
   );
 }

@@ -96,7 +96,7 @@ export function ProjectContent({ project, theme }: ProjectContentProps) {
 
       {/* Links */}
       {project.links && (
-        <motion.div className="flex gap-4 mt-8" variants={itemVariants}>
+        <motion.div className="flex gap-4 mt-8 pointer-events-auto" variants={itemVariants}>
           {project.links.github && (
             <a
               href={project.links.github}
