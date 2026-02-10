@@ -1,0 +1,6 @@
+User-Agent: *
+Allow: /
+Disallow: /404
+Disallow: /_next/
+
+Sitemap: https://qualuo.github.io/sitemap.xml
