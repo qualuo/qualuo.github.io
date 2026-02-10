@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "generate:og": "npx tsx scripts/generate-og-images.tsx",
+    "prebuild": "npx tsx scripts/generate-og-images.tsx",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
@@ -23,12 +25,14 @@
     "three": "^0.182.0"
   },
   "devDependencies": {
+    "@resvg/resvg-js": "^2.6.2",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
+    "satori": "^0.19.1",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

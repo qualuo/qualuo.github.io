@@ -9,6 +9,8 @@ export function SmoothScrollProvider({ children }: { children: React.ReactNode }
       lerp: 0.08,
       wheelMultiplier: 0.8,
       smoothWheel: true,
+      prevent: (node: HTMLElement) =>
+        node.closest("[data-slide-deck]") !== null,
     });
 
     let rafId: number;

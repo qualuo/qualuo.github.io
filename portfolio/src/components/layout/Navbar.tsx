@@ -9,6 +9,7 @@ import { useTimeLapse } from "@/components/animations/TimeLapseProvider";
 const navLinks = [
   { href: "/demos", label: "Demos", isPage: true },
   { href: "/work", label: "Work", isPage: true },
+  { href: "/points", label: "Points", isPage: true },
   { href: "/colophon", label: "60°N", isPage: true },
 ];
 
@@ -270,6 +271,7 @@ export function Navbar({ isSubpage = false, hasStars = true }: NavbarProps) {
             className="md:hidden flex items-center justify-center w-10 h-10 rounded-full cursor-pointer"
             whileTap={{ scale: 0.92 }}
             aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+            aria-expanded={mobileMenuOpen}
           >
             <div className="relative w-3.75 h-2.75">
               {[0, 1, 2].map((i) => (

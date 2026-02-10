@@ -177,9 +177,11 @@ export function Contact() {
                     type="text"
                     id="name"
                     name="name"
+                    autoComplete="name"
                     value={formState.name}
                     onChange={handleChange}
                     required
+                    aria-required="true"
                     data-cursor="text"
                     className="w-full px-0 py-4 bg-transparent border-0 border-b border-white/10 focus:border-white/30 focus:outline-none text-white text-lg transition-colors"
                     placeholder="Your name"
@@ -194,9 +196,11 @@ export function Contact() {
                     type="email"
                     id="email"
                     name="email"
+                    autoComplete="email"
                     value={formState.email}
                     onChange={handleChange}
                     required
+                    aria-required="true"
                     data-cursor="text"
                     className="w-full px-0 py-4 bg-transparent border-0 border-b border-white/10 focus:border-white/30 focus:outline-none text-white text-lg transition-colors"
                     placeholder="your@email.com"
@@ -213,6 +217,7 @@ export function Contact() {
                     value={formState.message}
                     onChange={handleChange}
                     required
+                    aria-required="true"
                     rows={4}
                     data-cursor="text"
                     className="w-full px-0 py-4 bg-transparent border-0 border-b border-white/10 focus:border-white/30 focus:outline-none text-white text-lg transition-colors resize-none"
@@ -253,25 +258,37 @@ export function Contact() {
           className="mt-32 pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 text-slate-600 text-sm"
         >
           <p>&copy; {new Date().getFullYear()} Quang Luong</p>
-          <div className="flex flex-col md:flex-row items-center gap-4 md:gap-8">
+          <nav aria-label="Footer navigation" className="flex flex-col md:flex-row items-center gap-4 md:gap-8">
             <div className="flex gap-6">
-              <Link href="/colophon" data-cursor="pointer" className="hover:text-slate-400 transition-colors">
-                Colophon
+              <Link href="/work" data-cursor="pointer" className="hover:text-slate-400 transition-colors">
+                Work
               </Link>
-              <Link href="/privacy" data-cursor="pointer" className="hover:text-slate-400 transition-colors">
-                Privacy
+              <Link href="/demos" data-cursor="pointer" className="hover:text-slate-400 transition-colors">
+                Demos
+              </Link>
+              <Link href="/points" data-cursor="pointer" className="hover:text-slate-400 transition-colors">
+                Points
               </Link>
             </div>
             <span className="hidden md:block text-slate-700">·</span>
             <div className="flex gap-6 text-slate-700">
-              <Link href="/blob" data-cursor="pointer" className="hover:text-slate-500 transition-colors">
-                Blob
+              <Link href="/colophon" data-cursor="pointer" className="hover:text-slate-500 transition-colors">
+                60°N
               </Link>
               <Link href="/creative" data-cursor="pointer" className="hover:text-slate-500 transition-colors">
                 Creative
               </Link>
+              <Link href="/blob" data-cursor="pointer" className="hover:text-slate-500 transition-colors">
+                Blob
+              </Link>
             </div>
-          </div>
+            <span className="hidden md:block text-slate-700">·</span>
+            <div className="flex gap-6 text-slate-700">
+              <Link href="/privacy" data-cursor="pointer" className="hover:text-slate-500 transition-colors">
+                Privacy
+              </Link>
+            </div>
+          </nav>
         </motion.footer>
       </div>
     </section>

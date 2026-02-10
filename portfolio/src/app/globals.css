@@ -76,3 +76,12 @@ body {
 .animate-gradient-x {
   animation: gradient-x 8s ease infinite;
 }
+
+/* Hide scrollbar on slide decks */
+[data-slide-deck] {
+  scrollbar-width: none;
+}
+
+[data-slide-deck]::-webkit-scrollbar {
+  display: none;
+}
