@@ -1,11 +1,12 @@
 import type { MetadataRoute } from "next";
 import { demos } from "@/lib/demos";
 import { points } from "@/lib/points";
+import { SITE_CONFIG } from "@/lib/seo";
 
 export const dynamic = "force-static";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = "https://qualuo.github.io";
+  const baseUrl = SITE_CONFIG.url;
 
   const staticPages: MetadataRoute.Sitemap = [
     { url: `${baseUrl}/`, changeFrequency: "monthly", priority: 1.0 },

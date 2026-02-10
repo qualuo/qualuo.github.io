@@ -1,9 +1,10 @@
 "use client";
 
-import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
+import { motion, useScroll, useTransform, AnimatePresence, useMotionValue, useSpring } from "framer-motion";
 import Link from "next/link";
 import { useRef, useState, useCallback, useEffect } from "react";
 import { MagneticButton } from "@/components/animations/MagneticButton";
+import { DelicateAccent } from "@/components/animations/DelicateAccent";
 
 const ease: [number, number, number, number] = [0.25, 0.1, 0.25, 1];
 
@@ -74,6 +75,21 @@ export function Hero() {
     window.dispatchEvent(new CustomEvent('hero-slide-change', { detail: { slide } }));
   }, [slide]);
 
+  // Mouse parallax — match starfield's Polaris offset (near layer: (mouse-0.5)*20px)
+  const mouseParallaxX = useMotionValue(0);
+  const mouseParallaxY = useMotionValue(0);
+  const bloomX = useSpring(mouseParallaxX, { stiffness: 50, damping: 18 });
+  const bloomY = useSpring(mouseParallaxY, { stiffness: 50, damping: 18 });
+
+  useEffect(() => {
+    const onMouse = (e: MouseEvent) => {
+      mouseParallaxX.set((e.clientX / window.innerWidth - 0.5) * 20);
+      mouseParallaxY.set((e.clientY / window.innerHeight - 0.5) * 20);
+    };
+    window.addEventListener("mousemove", onMouse, { passive: true });
+    return () => window.removeEventListener("mousemove", onMouse);
+  }, [mouseParallaxX, mouseParallaxY]);
+
   return (
     <section
       ref={containerRef}
@@ -82,6 +98,19 @@ export function Hero() {
       onPointerUp={onPointerUp}
       className="relative z-10 min-h-dvh flex flex-col items-center justify-center overflow-hidden touch-pan-y pt-20 md:pt-0"
     >
+      {/* Geometric accent — fixed to viewport, tracks Polaris through mouse parallax */}
+      <motion.div
+        className="fixed inset-0 pointer-events-none"
+        style={{ x: bloomX, y: bloomY }}
+        initial={{ scale: 0.92 }}
+        animate={{ scale: 1 }}
+        transition={{ duration: 1.2, delay: 0.1, ease }}
+      >
+        <div className="absolute w-80 h-80 md:w-120 md:h-120 -translate-x-1/2 -translate-y-1/2" style={{ left: "42%", top: "28%" }}>
+          <DelicateAccent variant="rings" />
+        </div>
+      </motion.div>
+
       <motion.div
         style={{ opacity, y }}
         className="relative z-10 text-center px-6 max-w-5xl w-full"

@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { SITE_CONFIG } from "@/lib/seo";
 
 export const dynamic = "force-static";
 
@@ -11,6 +12,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ["/404", "/_next/"],
       },
     ],
-    sitemap: "https://qualuo.github.io/sitemap.xml",
+    sitemap: `${SITE_CONFIG.url}/sitemap.xml`,
   };
 }

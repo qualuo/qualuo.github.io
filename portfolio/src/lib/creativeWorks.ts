@@ -9,6 +9,8 @@ export interface CreativeWork {
   connections: string[]; // IDs of related works (for thread system)
   href?: string; // Link to the experience
   gridArea?: string; // For custom grid placement
+  bgColor: string; // Dark background tint for scroll sections
+  particleColor: string; // WebGL particle accent color
 }
 
 export const creativeWorks: CreativeWork[] = [
@@ -22,6 +24,8 @@ export const creativeWorks: CreativeWork[] = [
     tags: ["ML", "Generative", "Visual"],
     color: "#FB7185",
     connections: ["voice-intimacy", "living-typography"],
+    bgColor: "#1a0a1e",
+    particleColor: "#FB7185",
   },
   {
     id: "voice-intimacy",
@@ -33,6 +37,8 @@ export const creativeWorks: CreativeWork[] = [
     tags: ["Voice", "AI", "Connection"],
     color: "#F472B6",
     connections: ["neural-dreams", "pulse-visualizer"],
+    bgColor: "#1a0f1e",
+    particleColor: "#F472B6",
   },
   {
     id: "living-typography",
@@ -44,6 +50,8 @@ export const creativeWorks: CreativeWork[] = [
     tags: ["Typography", "Animation", "Expression"],
     color: "#FBBF24",
     connections: ["neural-dreams", "digital-gardens"],
+    bgColor: "#1a1408",
+    particleColor: "#FBBF24",
   },
   {
     id: "pulse-visualizer",
@@ -55,6 +63,8 @@ export const creativeWorks: CreativeWork[] = [
     tags: ["Audio", "Reactive", "Rhythm"],
     color: "#9D174D",
     connections: ["voice-intimacy"],
+    bgColor: "#1a0515",
+    particleColor: "#9D174D",
   },
   {
     id: "digital-gardens",
@@ -66,6 +76,8 @@ export const creativeWorks: CreativeWork[] = [
     tags: ["Generative", "Exploration", "Growth"],
     color: "#FB923C",
     connections: ["living-typography", "three-worlds"],
+    bgColor: "#1a1008",
+    particleColor: "#FB923C",
   },
   {
     id: "three-worlds",
@@ -77,6 +89,8 @@ export const creativeWorks: CreativeWork[] = [
     tags: ["3D", "WebGL", "Immersive"],
     color: "#E879F9",
     connections: ["digital-gardens"],
+    bgColor: "#150a1e",
+    particleColor: "#E879F9",
   },
 ];
 

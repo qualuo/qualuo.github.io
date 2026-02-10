@@ -10,7 +10,9 @@ import { ProjectHero } from "@/components/projects/ProjectHero";
 import { ProjectProgress } from "@/components/projects/ProjectProgress";
 import { AbstractVisual } from "@/components/projects/visuals/AbstractVisual";
 import { WebGLErrorBoundary } from "@/components/ui/WebGLErrorBoundary";
+import { DelicateAccent } from "@/components/animations/DelicateAccent";
 
+const ease = [0.23, 1, 0.32, 1] as const;
 const AUTO_SCROLL_SPEED = 0.8; // desktop: pixels per frame (~48px/s at 60fps)
 const AUTO_SCROLL_SPEED_MOBILE = 1.6; // mobile: faster (~96px/s at 60fps)
 const IDLE_RESUME_MS = 30_000; // 30 seconds
@@ -235,52 +237,72 @@ export function Projects() {
   return (
     <section ref={sectionRef} id="projects" className="relative bg-black">
       {/* Section Header */}
-      <motion.div
-        initial={{ opacity: 0, y: 50 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
-        className="h-screen flex items-center justify-center relative z-2"
-      >
-        <div className="text-center max-w-4xl px-6">
-          <motion.h2
-            className="text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6"
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8, delay: 0.2 }}
+      <div className="h-screen flex items-center justify-center relative z-2">
+        <div className="relative z-10 text-center max-w-4xl px-6">
+          <motion.p
+            className="text-xs uppercase tracking-[0.2em] text-white/40 mb-6"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.3, ease }}
           >
-            Selected Work
-          </motion.h2>
+            Portfolio
+          </motion.p>
+
+          <h2 className="text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6">
+            {"Selected Work".split(" ").map((word, i) => (
+              <motion.span
+                key={i}
+                className="inline-block"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.5 + i * 0.12, ease }}
+              >
+                {word}
+                {i === 0 ? "\u00A0" : ""}
+              </motion.span>
+            ))}
+          </h2>
+
           <motion.p
             className="text-lg md:text-xl text-white/50"
             initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8, delay: 0.4 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.9, ease }}
           >
             From enterprise AI platforms to interactive experiences
           </motion.p>
-
-          {/* Scroll indicator */}
-          <motion.div
-            className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-white/30"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1.5 }}
-          >
-            <span className="text-xs uppercase tracking-widest">Scroll</span>
-            <motion.div
-              animate={{ y: [0, 6, 0] }}
-              transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <path d="M12 5v14M5 12l7 7 7-7" />
-              </svg>
-            </motion.div>
-          </motion.div>
         </div>
-      </motion.div>
+
+        {/* Delicate geometric accent — timeline behind text */}
+        <motion.div
+          className="absolute inset-0 flex items-center justify-center pointer-events-none"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 1.2, delay: 0.1, ease }}
+        >
+          <div className="w-80 h-[80vh]">
+            <DelicateAccent variant="timeline" />
+          </div>
+        </motion.div>
+
+        {/* Scroll indicator */}
+        <motion.div
+          className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-white/30"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.5 }}
+        >
+          <span className="text-xs uppercase tracking-widest">Scroll</span>
+          <motion.div
+            animate={{ y: [0, 6, 0] }}
+            transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M12 5v14M5 12l7 7 7-7" />
+            </svg>
+          </motion.div>
+        </motion.div>
+      </div>
 
       {/* Progress Indicator (both mobile + desktop) */}
       <ProjectProgress

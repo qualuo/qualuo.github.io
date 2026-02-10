@@ -65,16 +65,20 @@ export function SlideDeck({
 
     const observer = new IntersectionObserver(
       (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
+        let best: { index: number; ratio: number } | null = null;
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
             const index = slideRefs.current.indexOf(
               entry.target as HTMLElement
             );
-            if (index !== -1) setCurrentSlide(index);
+            if (index !== -1 && (!best || entry.intersectionRatio > best.ratio)) {
+              best = { index, ratio: entry.intersectionRatio };
+            }
           }
-        });
+        }
+        if (best) setCurrentSlide(best.index);
       },
-      { root: container, threshold: 0.5 }
+      { root: null, threshold: [0.15, 0.5] }
     );
 
     // Observe after a tick so refs are registered
@@ -181,14 +185,14 @@ export function SlideDeck({
           ref={containerRef}
           data-slide-deck
           tabIndex={0}
-          className="h-full overflow-y-auto snap-y snap-mandatory outline-none"
+          className="h-full overflow-y-auto lg:snap-y lg:snap-mandatory outline-none"
           style={{ scrollbarWidth: "none" }}
         >
           {children}
         </div>
 
         {/* Progress dots — right edge, desktop only */}
-        <div className="fixed right-4 top-1/2 -translate-y-1/2 z-40 hidden sm:flex flex-col gap-2 items-end">
+        <div className="fixed right-4 top-1/2 -translate-y-1/2 z-40 hidden lg:flex flex-col gap-2 items-end">
           {Array.from({ length: slideCount }).map((_, i) => (
             <div
               key={i}
@@ -253,6 +257,26 @@ export function SlideDeck({
           </button>
         </div>
 
+        {/* Mobile slide indicator */}
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 flex lg:hidden items-center gap-1.5 px-3 py-2 rounded-full bg-black/50 backdrop-blur-md border border-white/8">
+          {Array.from({ length: slideCount }).map((_, i) => (
+            <button
+              key={i}
+              onClick={() => navigateToSlide(i)}
+              aria-label={`Go to slide ${i + 1}${labels?.[i] ? `: ${labels[i]}` : ""}`}
+              className="p-0.5"
+            >
+              <span
+                className={`block rounded-full transition-all duration-300 ${
+                  i === currentSlide
+                    ? "w-2 h-2 bg-white/70"
+                    : "w-1.5 h-1.5 bg-white/20"
+                }`}
+              />
+            </button>
+          ))}
+        </div>
+
         {/* Fullscreen toast */}
         <AnimatePresence>
           {showFullscreenToast && (
@@ -305,7 +329,7 @@ export function Slide({
     return (
       <div
         ref={ref}
-        className={`h-dvh snap-start flex flex-col items-center justify-center relative ${className}`}
+        className={`min-h-dvh lg:h-dvh lg:snap-start flex flex-col items-center justify-center relative ${className}`}
       >
         {children}
       </div>
@@ -316,7 +340,7 @@ export function Slide({
     return (
       <div
         ref={ref}
-        className={`min-h-dvh snap-start px-6 pt-24 pb-12 ${className}`}
+        className={`min-h-dvh lg:snap-start px-6 pt-24 pb-12 ${className}`}
       >
         <div className="max-w-4xl mx-auto w-full">{children}</div>
       </div>
@@ -327,7 +351,7 @@ export function Slide({
   return (
     <div
       ref={ref}
-      className={`h-dvh snap-start flex flex-col justify-center px-6 ${className}`}
+      className={`min-h-dvh lg:h-dvh lg:snap-start flex flex-col justify-center px-6 py-16 lg:py-0 ${className}`}
     >
       <div className="max-w-4xl mx-auto w-full">{children}</div>
     </div>

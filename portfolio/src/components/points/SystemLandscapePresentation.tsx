@@ -7,18 +7,151 @@ import { PresentationSection } from "./shared/PresentationSection";
 import { DiagramCard } from "./shared/DiagramCard";
 import { InsightCallout } from "./shared/InsightCallout";
 import { TypewriterText } from "./shared/TypewriterText";
+import { DrawSvg } from "./shared/DrawSvg";
+
+// ──────────────────────────────────────────────
+// Icons (stroke-based, currentColor)
+// ──────────────────────────────────────────────
+
+const ICONS = {
+  tangled: (
+    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+      <path d="M4 7c4 0 4 10 8 10s4-10 8-10" />
+      <path d="M4 17c4 0 4-10 8-10s4 10 8 10" />
+    </svg>
+  ),
+  lock: (
+    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="5" y="11" width="14" height="10" rx="2" />
+      <path d="M8 11V7a4 4 0 018 0v4" />
+    </svg>
+  ),
+  eyeOff: (
+    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94" />
+      <path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19" />
+      <line x1="1" y1="1" x2="23" y2="23" />
+    </svg>
+  ),
+  anchor: (
+    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="5" r="3" />
+      <line x1="12" y1="8" x2="12" y2="21" />
+      <path d="M5 12H2a10 10 0 0020 0h-3" />
+    </svg>
+  ),
+  copy: (
+    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="9" y="9" width="13" height="13" rx="2" />
+      <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+    </svg>
+  ),
+  zap: (
+    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+    </svg>
+  ),
+  clock: (
+    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" />
+      <polyline points="12 6 12 12 16 14" />
+    </svg>
+  ),
+  user: (
+    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
+    </svg>
+  ),
+  dollar: (
+    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="12" y1="1" x2="12" y2="23" />
+      <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
+    </svg>
+  ),
+  power: (
+    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M18.36 6.64a9 9 0 11-12.73 0" />
+      <line x1="12" y1="2" x2="12" y2="12" />
+    </svg>
+  ),
+  landmark: (
+    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="3" y1="22" x2="21" y2="22" />
+      <line x1="6" y1="18" x2="6" y2="11" />
+      <line x1="10" y1="18" x2="10" y2="11" />
+      <line x1="14" y1="18" x2="14" y2="11" />
+      <line x1="18" y1="18" x2="18" y2="11" />
+      <polygon points="12 2 20 7 4 7" />
+      <line x1="2" y1="18" x2="22" y2="18" />
+    </svg>
+  ),
+  link: (
+    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" />
+      <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" />
+    </svg>
+  ),
+  cycle: (
+    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="1 4 1 10 7 10" />
+      <polyline points="23 20 23 14 17 14" />
+      <path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15" />
+    </svg>
+  ),
+  shuffle: (
+    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="16 3 21 3 21 8" />
+      <line x1="4" y1="20" x2="21" y2="3" />
+      <polyline points="21 16 21 21 16 21" />
+      <line x1="15" y1="15" x2="21" y2="21" />
+      <line x1="4" y1="4" x2="9" y2="9" />
+    </svg>
+  ),
+  target: (
+    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" />
+      <circle cx="12" cy="12" r="6" />
+      <circle cx="12" cy="12" r="2" />
+    </svg>
+  ),
+  clipboardList: (
+    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="8" y="2" width="8" height="4" rx="1" />
+      <path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2" />
+      <path d="M12 11h4" />
+      <path d="M12 16h4" />
+      <path d="M8 11h.01" />
+      <path d="M8 16h.01" />
+    </svg>
+  ),
+  scissors: (
+    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="6" cy="6" r="3" />
+      <circle cx="6" cy="18" r="3" />
+      <line x1="20" y1="4" x2="8.12" y2="15.88" />
+      <line x1="14.47" y1="14.48" x2="20" y2="20" />
+      <line x1="8.12" y1="8.12" x2="12" y2="12" />
+    </svg>
+  ),
+  wrench: (
+    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z" />
+    </svg>
+  ),
+};
 
 // ──────────────────────────────────────────────
 // Data
 // ──────────────────────────────────────────────
 
 const antiPatterns = [
-  { title: "Spaghetti Integration", desc: "Point-to-point connections multiply with every new system. One change breaks three others.", icon: "🍝" },
-  { title: "Vendor Lock-in", desc: "A single vendor controls your roadmap, pricing, and deprecation timeline. You lose all leverage.", icon: "🔒" },
-  { title: "Shadow IT", desc: "Departments buy their own tools because the official stack doesn't meet their needs. Data fragments.", icon: "👻" },
-  { title: "Legacy Paralysis", desc: "Core systems are too risky to touch, too expensive to replace, and too critical to ignore.", icon: "🪨" },
-  { title: "Duplication Sprawl", desc: "Multiple tools solving the same problem across business units. Licensing costs compound silently.", icon: "📋" },
-  { title: "Big-Bang Migration", desc: "Multi-year transformation programs that deliver value only at the end — if they deliver at all.", icon: "💥" },
+  { title: "Spaghetti Integration", desc: "Point-to-point connections multiply with every new system. One change breaks three others.", icon: ICONS.tangled },
+  { title: "Vendor Lock-in", desc: "A single vendor controls your roadmap, pricing, and deprecation timeline. You lose all leverage.", icon: ICONS.lock },
+  { title: "Shadow IT", desc: "Departments buy their own tools because the official stack doesn't meet their needs. Data fragments.", icon: ICONS.eyeOff },
+  { title: "Legacy Paralysis", desc: "Core systems are too risky to touch, too expensive to replace, and too critical to ignore.", icon: ICONS.anchor },
+  { title: "Duplication Sprawl", desc: "Multiple tools solving the same problem across business units. Licensing costs compound silently.", icon: ICONS.copy },
+  { title: "Big-Bang Migration", desc: "Multi-year transformation programs that deliver value only at the end — if they deliver at all.", icon: ICONS.zap },
 ];
 
 const approaches = [
@@ -66,10 +199,10 @@ const settleVsFluid = [
 ];
 
 const successMetrics = [
-  { metric: "Time to Replace", desc: "Can you swap a system in months, not years?", icon: "⏱️", color: "#14B8A6" },
-  { metric: "Clarity of Ownership", desc: "Does every system have one person who decides?", icon: "👤", color: "#10B981" },
-  { metric: "Cost per Transaction", desc: "Do you know the true cost of each business process?", icon: "💰", color: "#059669" },
-  { metric: "Decommission Velocity", desc: "Can you turn off a system without a 2-year committee?", icon: "🗑️", color: "#0D9488" },
+  { metric: "Time to Replace", desc: "Can you swap a system in months, not years?", icon: ICONS.clock, color: "#14B8A6" },
+  { metric: "Clarity of Ownership", desc: "Does every system have one person who decides?", icon: ICONS.user, color: "#10B981" },
+  { metric: "Cost per Transaction", desc: "Do you know the true cost of each business process?", icon: ICONS.dollar, color: "#059669" },
+  { metric: "Decommission Velocity", desc: "Can you turn off a system without a 2-year committee?", icon: ICONS.power, color: "#0D9488" },
 ];
 
 const SLIDE_LABELS = ["", "Overview", "Anti-patterns", "Approaches", "Architecture", "Principles", "Build vs Buy", "Metrics", "Summary", ""];
@@ -87,11 +220,11 @@ function ApproachComparison() {
 
   return (
     <div ref={ref} className="space-y-4">
-      <div className="flex gap-2 mb-6">
+      <div className="grid grid-cols-2 sm:flex gap-2 mb-6">
         {approaches.map((a, i) => (
           <motion.button
             key={a.title}
-            className="flex-1 py-2.5 px-3 rounded-xl text-xs font-medium border transition-all duration-300 cursor-pointer"
+            className="sm:flex-1 py-2.5 px-3 rounded-xl text-xs font-medium border transition-all duration-300 cursor-pointer"
             style={{
               borderColor: active === i ? `${a.color}60` : "rgba(255,255,255,0.08)",
               backgroundColor: active === i ? `${a.color}15` : "rgba(255,255,255,0.03)",
@@ -200,7 +333,7 @@ function ComposableStack() {
                 <h4 className="text-sm font-semibold text-white">{layer.label}</h4>
                 <p className="text-xs text-slate-400">{layer.desc}</p>
               </div>
-              <svg className={`w-3 h-3 text-slate-600 transition-transform shrink-0 ${expandedLayer === i ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+              <svg className={`w-3 h-3 text-slate-400 transition-transform shrink-0 ${expandedLayer === i ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
                 <path d="M19 9l-7 7-7-7" />
               </svg>
             </motion.div>
@@ -208,7 +341,7 @@ function ComposableStack() {
             <AnimatePresence>
               {expandedLayer === i && (
                 <motion.div
-                  className="px-4 py-3 ml-14"
+                  className="px-4 py-3 ml-4 sm:ml-14"
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
@@ -231,32 +364,57 @@ function SettleFluidTable() {
 
   return (
     <div ref={ref} className="overflow-hidden rounded-2xl border border-white/8">
-      <div className="grid grid-cols-2 border-b border-white/8">
-        <div className="p-4 bg-emerald-500/8">
-          <p className="text-xs font-bold text-emerald-400 uppercase tracking-widest">Settle on</p>
-          <p className="text-[10px] text-slate-500 mt-0.5">Stable foundations</p>
+      {/* Desktop: 2-column table */}
+      <div className="hidden sm:block">
+        <div className="grid grid-cols-2 border-b border-white/8">
+          <div className="p-4 bg-emerald-500/8">
+            <p className="text-xs font-bold text-emerald-400 uppercase tracking-widest">Settle on</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">Stable foundations</p>
+          </div>
+          <div className="p-4 bg-cyan-500/8">
+            <p className="text-xs font-bold text-cyan-400 uppercase tracking-widest">Keep fluid</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">Replaceable implementations</p>
+          </div>
         </div>
-        <div className="p-4 bg-cyan-500/8">
-          <p className="text-xs font-bold text-cyan-400 uppercase tracking-widest">Keep fluid</p>
-          <p className="text-[10px] text-slate-500 mt-0.5">Replaceable implementations</p>
-        </div>
+        {settleVsFluid.map((row, i) => (
+          <motion.div
+            key={row.settle}
+            className="grid grid-cols-2 border-b border-white/5 last:border-b-0"
+            initial={{ opacity: 0, y: 10 }}
+            animate={isInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ delay: i * 0.08, duration: 0.4 }}
+          >
+            <div className="p-4">
+              <p className="text-sm text-slate-300">{row.settle}</p>
+            </div>
+            <div className="p-4 border-l border-white/5">
+              <p className="text-sm text-slate-400">{row.fluid}</p>
+            </div>
+          </motion.div>
+        ))}
       </div>
-      {settleVsFluid.map((row, i) => (
-        <motion.div
-          key={row.settle}
-          className="grid grid-cols-2 border-b border-white/5 last:border-b-0"
-          initial={{ opacity: 0, y: 10 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ delay: i * 0.08, duration: 0.4 }}
-        >
-          <div className="p-4">
-            <p className="text-sm text-slate-300">{row.settle}</p>
-          </div>
-          <div className="p-4 border-l border-white/5">
-            <p className="text-sm text-slate-400">{row.fluid}</p>
-          </div>
-        </motion.div>
-      ))}
+
+      {/* Mobile: stacked cards */}
+      <div className="sm:hidden divide-y divide-white/5">
+        {settleVsFluid.map((row, i) => (
+          <motion.div
+            key={row.settle}
+            className="p-4 space-y-2"
+            initial={{ opacity: 0, y: 10 }}
+            animate={isInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ delay: i * 0.08, duration: 0.4 }}
+          >
+            <div>
+              <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mb-1">Settle</p>
+              <p className="text-sm text-slate-300">{row.settle}</p>
+            </div>
+            <div>
+              <p className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest mb-1">Keep fluid</p>
+              <p className="text-sm text-slate-400">{row.fluid}</p>
+            </div>
+          </motion.div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -272,7 +430,7 @@ function ScrollDrawBuildBuy() {
   return (
     <div ref={containerRef}>
       <div className="mb-2">
-        <div className="flex h-14 rounded-xl overflow-hidden">
+        <div className="flex h-20 sm:h-14 rounded-xl overflow-hidden">
           <div className="flex-1 flex items-center justify-center bg-teal-500/20 border-r border-teal-500/10">
             <motion.div
               initial={{ opacity: 0 }}
@@ -282,7 +440,7 @@ function ScrollDrawBuildBuy() {
             >
               <div className="text-center">
                 <span className="text-xs font-bold text-teal-400 block">BUILD</span>
-                <span className="text-[10px] text-slate-500">Core differentiator</span>
+                <span className="text-[11px] text-slate-400">Core differentiator</span>
               </div>
             </motion.div>
           </div>
@@ -295,7 +453,7 @@ function ScrollDrawBuildBuy() {
             >
               <div className="text-center">
                 <span className="text-xs font-bold text-slate-300 block">CONFIGURE</span>
-                <span className="text-[10px] text-slate-500">Platform + customization</span>
+                <span className="text-[11px] text-slate-400">Platform + customization</span>
               </div>
             </motion.div>
           </div>
@@ -308,7 +466,7 @@ function ScrollDrawBuildBuy() {
             >
               <div className="text-center">
                 <span className="text-xs font-bold text-cyan-400 block">BUY</span>
-                <span className="text-[10px] text-slate-500">Commodity</span>
+                <span className="text-[11px] text-slate-400">Commodity</span>
               </div>
             </motion.div>
           </div>
@@ -320,7 +478,7 @@ function ScrollDrawBuildBuy() {
             style={{ width: barWidth }}
           />
         </div>
-        <div className="flex justify-between mt-2 text-[10px] text-slate-600 uppercase tracking-wider">
+        <div className="flex justify-between mt-2 text-[11px] text-slate-400 uppercase tracking-wider">
           <span>Your competitive edge</span>
           <span>Everyone needs it</span>
         </div>
@@ -367,11 +525,16 @@ export function SystemLandscapePresentation() {
 
       {/* ═══════ Slide 0: HERO ═══════ */}
       <Slide index={0} variant="hero">
+        {/* Background glow */}
+        <div
+          className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-150 h-150 rounded-full pointer-events-none"
+          style={{ background: "radial-gradient(circle, rgba(20,184,166,0.08) 0%, rgba(20,184,166,0) 70%)" }}
+        />
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, delay: 0.2 }}
-          className="text-center"
+          className="relative text-center"
         >
           <motion.p
             className="text-teal-400 text-sm font-medium tracking-widest uppercase mb-6"
@@ -399,7 +562,7 @@ export function SystemLandscapePresentation() {
         </motion.div>
 
         <motion.div
-          className="absolute bottom-12 flex flex-col items-center gap-2 text-slate-600"
+          className="absolute bottom-12 flex flex-col items-center gap-2 text-slate-400"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1.5 }}
@@ -435,7 +598,7 @@ export function SystemLandscapePresentation() {
             {antiPatterns.map((item, i) => (
               <DiagramCard key={item.title} delay={i * 0.06}>
                 <div className="flex items-start gap-3">
-                  <span className="text-lg shrink-0">{item.icon}</span>
+                  <span className="shrink-0 text-slate-500"><DrawSvg>{item.icon}</DrawSvg></span>
                   <div>
                     <h3 className="text-sm font-semibold text-white mb-1">{item.title}</h3>
                     <p className="text-xs text-slate-400 leading-relaxed">{item.desc}</p>
@@ -526,14 +689,14 @@ export function SystemLandscapePresentation() {
                 <div className="flex items-start gap-3">
                   <motion.div
                     className="w-10 h-10 rounded-xl flex items-center justify-center text-lg shrink-0 border"
-                    style={{ backgroundColor: `${m.color}15`, borderColor: `${m.color}30` }}
+                    style={{ backgroundColor: `${m.color}15`, borderColor: `${m.color}30`, color: m.color }}
                     whileInView={{
                       scale: [1, 1.15, 1],
                     }}
                     viewport={{ once: true }}
                     transition={{ delay: 0.3 + i * 0.1, duration: 0.5 }}
                   >
-                    {m.icon}
+                    <DrawSvg>{m.icon}</DrawSvg>
                   </motion.div>
                   <div>
                     <h3 className="text-sm font-semibold text-white mb-1">{m.metric}</h3>
@@ -551,14 +714,17 @@ export function SystemLandscapePresentation() {
         <PresentationSection eyebrow="The Takeaway" title="For the Leadership Table" gradient={GRADIENT}>
           <div className="space-y-3">
             {[
-              "There is no ideal architecture — there is only an architecture that's cheap to change.",
-              "Consolidate where a capability is commoditized. Differentiate where it gives you competitive advantage.",
-              "Treat integration as a first-class capability, not an afterthought.",
-              "Settle on the rules. Stay flexible on the tools.",
-              "The enterprises that win don't pick the right systems — they can swap the wrong ones fast.",
+              { text: "There is no ideal architecture — there is only an architecture that's cheap to change.", icon: ICONS.cycle },
+              { text: "Consolidate where a capability is commoditized. Differentiate where it gives you competitive advantage.", icon: ICONS.target },
+              { text: "Treat integration as a first-class capability, not an afterthought.", icon: ICONS.link },
+              { text: "Settle on the rules. Stay flexible on the tools.", icon: ICONS.landmark },
+              { text: "The enterprises that win don't pick the right systems — they can swap the wrong ones fast.", icon: ICONS.shuffle },
             ].map((point, i) => (
               <DiagramCard key={i} delay={i * 0.06}>
-                <p className="text-sm text-slate-300 leading-relaxed">{point}</p>
+                <div className="flex items-start gap-3">
+                  <span className="shrink-0 mt-0.5 text-teal-400/60"><DrawSvg>{point.icon}</DrawSvg></span>
+                  <p className="text-sm text-slate-300 leading-relaxed">{point.text}</p>
+                </div>
               </DiagramCard>
             ))}
           </div>
@@ -570,27 +736,36 @@ export function SystemLandscapePresentation() {
         <PresentationSection eyebrow="So What?" title="What to Do Monday Morning" gradient={GRADIENT}>
           <div className="space-y-3 mb-8">
             <DiagramCard delay={0}>
-              <p className="text-sm text-slate-300 leading-relaxed">
-                Map your landscape. Not in a 6-month initiative — in a
-                spreadsheet this week. System name, owner, cost, replaceability score.
-              </p>
+              <div className="flex items-start gap-3">
+                <span className="shrink-0 mt-0.5 text-teal-400/60"><DrawSvg>{ICONS.clipboardList}</DrawSvg></span>
+                <p className="text-sm text-slate-300 leading-relaxed">
+                  Map your landscape. Not in a 6-month initiative — in a
+                  spreadsheet this week. System name, owner, cost, replaceability score.
+                </p>
+              </div>
             </DiagramCard>
             <DiagramCard delay={0.08}>
-              <p className="text-sm text-slate-300 leading-relaxed">
-                Identify two systems you&apos;d struggle to replace. That&apos;s
-                where your risk lives. Start decoupling them from everything else.
-              </p>
+              <div className="flex items-start gap-3">
+                <span className="shrink-0 mt-0.5 text-teal-400/60"><DrawSvg>{ICONS.scissors}</DrawSvg></span>
+                <p className="text-sm text-slate-300 leading-relaxed">
+                  Identify two systems you&apos;d struggle to replace. That&apos;s
+                  where your risk lives. Start decoupling them from everything else.
+                </p>
+              </div>
             </DiagramCard>
             <DiagramCard delay={0.16}>
-              <p className="text-sm text-slate-300 leading-relaxed">
-                Fund the integration layer. It&apos;s not glamorous, but it&apos;s
-                the single investment that makes every future decision cheaper.
-              </p>
+              <div className="flex items-start gap-3">
+                <span className="shrink-0 mt-0.5 text-teal-400/60"><DrawSvg>{ICONS.wrench}</DrawSvg></span>
+                <p className="text-sm text-slate-300 leading-relaxed">
+                  Fund the integration layer. It&apos;s not glamorous, but it&apos;s
+                  the single investment that makes every future decision cheaper.
+                </p>
+              </div>
             </DiagramCard>
           </div>
           <TypewriterText
             text="The best system landscape isn't the one that's perfect today — it's the one that's easy to fix tomorrow."
-            className="text-slate-600 text-sm tracking-wide italic text-center"
+            className="text-slate-400 text-sm tracking-wide italic text-center"
             speed={30}
           />
         </PresentationSection>

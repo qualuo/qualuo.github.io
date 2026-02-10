@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const point = getPointBySlug(slug);
 
   if (!point) {
-    return { title: "Presentation Not Found" };
+    return { title: "Point of View Not Found" };
   }
 
   const title = `${point.title} — ${point.subtitle}`;
@@ -30,7 +30,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title,
     description,
-    keywords: [...point.tags, "enterprise architecture", "presentation", SITE_CONFIG.name],
+    keywords: [...point.tags, "enterprise architecture", SITE_CONFIG.name],
     alternates: { canonical: url },
     openGraph: {
       title: `${title} | ${SITE_CONFIG.name}`,
@@ -42,7 +42,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
           url: `/og/points/${point.slug}.png`,
           width: 1200,
           height: 630,
-          alt: `${point.title} Presentation`,
+          alt: point.title,
         },
       ],
     },

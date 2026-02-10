@@ -17,16 +17,16 @@ const SystemLandscapePresentation = lazy(() =>
   }))
 );
 
-const AIArchitecturePresentation = lazy(() =>
-  import("@/components/points/AIArchitecturePresentation").then((m) => ({
-    default: m.AIArchitecturePresentation,
+const AIArchitecturePaper = lazy(() =>
+  import("@/components/points/AIArchitecturePaper").then((m) => ({
+    default: m.AIArchitecturePaper,
   }))
 );
 
 const POINT_COMPONENTS: Record<string, React.ComponentType> = {
   togaf: TogafPresentation,
   "system-landscape": SystemLandscapePresentation,
-  "ai-architecture": AIArchitecturePresentation,
+  "ai-architecture": AIArchitecturePaper,
 };
 
 function DotGrid() {
@@ -68,8 +68,12 @@ export function PointPageClient({ point }: PointPageClientProps) {
 
   const PresentationComponent = POINT_COMPONENTS[point.slug];
 
+  const isPaper = point.format === "paper";
+
   return (
-    <main className="relative h-dvh overflow-hidden">
+    <main
+      className={`relative ${isPaper ? "min-h-dvh" : "h-dvh overflow-hidden"}`}
+    >
       <DotGrid />
       <Navbar isSubpage hasStars={false} />
 

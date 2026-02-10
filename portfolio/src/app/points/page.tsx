@@ -6,19 +6,20 @@ import PointsPageClient from "./PointsPageClient";
 export const metadata: Metadata = {
   title: "Points of View",
   description:
-    "Enterprise architecture presentations by Quang Luong covering TOGAF, system landscapes, AI architecture, API strategy, and cloud migration patterns.",
+    "Frameworks and perspectives for building systems that scale — papers and presentations on AI architecture, system landscape strategy, TOGAF, and enterprise design patterns.",
   alternates: { canonical: canonicalUrl("/points") },
   openGraph: {
     title: "Points of View | Quang Luong",
     description:
-      "Enterprise architecture presentations on TOGAF, system landscapes, and AI architecture.",
+      "Papers and presentations on AI architecture, system landscape strategy, and enterprise design patterns.",
     url: canonicalUrl("/points"),
     images: [{ url: "/og/points.png", width: 1200, height: 630, alt: "Points of View" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Points of View | Quang Luong",
-    description: "Enterprise architecture presentations and strategic thinking.",
+    description:
+      "Papers and presentations on AI architecture, system landscape strategy, and enterprise design patterns.",
     images: ["/og/points.png"],
   },
 };

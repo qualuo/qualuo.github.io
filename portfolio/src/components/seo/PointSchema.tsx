@@ -7,7 +7,7 @@ export function PointSchema({ point }: { point: Point }) {
     <JsonLd
       data={{
         "@context": "https://schema.org",
-        "@type": "PresentationDigitalDocument",
+        "@type": point.format === "paper" ? "ScholarlyArticle" : "PresentationDigitalDocument",
         name: point.title,
         description: point.description,
         url: canonicalUrl(`/points/${point.slug}`),
