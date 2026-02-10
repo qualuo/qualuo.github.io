@@ -107,7 +107,7 @@ export function Hero() {
         transition={{ duration: 1.2, delay: 0.1, ease }}
       >
         <div className="absolute w-80 h-80 md:w-120 md:h-120 -translate-x-1/2 -translate-y-1/2" style={{ left: "42%", top: "28%" }}>
-          <DelicateAccent variant="rings" />
+          <DelicateAccent variant="goldenbloom" />
         </div>
       </motion.div>
 

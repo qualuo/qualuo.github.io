@@ -2,22 +2,22 @@
 
 /**
  * Subtle geometric watermark behind page headers.
- * - "rings": golden-ratio geometry — φ-spaced rings, phyllotaxis dots, logarithmic spiral
+ * - "goldenbloom": golden-ratio geometry — φ-spaced spirals, phyllotaxis dots, logarithmic spiral
  * - "timeline": vertical timeline spine with alternating milestone branches (Work page)
  * - "compass": radial lines from center + thin circle (frameworks / Points page)
  */
 export function DelicateAccent({
-  variant = "rings",
+  variant = "goldenbloom",
   className = "",
 }: {
-  variant?: "rings" | "compass" | "timeline";
+  variant?: "goldenbloom" | "compass" | "timeline";
   className?: string;
 }) {
   const stroke = "rgba(255,255,255,0.30)";
-  const strokeFaint = "rgba(255,255,255,0.18)";
-  const strokeGhost = "rgba(255,255,255,0.10)";
+  const strokeFaint = "rgba(255,255,255,0.26)";
+  const strokeGhost = "rgba(255,255,255,0.15)";
 
-  if (variant === "rings") {
+  if (variant === "goldenbloom") {
     // ═══════════════════════════════════════════════════════
     //  G O L D E N   B L O O M
     //
@@ -27,38 +27,31 @@ export function DelicateAccent({
     //  space: sunflower heads, nautilus shells, galaxy arms.
     //  The same constant governs every layer here:
     //
-    //  ACTIVE LAYERS
-    //  ─────────────
-    //  ② 3-arm golden spiral — logarithmic spirals where
+    //  LAYERS
+    //  ──────
+    //  ① 3-arm golden spiral — logarithmic spirals where
     //     r(θ) = A · e^(bθ), with b = ln(φ)/(π/2).
     //     The radius multiplies by φ every quarter-turn.
     //     Three arms offset by the golden angle (≈ 137.508°),
     //     which is 360°/φ² — the same rotation sunflower
     //     florets use to pack most efficiently.
     //
-    //  ③ Intersection stars — 9 four-point stars (3 arms ×
-    //     3 outer Fibonacci rings) where the spiral crosses
-    //     each ring. Radial spacing is φ-governed: the rings
-    //     sit at radii 68, 110, 178 (Fibonacci ×2), so
-    //     consecutive ratios ≈ φ (110/68 ≈ 1.618, 178/110 ≈
-    //     1.618). Angular positions solved via θ = ln(r/A)/b,
+    //  ② Intersection stars — 9 four-point stars (3 arms ×
+    //     3 Fibonacci radii) where the spiral crosses each
+    //     ring. Radial spacing is φ-governed: the rings sit
+    //     at radii 68, 110, 178 (Fibonacci ×2), so consecutive
+    //     ratios ≈ φ (110/68 ≈ 1.618, 178/110 ≈ 1.618).
+    //     Angular positions solved via θ = ln(r/A)/b,
     //     inheriting the spiral's φ growth rate. Stars on
     //     different arms are golden-angle (137.508°) apart.
     //
-    //  ④ Phyllotaxis dots — 34 (a Fibonacci number) dots
+    //  ③ Phyllotaxis dots — 34 (a Fibonacci number) dots
     //     placed on a Fermat spiral r = c·√n, each rotated by
     //     the golden angle from its predecessor. This recreates
     //     the sunflower seed pattern; every 5th dot (also Fib)
     //     glows brighter.
     //
-    //  ⑤ Center seed — the origin from which everything grows.
-    //
-    //  DORMANT (commented out)
-    //  ───────
-    //  ① Fibonacci concentric rings — 4 circles at radii
-    //     [42, 68, 110, 178] = Fibonacci [21, 34, 55, 89] ×2.
-    //     Consecutive ratios approximate φ: 34/21 ≈ 1.619,
-    //     55/34 ≈ 1.618, 89/55 ≈ 1.618.
+    //  ④ Center seed — the origin from which everything grows.
     //
     //  ROTATION
     //  ────────
@@ -66,10 +59,11 @@ export function DelicateAccent({
     //  revolution per 60·φ ≈ 97.08 seconds — a golden-ratio-
     //  derived period that feels unhurried and contemplative.
     //
-    //  ANIMATION — bloom/wilt cycle (~6.7s)
+    //  ANIMATION — bloom/wilt cycle (~10s, 2s entrance delay)
     //  ─────────
-    //  Blooms outward from center (0→3.3s), holds briefly,
-    //  then closes inward like a flower folding (4.5→6.7s).
+    //  Waits 2s for hero text to settle, then blooms outward
+    //  from center (2→5.3s), holds ~3s for appreciation,
+    //  then closes inward like a flower folding (8.3→10s).
     // ═══════════════════════════════════════════════════════
     const φ  = 1.618033988749895;
     const GA = 360 / (φ * φ);              // golden angle ≈ 137.508°
@@ -78,18 +72,18 @@ export function DelicateAccent({
 
     // Timing — narrative arc:
     //
-    //  BLOOM (center → out):
-    //   0.0  seed blooms (0.55s)
-    //   0.18 spiral begins unfurling (2.4s)
-    //   1.7  stars flash at intersections
-    //   2.0  phyllotaxis dots cascade outward
-    //   3.3  everything fully visible — hold
+    //  BLOOM (center → out, after 2s entrance delay):
+    //   2.0  seed blooms (0.55s)
+    //   2.18 spiral begins unfurling (2.4s)
+    //   3.7  stars flash at intersections
+    //   4.0  phyllotaxis dots cascade outward
+    //   5.3  everything fully visible — hold ~3s
     //
     //  CLOSE (outside → in, the flower folds back):
-    //   4.5  dots wilt outer→inner
-    //   4.8  stars blink out outer→inner
-    //   5.3  spiral retracts back to center
-    //   6.2  seed shrinks — silence (~6.7s total)
+    //   8.3  dots wilt outer→inner
+    //   8.6  stars blink out outer→inner
+    //   9.1  spiral retracts back to center
+    //  10.0  seed shrinks — silence (~10s total)
 
     // ── Fibonacci radii (×2 scale) ──
     const R = [21, 34, 55, 89].map(n => n * 2);
@@ -115,9 +109,9 @@ export function DelicateAccent({
       R.slice(1).map((r, ri) => {
         const θ = Math.log(r / A) / b;
         return {
-          x: 200 + r * Math.cos(-(θ + off)),
-          y: 200 + r * Math.sin(-(θ + off)),
-          d: 1.7 + ai * 0.1 + ri * 0.35,  // stagger by arm, then ring
+          x: +((200 + r * Math.cos(-(θ + off))).toFixed(3)),
+          y: +((200 + r * Math.sin(-(θ + off))).toFixed(3)),
+          d: 3.7 + ai * 0.1 + ri * 0.35,  // stagger by arm, then ring
           ri,                               // ring index for wilt ordering
         };
       })
@@ -126,12 +120,8 @@ export function DelicateAccent({
     return (
       <svg className={`w-full h-full ${className}`} viewBox="0 0 400 400" aria-hidden="true">
         <style>{`
-          @keyframes gbl-draw{from{stroke-dashoffset:var(--dl)}to{stroke-dashoffset:0}}
-          @keyframes gbl-out{from{stroke-dashoffset:0}to{stroke-dashoffset:calc(-1 * var(--dl))}}
           @keyframes gbl-pd{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
           @keyframes gbl-pdo{from{stroke-dashoffset:0}to{stroke-dashoffset:1}}
-          @keyframes gbl-in{from{opacity:0}to{opacity:1}}
-          @keyframes gbl-fo{to{opacity:0}}
           @keyframes gbl-bloom{from{opacity:0;transform:scale(0)}to{opacity:1;transform:scale(1)}}
           @keyframes gbl-wilt{to{opacity:0;transform:scale(0)}}
           @keyframes gbl-spin{from{transform:rotate(0deg)}to{transform:rotate(-360deg)}}
@@ -140,63 +130,47 @@ export function DelicateAccent({
         {/* CCW rotation: one revolution per 60·φ ≈ 97s — matches starfield's contemplative drift */}
         <g style={{ transformOrigin: "200px 200px", animation: "gbl-spin 97.08s linear infinite" }}>
 
-        {/* ① Fibonacci concentric rings — disabled for testing
-        {R.map((r, i) => {
-          const c = 2 * Math.PI * r;
-          const d = 1.2 + i * 0.6;
-          const dur = 1.0 + i * 0.15;
-          return (
-            <circle key={`r${i}`} cx={200} cy={200} r={r}
-              fill="none"
-              stroke={i < 2 ? stroke : strokeFaint}
-              strokeWidth={0.4 + i * 0.04}
-              strokeDasharray={c} strokeDashoffset={-c}
-              style={{ ["--dl" as string]: -c, animation: `gbl-draw ${dur}s ease-out ${d}s forwards, gbl-fo ${0.6 + i * 0.1}s ease-in ${(7.8 + (3 - i) * 0.35).toFixed(2)}s forwards` }}
-            />
-          );
-        })} */}
-
-        {/* ② Golden spiral — 3 arms offset by the golden angle */}
+        {/* ① Golden spiral — 3 arms offset by the golden angle */}
         {[0, GAr, 2 * GAr].map((off, ai) => (
           <path key={`sp${ai}`} d={mkSpiral(off)} fill="none"
-            stroke="rgba(255,255,255,0.12)" strokeWidth="0.5" strokeLinecap="round"
+            stroke="rgba(255,255,255,0.18)" strokeWidth="0.5" strokeLinecap="round"
             pathLength={1} strokeDasharray="1" strokeDashoffset={1}
-            style={{ animation: `gbl-pd ${2.4 + ai * 0.2}s cubic-bezier(0.16,1,0.3,1) ${0.18 + ai * 0.1}s forwards, gbl-pdo 1.3s ease-in ${5.3 + ai * 0.1}s forwards` }}
+            style={{ animation: `gbl-pd ${2.4 + ai * 0.2}s cubic-bezier(0.16,1,0.3,1) ${2.18 + ai * 0.1}s forwards, gbl-pdo 1.3s ease-in ${9.1 + ai * 0.1}s forwards` }}
           />
         ))}
 
-        {/* ③ Intersection stars — where spiral meets Fibonacci rings */}
+        {/* ② Intersection stars — where spiral meets Fibonacci rings */}
         {ixns.map(({ x, y, d, ri }, i) => {
           const s = 4.5;  // outer spike length
           const n = 1.2;  // inner notch
           const star = `M${x},${y - s} L${x + n},${y - n} L${x + s},${y} L${x + n},${y + n} L${x},${y + s} L${x - n},${y + n} L${x - s},${y} L${x - n},${y - n}Z`;
           return (
             <path key={`ix${i}`} d={star} fill={strokeFaint} stroke="none"
-              style={{ opacity: 0, transformOrigin: `${x}px ${y}px`, animation: `gbl-bloom 0.2s ease-out ${d}s forwards, gbl-wilt 0.3s ease-in ${(4.8 + (2 - ri) * 0.25).toFixed(2)}s forwards` }}
+              style={{ opacity: 0, transformOrigin: `${x}px ${y}px`, animation: `gbl-bloom 0.2s ease-out ${d}s forwards, gbl-wilt 0.3s ease-in ${(8.6 + (2 - ri) * 0.25).toFixed(2)}s forwards` }}
             />
           );
         })}
 
-        {/* ④ Phyllotaxis bloom — 34 dots, golden-angle Fermat spiral */}
+        {/* ③ Phyllotaxis bloom — 34 dots, golden-angle Fermat spiral */}
         {Array.from({ length: 34 }).map((_, n) => {
           const a = -(n + 1) * GAr;
           const r = 24 * Math.sqrt(n + 1);
           if (r > 170) return null;
-          const x = 200 + Math.cos(a) * r;
-          const y = 200 + Math.sin(a) * r;
+          const x = +((200 + Math.cos(a) * r).toFixed(3));
+          const y = +((200 + Math.sin(a) * r).toFixed(3));
           const sz = r < 35 ? 1.3 : r < 70 ? 1.0 : r < 110 ? 0.8 : 0.6;
-          const d = 2.0 + n * 0.04;          // cascade after spirals settle
+          const d = 4.0 + n * 0.04;          // cascade after spirals settle
           return (
             <circle key={`ph${n}`} cx={x} cy={y} r={sz}
               fill={n % 5 === 0 ? strokeFaint : strokeGhost}
-              style={{ opacity: 0, transformOrigin: `${x}px ${y}px`, animation: `gbl-bloom 0.3s ease-out ${d}s forwards, gbl-wilt 0.25s ease-in ${(4.5 + (33 - n) * 0.025).toFixed(2)}s forwards` }}
+              style={{ opacity: 0, transformOrigin: `${x}px ${y}px`, animation: `gbl-bloom 0.3s ease-out ${d}s forwards, gbl-wilt 0.25s ease-in ${(8.3 + (33 - n) * 0.025).toFixed(2)}s forwards` }}
             />
           );
         })}
 
-        {/* ⑤ Center seed — the origin */}
+        {/* ④ Center seed — the origin */}
         <circle cx={200} cy={200} r={2} fill={stroke}
-          style={{ opacity: 0, transformOrigin: "200px 200px", animation: `gbl-bloom 0.55s cubic-bezier(0.16,1,0.3,1) 0s forwards, gbl-wilt 0.45s ease-in 6.2s forwards` }}
+          style={{ opacity: 0, transformOrigin: "200px 200px", animation: `gbl-bloom 0.55s cubic-bezier(0.16,1,0.3,1) 2s forwards, gbl-wilt 0.45s ease-in 10s forwards` }}
         />
 
         </g>
