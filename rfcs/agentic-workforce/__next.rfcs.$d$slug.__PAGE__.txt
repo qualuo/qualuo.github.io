@@ -1,0 +1,399 @@
+1:"$Sreact.fragment"
+2:I[8933,["/_next/static/chunks/16f7c40d1abe2b9f.js","/_next/static/chunks/2b8a373d7a2718a7.js","/_next/static/chunks/4d58cadbbbba6f4b.js","/_next/static/chunks/00ef392e4e2f2974.js"],"RfcPageClient"]
+7:I[97367,["/_next/static/chunks/ff1a16fafef87110.js","/_next/static/chunks/0bd6498bda341889.js"],"OutletBoundary"]
+8:"$Sreact.suspense"
+3:T4c0e,A proposal for deploying AI agents as containerized, single-role workers — each defined by one prompt, scoped to one job — composed into an agentic workforce that automates business operations.
+
+---
+
+## Motivation
+
+Every organization has work that follows a pattern: receive input, apply judgment, produce output. Invoice processing, customer onboarding, compliance review, content generation, data reconciliation — these are not engineering problems. They are judgment problems that currently require humans because software has historically been too brittle to handle ambiguity.
+
+Large language models change this. An LLM can read an unstructured email, understand what's being asked, and draft a response. But a single LLM prompt in a notebook is not a deployment. The gap between "this works in a demo" and "this runs the accounts payable process" is infrastructure.
+
+This RFC proposes a deployment model built on three ideas:
+
+| # | Principle | Rationale |
+|---|-----------|-----------|
+| P1 | One agent, one role, one container | Agents are scoped like microservices — single responsibility, independently deployable |
+| P2 | Agents will make mistakes | Errors are not bugs to eliminate; they are a certainty to design around |
+| P3 | Quality is layered | Validation, verification, and human oversight catch errors before they reach the business |
+
+The result is an **agentic workforce** — a fleet of containerized agents, each with a defined role, that collectively automate business processes the way a team of specialists would.
+
+> The question is not "can AI do this perfectly?" It's "can AI do this well enough, with review, faster and cheaper than the current process?" The answer, for a growing number of business functions, is yes.
+
+---
+
+## The Container-Per-Agent Model
+
+Each agent is deployed as an independent container. The container runs a lightweight runtime that loads a system prompt — the agent's role definition — and connects to the tools that role requires. Nothing else.
+
+### Why Containers
+
+The same reasons you containerize microservices apply to agents:
+
+| Benefit | For Microservices | For Agents |
+|---------|-------------------|------------|
+| Isolation | Process and memory boundaries | Prompt and tool boundaries — one agent can't access another's context |
+| Independent scaling | Scale hot services independently | Scale busy agents (e.g. invoice processor) without scaling idle ones |
+| Independent deployment | Ship one service without redeploying the monolith | Update one agent's prompt or model without touching the fleet |
+| Resource limits | CPU/memory caps | Token budgets, timeout limits, cost ceilings per container |
+| Observability | Per-service metrics and logs | Per-agent traces, token usage, error rates |
+
+### Agent Container Anatomy
+
+Every agent container has four components:
+
+```yaml
+agent:
+  name: "invoice-processor"
+  model: "claude-sonnet-4-5-20250929"
+
+  # 1. The role prompt — this IS the agent
+  system_prompt: |
+    You are an invoice processing specialist. You receive scanned
+    invoices and extract: vendor name, invoice number, date, line
+    items, totals, and payment terms. You output structured JSON.
+    Flag anything ambiguous for human review.
+
+  # 2. The tools this role can access
+  tools:
+    - ocr_extract
+    - vendor_lookup
+    - output_json
+    - flag_for_review
+
+  # 3. Operational constraints
+  limits:
+    max_tokens_per_request: 4096
+    max_requests_per_minute: 30
+    timeout_seconds: 60
+    cost_ceiling_daily: 50.00
+
+  # 4. Output destination
+  output:
+    queue: "invoice-results"
+    dead_letter: "invoice-errors"
+```
+
+The system prompt is the most important line. It defines what the agent is, what it does, and what it doesn't do. A well-scoped prompt is the difference between an agent that reliably processes invoices and one that hallucinates line items.
+
+> **One prompt, one job.** Don't build a "general assistant" container that handles invoices, customer emails, and compliance checks. Build three containers. The prompt stays focused, the tools stay minimal, the failure modes stay predictable.
+
+---
+
+## Composing the Agentic Workforce
+
+Individual agents are useful. Composed agents automate entire business processes. The composition model is simple: agents communicate through message queues, each doing their part of a larger workflow.
+
+### Example: Order-to-Cash Pipeline
+
+```
+┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐
+│  Email   │    │  Order   │    │ Invoice  │    │ Payment  │
+│  Intake  │───▶│ Validator│───▶│Generator │───▶│ Matcher  │
+│  Agent   │    │  Agent   │    │  Agent   │    │  Agent   │
+└──────────┘    └──────────┘    └──────────┘    └──────────┘
+```
+
+Each agent in the pipeline:
+1. Reads from an input queue
+2. Performs its role (extract, validate, generate, match)
+3. Writes to an output queue
+4. The next agent in the chain implicitly validates the previous agent's output — an order validator that receives malformed data from the intake agent will flag it
+
+### Workforce Topology Patterns
+
+| Pattern | Description | Use Case |
+|---------|-------------|----------|
+| Pipeline | A → B → C, sequential handoff | Order processing, document workflows |
+| Fan-out | One input, multiple agents process in parallel | Multi-criteria analysis, parallel extraction |
+| Fan-in | Multiple agents' outputs merged by an aggregator | Research synthesis, multi-source reconciliation |
+| Router | Classifier agent routes to specialist agents | Customer support (billing vs. technical vs. sales) |
+| Loop | Agent output feeds back for iterative refinement | Content generation with revision cycles |
+
+### Workforce Registry
+
+Every agent in the workforce is registered in a central manifest. This is the source of truth for what's deployed, what role each agent plays, and how they connect.
+
+```yaml
+workforce:
+  - name: "email-intake"
+    role: "Extract structured data from incoming customer emails"
+    model: "claude-haiku-4-5-20251001"
+    replicas: 3
+    input: "incoming-emails"
+    output: "parsed-emails"
+
+  - name: "order-validator"
+    role: "Validate order details against product catalog and customer history"
+    model: "claude-sonnet-4-5-20250929"
+    replicas: 2
+    input: "parsed-emails"
+    output: "validated-orders"
+
+  - name: "invoice-generator"
+    role: "Generate invoices from validated orders per billing rules"
+    model: "claude-sonnet-4-5-20250929"
+    replicas: 2
+    input: "validated-orders"
+    output: "draft-invoices"
+```
+
+> **Treat agents like employees.** Each one has a job title (name), a job description (prompt), and tools they're authorized to use. The workforce registry is the org chart.
+
+---
+
+## Quality Assurance
+
+Agents will make mistakes. LLMs hallucinate, misinterpret edge cases, and occasionally produce confident nonsense. The solution is not to make agents perfect — it's to layer multiple quality checks so errors are caught before they matter.
+
+### Verification Layers
+
+| Layer | Mechanism | Cost |
+|-------|-----------|------|
+| Schema validation | Deterministic check — does the output match the expected structure? | Near zero |
+| Business rules | Code-based checks — are calculations correct, are required fields present? | Near zero |
+| Downstream agents | The next agent in the pipeline rejects malformed input naturally | Included in pipeline cost |
+| Agent-based review | A dedicated verification agent spot-checks output using a different model | LLM cost per review |
+| Human spot-checks | Sample-based human review (e.g. 5–10% of output) | Labor cost |
+
+The key insight is that most errors can be caught cheaply. Schema validation and business rule checks are deterministic and free. Only the ambiguous cases — semantic correctness, edge cases, novel inputs — need LLM-based or human review.
+
+### Error Budget
+
+Not every mistake needs to be caught. The goal is to reduce the error rate below the threshold where the business impact is acceptable — not to reach zero.
+
+| Metric | Target | Action |
+|--------|--------|--------|
+| Agent accuracy (raw output) | > 85% | Below this, the prompt or model needs rework |
+| Post-validation accuracy | > 99% | Below this, add more verification layers or increase human review |
+| Human escalation rate | < 5% | Above this, the agents aren't ready for this task |
+| False positive rate (over-flagging) | < 10% | Above this, validation is too aggressive — wasting throughput |
+
+> **Measure the pipeline, not the individual agent.** An agent with 88% accuracy feeding into a schema validator that catches structural errors and a business rule check that catches calculation errors can produce a pipeline with 99%+ end-to-end accuracy. That's better than most manual processes.
+
+---
+
+## Cost / Benefit
+
+The business case for an agentic workforce is not "AI is exciting." It's arithmetic. A back-office worker processing invoices costs money, works fixed hours, and processes at a fixed rate. An agent container costs fractions of a cent per transaction, runs 24/7, and scales horizontally. The question is whether the math works after you account for infrastructure, quality checks, human escalations, and error costs.
+
+### Unit Economics: Invoice Processing
+
+Take a concrete example — a four-person team processing 200 invoices per day manually.
+
+**Manual baseline:**
+
+| Item | Value |
+|------|-------|
+| Team size | 4 FTEs |
+| Fully loaded cost per FTE | $75,000 / year |
+| Total annual labor cost | $300,000 |
+| Invoices per day | 200 |
+| Working days per year | 250 |
+| Invoices per year | 50,000 |
+| Cost per invoice | $6.00 |
+| Processing time per invoice | 8–12 minutes |
+| Error rate (industry average) | 1–3% |
+
+**Agentic workforce:**
+
+| Item | Value |
+|------|-------|
+| Agent model | Haiku for extraction, Sonnet for complex reasoning |
+| Tokens per invoice | ~1,500 input + ~800 output |
+| LLM cost per invoice | ~$0.005 |
+| Validation (schema + business rules) | ~$0.00 (deterministic) |
+| Human escalation rate | 5% (at $3.00 per escalation) |
+| Blended cost per invoice | ~$0.16 |
+| Infrastructure (containers, queues, gateway) | ~$1,500 / month |
+| Annual LLM cost (50,000 invoices) | ~$250 |
+| Annual infrastructure | ~$18,000 |
+| Annual human escalation (2,500 cases) | ~$7,500 |
+| **Total annual cost** | **~$25,750** |
+| **Cost per invoice** | **~$0.52** |
+| Processing time per invoice | 10–30 seconds |
+| Post-validation error rate | < 0.5% |
+
+### Comparison
+
+| Metric | Manual | Agentic | Delta |
+|--------|--------|---------|-------|
+| Annual cost | $300,000 | $25,750 | **91% reduction** |
+| Cost per invoice | $6.00 | $0.52 | **91% reduction** |
+| Processing time | 8–12 min | 10–30 sec | **~30x faster** |
+| Error rate | 1–3% | < 0.5% | **2–6x more accurate** |
+| Availability | Business hours | 24/7 | Continuous |
+| Scalability | Hire + train (weeks) | Add replicas (minutes) | Elastic |
+
+### Break-Even
+
+| Cost Item | One-Time | Recurring |
+|-----------|----------|-----------|
+| Platform build (containers, messaging, LLM gateway) | $30,000–50,000 | — |
+| Prompt engineering + eval suite (per workflow) | $10,000–20,000 | — |
+| Ongoing infrastructure | — | $18,000 / year |
+| LLM API costs | — | Scales with volume |
+| Human oversight (escalations + spot-checks) | — | $7,500 / year |
+
+At $300,000/year in manual labor costs and ~$25,750/year in agentic costs, the annual savings are ~$274,000. With a one-time platform investment of $50,000–70,000, the **break-even point is roughly 3 months** after the first workflow goes live.
+
+### What Changes With Scale
+
+The economics improve with volume. The platform cost is fixed — adding a second workflow doesn't require rebuilding the container orchestration, LLM gateway, or observability stack. Each new workflow adds only its prompt engineering cost and marginal LLM usage.
+
+| Workflows automated | Annual manual cost displaced | Annual agentic cost | Net savings |
+|---------------------|------------------------------|---------------------|-------------|
+| 1 (invoice processing) | $300,000 | $25,750 | $274,000 |
+| 3 (+ email triage, order validation) | $750,000 | $62,000 | $688,000 |
+| 5 (+ compliance checks, data reconciliation) | $1,200,000 | $100,000 | $1,100,000 |
+
+> **The first workflow is the most expensive.** It carries the full platform build cost. Every subsequent workflow is incremental — just prompts, validation rules, and eval suites. This is where the container-per-agent model pays off: the infrastructure is reusable, only the roles change.
+
+---
+
+## Infrastructure
+
+The container platform is standard — Kubernetes, ECS, or Cloud Run. The agent-specific infrastructure is the messaging layer, the LLM gateway, and the observability stack.
+
+### Container Orchestration
+
+| Component | Purpose | Implementation |
+|-----------|---------|----------------|
+| Container runtime | Run agent containers | Kubernetes / ECS / Cloud Run |
+| Message broker | Inter-agent communication | RabbitMQ / SQS / Cloud Pub/Sub |
+| Dead letter queue | Capture failed messages for investigation | Per-agent DLQ |
+| LLM gateway | Route requests, enforce rate limits, track costs | LiteLLM / custom proxy |
+| Secret store | API keys, connection strings | Vault / cloud-native KMS |
+| Config store | Agent prompts and tool definitions (version-controlled) | Git + ConfigMap / Parameter Store |
+
+### Scaling
+
+Agents scale like any stateless container workload — horizontally, based on queue depth.
+
+| Signal | Action |
+|--------|--------|
+| Queue depth > threshold | Scale up worker replicas |
+| Queue depth = 0 for 5 min | Scale down to minimum |
+| Error rate > 10% | Halt scaling, alert on-call |
+| Cost ceiling reached | Stop processing, queue backpressure |
+
+> **Prompts are config, not code.** Store system prompts in version-controlled config. Updating an agent's behavior is a config change, not a code deployment. This enables rapid iteration without CI/CD overhead for prompt tuning.
+
+---
+
+## Observability
+
+Every agent interaction produces a trace. Because agents communicate through queues, you need end-to-end tracing across the entire workflow — not just per-agent metrics.
+
+### Per-Agent Metrics
+
+| Metric | Description |
+|--------|-------------|
+| Throughput | Messages processed per minute |
+| Latency | Time from message received to output produced |
+| Token usage | Input + output tokens per request |
+| Cost | Dollar cost per request (computed from token usage) |
+| Error rate | Failed requests / total requests |
+| Validation pass rate | Percentage of outputs passing schema + business rule checks |
+
+### Workflow Metrics
+
+| Metric | Description |
+|--------|-------------|
+| End-to-end latency | Time from initial input to final output |
+| Pipeline accuracy | Post-validation accuracy across the full workflow |
+| Human escalation rate | Percentage of items requiring human intervention |
+| Cost per transaction | Total LLM + infrastructure cost for one complete workflow run |
+| Queue depth | Backlog per agent — indicates bottlenecks |
+
+### Alerts
+
+| Condition | Severity | Response |
+|-----------|----------|----------|
+| Agent error rate > 10% | SEV-2 | Pause agent, investigate prompt or input quality |
+| Validation failure rate > 30% | SEV-2 | Agent quality degraded — review prompt, check model version |
+| End-to-end latency > 2x baseline | SEV-3 | Identify bottleneck agent, check queue depth, scale up |
+| Daily cost > 150% of budget | SEV-2 | Circuit breaker, review for retry loops or prompt regression |
+| Human escalation rate > 15% | SEV-3 | Agents are not handling enough — expand prompts or add training data |
+
+> **Dashboard the workforce like you'd dashboard a team.** Who's busy, who's idle, who's making mistakes, what's the cost per completed task. The agent workforce should be as transparent as a Kanban board.
+
+---
+
+## Deployment & Lifecycle
+
+Deploying an agent is deploying a container with a prompt. The CI/CD pipeline reflects this — standard container build plus agent-specific behavioral validation.
+
+### Pipeline
+
+| Stage | Gate | Description |
+|-------|------|-------------|
+| Prompt lint | Schema validation | Ensure prompt follows template, tools are registered |
+| Unit test | Tool mocks | Verify tool integration and output parsing |
+| Eval suite | Golden set | Run agent against 50–100 curated inputs, compare to expected outputs |
+| Integration test | Pipeline validation | Run full workflow end-to-end, verify outputs pass all validation layers |
+| Shadow mode | Parallel execution | New agent runs alongside current, outputs compared but not acted on |
+| Canary | 10% traffic | Route fraction of queue messages to new version |
+| Promote | Full rollout | After 24h canary with no regression |
+
+### Prompt Versioning
+
+Every prompt change is versioned and traceable. A prompt change is functionally equivalent to a code change — it alters agent behavior.
+
+| Policy | Rule |
+|--------|------|
+| All prompts in Git | Version-controlled, reviewed, auditable |
+| Prompt + model pinned together | Changing the model version requires re-running evals |
+| Rollback-ready | Previous prompt version deployable in < 5 minutes |
+| A/B testing | Route percentage of traffic to prompt variant, measure accuracy difference |
+
+> **Prompt engineering is not ad-hoc.** It's a deployment artifact with a version, an eval suite, and a rollback plan. Treat it like code.
+
+---
+
+## Team & Getting Started
+
+Building an agentic workforce is not an AI research project. It's a platform engineering effort with domain expertise.
+
+### Team
+
+| Role | Count | Scope |
+|------|-------|-------|
+| Platform Engineer | 1–2 | Container orchestration, messaging, LLM gateway, observability |
+| Prompt Engineer | 1–2 | Agent role design, eval suite curation, validation rule authoring |
+| Domain Expert | 1 per workflow | Define what "correct" looks like, review escalations, validate accuracy targets |
+| FinOps / Cost Analyst | 0.5 | Model selection for cost optimization, budget configuration |
+
+### Getting Started
+
+Don't automate everything at once. Start with one workflow, prove the model, then expand.
+
+| Phase | Duration | Scope |
+|-------|----------|-------|
+| Pilot | Weeks 1–4 | One workflow, 2–3 agents, shadow mode only |
+| Validation | Weeks 5–8 | Measure accuracy, cost, latency against manual baseline |
+| Production | Weeks 9–12 | Promote to live traffic, human spot-checks at 10% sample rate |
+| Expansion | Ongoing | Add workflows, add agents, reduce human review as confidence grows |
+
+### Tooling
+
+| Function | Tool |
+|----------|------|
+| Container orchestration | Kubernetes / ECS / Cloud Run |
+| Message broker | RabbitMQ / SQS / Pub/Sub |
+| LLM gateway | LiteLLM / Portkey |
+| Observability | Langfuse / Arize Phoenix |
+| Eval framework | promptfoo / custom harness |
+| Prompt storage | Git + ConfigMap |
+| Cost tracking | Provider dashboards + aggregation |
+
+> Start with the boring workflow — the one that's high-volume, well-understood, and low-risk. Invoice processing, email classification, data entry validation. Prove that the container-per-agent model works, that quality checks catch errors, and that the cost math holds. Then scale.
+0:{"buildId":"i0FwE7AJBk1eS5uATMCFT","rsc":["$","$1","c",{"children":[[[["$","script",null,{"type":"application/ld+json","dangerouslySetInnerHTML":{"__html":"{\"@context\":\"https://schema.org\",\"@type\":\"BreadcrumbList\",\"itemListElement\":[{\"@type\":\"ListItem\",\"position\":1,\"name\":\"Home\",\"item\":\"https://qualuo.github.io/\"},{\"@type\":\"ListItem\",\"position\":2,\"name\":\"RFCs\",\"item\":\"https://qualuo.github.io/rfcs/\"},{\"@type\":\"ListItem\",\"position\":3,\"name\":\"The Agentic Workforce\",\"item\":\"https://qualuo.github.io/rfcs/agentic-workforce/\"}]}"}}],["$","script",null,{"type":"application/ld+json","dangerouslySetInnerHTML":{"__html":"{\"@context\":\"https://schema.org\",\"@type\":\"TechArticle\",\"name\":\"The Agentic Workforce\",\"headline\":\"The Agentic Workforce — One Container, One Role, One Prompt — The Agentic Workforce\",\"description\":\"A proposal for deploying AI agents as single-role containers — each with one prompt, one job — composed into an agentic workforce that automates business operations at a fraction of the cost.\",\"url\":\"https://qualuo.github.io/rfcs/agentic-workforce/\",\"datePublished\":\"2026-02-12\",\"author\":{\"@id\":\"https://qualuo.github.io/#person\"},\"about\":[{\"@type\":\"Thing\",\"name\":\"AI Agents\"},{\"@type\":\"Thing\",\"name\":\"Containers\"},{\"@type\":\"Thing\",\"name\":\"Agentic Workforce\"},{\"@type\":\"Thing\",\"name\":\"Cost Optimization\"}],\"inLanguage\":\"en-US\",\"keywords\":\"AI Agents, Containers, Agentic Workforce, Cost Optimization\",\"articleSection\":\"RFC\"}"}}]],["$","$L2",null,{"rfc":{"slug":"agentic-workforce","number":3,"title":"The Agentic Workforce","subtitle":"One Container, One Role, One Prompt — The Agentic Workforce","description":"A proposal for deploying AI agents as single-role containers — each with one prompt, one job — composed into an agentic workforce that automates business operations at a fraction of the cost.","icon":"brain-circuit","gradient":"from-emerald-500 via-teal-500 to-cyan-500","tags":["AI Agents","Containers","Agentic Workforce","Cost Optimization"],"status":"live","date":"2026-02-12","sectionCount":9},"content":"$3"}]],["$L4","$L5"],"$L6"]}],"loading":null,"isPartial":false}
+4:["$","script","script-0",{"src":"/_next/static/chunks/4d58cadbbbba6f4b.js","async":true}]
+5:["$","script","script-1",{"src":"/_next/static/chunks/00ef392e4e2f2974.js","async":true}]
+6:["$","$L7",null,{"children":["$","$8",null,{"name":"Next.MetadataOutlet","children":"$@9"}]}]
+9:null
