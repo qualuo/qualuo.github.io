@@ -3,10 +3,15 @@
 import { useRef, useState, useEffect, useCallback } from "react";
 import { motion, useMotionValue, useMotionTemplate } from "framer-motion";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { demos, Demo } from "@/lib/demos";
-import { StarsBackground } from "@/components/animations/StarsBackground";
 import { WaveDivider } from "@/components/animations/WaveDivider";
 import { Navbar } from "@/components/layout/Navbar";
+
+const StarsBackground = dynamic(
+  () => import("@/components/animations/StarsBackground").then(m => ({ default: m.StarsBackground })),
+  { ssr: false }
+);
 
 /* ── Glow colors (RGB per demo) ──────────────────────────────── */
 
@@ -19,6 +24,8 @@ const DEMO_GLOW: Record<string, string> = {
   "type-experiments": "148,163,184",
   "particle-playground": "167,139,250",
   "3d-sandbox": "245,158,11",
+  "neural-forward-pass": "217,70,239",
+  "million-points": "249,115,22",
 };
 
 /* ── Drawn Icons (stroke-based, white on gradient) ───────────── */
@@ -119,6 +126,34 @@ const DEMO_ICONS: Record<string, React.ReactNode> = {
       <path d="m9 10 3-2 3 2" />
       <path d="M12 22c4.2 0 7-1.667 7-5-4.2 0-7-1.667-7-5-4.2 0-7-1.667-7-5" />
       <path d="M12 22c-4.2 0-7-1.667-7-5 4.2 0 7-1.667 7-5 4.2 0 7-1.667 7-5" />
+    </svg>
+  ),
+  "neural-forward-pass": (
+    <svg className="w-8 h-8" viewBox="0 0 24 24" {...S}>
+      <circle cx="4" cy="6" r="1.5" />
+      <circle cx="4" cy="12" r="1.5" />
+      <circle cx="4" cy="18" r="1.5" />
+      <circle cx="12" cy="8" r="1.5" />
+      <circle cx="12" cy="16" r="1.5" />
+      <circle cx="20" cy="12" r="1.5" />
+      <path d="M5.5 6l5 2" /><path d="M5.5 6l5 10" />
+      <path d="M5.5 12l5 -4" /><path d="M5.5 12l5 4" />
+      <path d="M5.5 18l5 -10" /><path d="M5.5 18l5 -2" />
+      <path d="M13.5 8l5 4" /><path d="M13.5 16l5 -4" />
+    </svg>
+  ),
+  "million-points": (
+    <svg className="w-8 h-8" viewBox="0 0 24 24" {...S}>
+      <circle cx="4" cy="4" r="0.8" /><circle cx="8" cy="3" r="0.6" />
+      <circle cx="12" cy="5" r="1" /><circle cx="16" cy="3" r="0.7" />
+      <circle cx="20" cy="5" r="0.5" /><circle cx="3" cy="9" r="0.7" />
+      <circle cx="7" cy="8" r="0.9" /><circle cx="11" cy="10" r="0.6" />
+      <circle cx="15" cy="8" r="0.8" /><circle cx="19" cy="9" r="0.6" />
+      <circle cx="5" cy="14" r="0.8" /><circle cx="9" cy="13" r="0.5" />
+      <circle cx="13" cy="15" r="0.7" /><circle cx="17" cy="13" r="0.9" />
+      <circle cx="21" cy="14" r="0.6" /><circle cx="4" cy="19" r="0.6" />
+      <circle cx="8" cy="18" r="0.7" /><circle cx="12" cy="20" r="0.8" />
+      <circle cx="16" cy="18" r="0.5" /><circle cx="20" cy="20" r="0.7" />
     </svg>
   ),
 };
@@ -228,7 +263,7 @@ function DemoCard({ demo }: { demo: Demo }) {
 
           <div className="flex items-center text-sm font-medium mt-auto">
             {isComingSoon ? (
-              <span className="text-slate-600">In Development</span>
+              <span className="text-slate-500">In Development</span>
             ) : (
               <motion.span
                 className={`flex items-center gap-2 bg-linear-to-r ${demo.gradient} bg-clip-text text-transparent`}

@@ -89,15 +89,15 @@ export function DelicateAccent({
     const R = [21, 34, 55, 89].map(n => n * 2);
     // → [42, 68, 110, 178]
 
-    // ── Golden spiral path builder (CCW logarithmic) ──
+    // ── Golden spiral path builder (CW logarithmic) ──
     const A = 2.5; // seed radius
     const mkSpiral = (off: number) => {
       const pts: string[] = [];
       for (let θ = 0; θ <= 14; θ += 0.05) {
         const r = A * Math.exp(b * θ);
         if (r > R[R.length - 1]) break;
-        const x = 200 + r * Math.cos(-(θ + off));
-        const y = 200 + r * Math.sin(-(θ + off));
+        const x = 200 + r * Math.cos(θ + off);
+        const y = 200 + r * Math.sin(θ + off);
         pts.push(`${pts.length ? "L" : "M"}${x.toFixed(1)},${y.toFixed(1)}`);
       }
       return pts.join(" ");
@@ -109,8 +109,8 @@ export function DelicateAccent({
       R.slice(1).map((r, ri) => {
         const θ = Math.log(r / A) / b;
         return {
-          x: +((200 + r * Math.cos(-(θ + off))).toFixed(3)),
-          y: +((200 + r * Math.sin(-(θ + off))).toFixed(3)),
+          x: +((200 + r * Math.cos(θ + off)).toFixed(3)),
+          y: +((200 + r * Math.sin(θ + off)).toFixed(3)),
           d: 3.7 + ai * 0.1 + ri * 0.35,  // stagger by arm, then ring
           ri,                               // ring index for wilt ordering
         };

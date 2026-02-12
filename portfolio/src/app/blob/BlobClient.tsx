@@ -3,7 +3,12 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { MorphingBlob } from "@/components/animations/MorphingBlob";
+import dynamic from "next/dynamic";
+
+const MorphingBlob = dynamic(
+  () => import("@/components/animations/MorphingBlob").then(m => ({ default: m.MorphingBlob })),
+  { ssr: false }
+);
 
 export default function BlobClient() {
   const [clicked, setClicked] = useState(false);

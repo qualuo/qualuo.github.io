@@ -41,23 +41,27 @@ function getPos(i: number) {
 interface RAGPipelineDiagramProps {
   progress: MotionValue<number>;
   activeStep: number;
+  /** Show all nodes as active with no per-step highlighting (mobile). */
+  showAll?: boolean;
 }
 
 function Node({
   index,
   progress,
   activeStep,
+  showAll,
 }: {
   index: number;
   progress: MotionValue<number>;
   activeStep: number;
+  showAll?: boolean;
 }) {
   const step = STEPS[index];
   const { x, y } = getPos(index);
   const t = index / STEPS.length;
   const opacity = useTransform(progress, [t, t + 0.06], [index === 0 ? 1 : 0, 1]);
-  const isCurrent = index === activeStep;
-  const isActive = index <= activeStep;
+  const isCurrent = showAll ? false : index === activeStep;
+  const isActive = showAll ? true : index <= activeStep;
 
   return (
     <motion.g style={{ opacity }}>
@@ -126,16 +130,18 @@ function Arrow({
   index,
   progress,
   activeStep,
+  showAll,
 }: {
   index: number;
   progress: MotionValue<number>;
   activeStep: number;
+  showAll?: boolean;
 }) {
   const s = (index + 0.5) / STEPS.length;
   const e = (index + 1) / STEPS.length;
   const pathLength = useTransform(progress, [s, e], [0, 1]);
   const opacity = useTransform(progress, [s, s + 0.03], [0, 1]);
-  const isActive = index < activeStep;
+  const isActive = showAll ? true : index < activeStep;
   const fill = isActive ? `rgba(${ACCENT}, 0.5)` : `rgba(${ACCENT}, 0.25)`;
   const stroke = isActive ? `rgba(${ACCENT}, 0.4)` : `rgba(${ACCENT}, 0.18)`;
 
@@ -186,7 +192,7 @@ function Arrow({
   );
 }
 
-export function RAGPipelineDiagram({ progress, activeStep }: RAGPipelineDiagramProps) {
+export function RAGPipelineDiagram({ progress, activeStep, showAll }: RAGPipelineDiagramProps) {
   return (
     <div className="w-full h-full flex items-center justify-center">
       <svg
@@ -215,12 +221,12 @@ export function RAGPipelineDiagram({ progress, activeStep }: RAGPipelineDiagramP
 
         {/* Arrows */}
         {STEPS.slice(0, -1).map((_, i) => (
-          <Arrow key={`a-${i}`} index={i} progress={progress} activeStep={activeStep} />
+          <Arrow key={`a-${i}`} index={i} progress={progress} activeStep={activeStep} showAll={showAll} />
         ))}
 
         {/* Nodes */}
         {STEPS.map((_, i) => (
-          <Node key={STEPS[i].label} index={i} progress={progress} activeStep={activeStep} />
+          <Node key={STEPS[i].label} index={i} progress={progress} activeStep={activeStep} showAll={showAll} />
         ))}
       </svg>
     </div>

@@ -13,8 +13,8 @@ import { WebGLErrorBoundary } from "@/components/ui/WebGLErrorBoundary";
 import { DelicateAccent } from "@/components/animations/DelicateAccent";
 
 const ease = [0.23, 1, 0.32, 1] as const;
-const AUTO_SCROLL_SPEED = 0.8; // desktop: pixels per frame (~48px/s at 60fps)
-const AUTO_SCROLL_SPEED_MOBILE = 1.6; // mobile: faster (~96px/s at 60fps)
+const AUTO_SCROLL_VH_S = 5; // desktop: % of viewport height per second
+const AUTO_SCROLL_VH_S_MOBILE = 12; // mobile: % of viewport height per second
 const IDLE_RESUME_MS = 30_000; // 30 seconds
 
 // Mobile project card component
@@ -166,15 +166,20 @@ export function Projects() {
     let idleTimer: ReturnType<typeof setTimeout> | null = null;
     let paused = false;
     let looping = false; // true while smooth-scrolling back to top
+    let lastTime: number | null = null;
 
-    const tick = () => {
+    const tick = (now: number) => {
       if (paused || looping) return;
+
+      const dt = lastTime ? (now - lastTime) / 1000 : 0; // seconds since last frame
+      lastTime = now;
 
       const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
 
       if (window.scrollY >= maxScroll - 2) {
         // Reached bottom — fade to black, jump to top, fade back in
         looping = true;
+        lastTime = null;
         const overlay = loopOverlayRef.current;
         if (overlay) {
           overlay.style.transition = "opacity 0.6s ease-in";
@@ -196,14 +201,15 @@ export function Projects() {
         return;
       }
 
-      const speed = window.innerWidth < 1024 ? AUTO_SCROLL_SPEED_MOBILE : AUTO_SCROLL_SPEED;
-      window.scrollBy(0, speed);
+      const vhRate = window.innerWidth < 1024 ? AUTO_SCROLL_VH_S_MOBILE : AUTO_SCROLL_VH_S;
+      window.scrollBy(0, (vhRate / 100) * window.innerHeight * dt);
       rafId = requestAnimationFrame(tick);
     };
 
     const start = () => {
       paused = false;
       looping = false;
+      lastTime = null;
       rafId = requestAnimationFrame(tick);
     };
 

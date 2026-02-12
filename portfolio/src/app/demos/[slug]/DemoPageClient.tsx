@@ -2,9 +2,14 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { Demo } from "@/lib/demos";
-import { StarsBackground } from "@/components/animations/StarsBackground";
 import { lazy, Suspense } from "react";
+
+const StarsBackground = dynamic(
+  () => import("@/components/animations/StarsBackground").then(m => ({ default: m.StarsBackground })),
+  { ssr: false }
+);
 
 // Lazy load demo components for better initial page performance
 const ParticlePlayground = lazy(() => import("@/components/demos/ParticlePlayground").then(m => ({ default: m.ParticlePlayground })));
@@ -15,6 +20,8 @@ const VoiceChat = lazy(() => import("@/components/demos/VoiceChat").then(m => ({
 const MusicGeneration = lazy(() => import("@/components/demos/MusicGeneration").then(m => ({ default: m.MusicGeneration })));
 const TransformersPlayground = lazy(() => import("@/components/demos/TransformersPlayground").then(m => ({ default: m.TransformersPlayground })));
 const ThreeDSandbox = lazy(() => import("@/components/demos/ThreeDSandbox").then(m => ({ default: m.ThreeDSandbox })));
+const NeuralForwardPass = lazy(() => import("@/components/demos/NeuralForwardPass").then(m => ({ default: m.NeuralForwardPass })));
+const MillionPointScatter = lazy(() => import("@/components/demos/MillionPointScatter").then(m => ({ default: m.MillionPointScatter })));
 
 // Map of demo slugs to their components
 const DEMO_COMPONENTS: Record<string, React.ComponentType> = {
@@ -26,6 +33,8 @@ const DEMO_COMPONENTS: Record<string, React.ComponentType> = {
   "music-generation": MusicGeneration,
   "ml-playground": TransformersPlayground,
   "3d-sandbox": ThreeDSandbox,
+  "neural-forward-pass": NeuralForwardPass,
+  "million-points": MillionPointScatter,
 };
 
 function DemoPlaceholder({ demo }: { demo: Demo }) {

@@ -23,6 +23,8 @@ const START_Y = 44;
 interface ProductionStackDiagramProps {
   progress: MotionValue<number>;
   activeStep: number;
+  /** Show all layers as active with no per-step highlighting (mobile). */
+  showAll?: boolean;
 }
 
 function Layer({
@@ -31,18 +33,20 @@ function Layer({
   y,
   progress,
   activeStep,
+  showAll,
 }: {
   layer: (typeof LAYERS)[number];
   index: number;
   y: number;
   progress: MotionValue<number>;
   activeStep: number;
+  showAll?: boolean;
 }) {
   const threshold = index / (LAYERS.length + 1);
   const opacity = useTransform(progress, [threshold, threshold + 0.1], [index === 0 ? 1 : 0, 1]);
   const translateY = useTransform(progress, [threshold, threshold + 0.1], [index === 0 ? 0 : 16, 0]);
-  const isCurrent = index === activeStep;
-  const isActive = index <= activeStep;
+  const isCurrent = showAll ? false : index === activeStep;
+  const isActive = showAll ? true : index <= activeStep;
   const isBuild = layer.type === "build";
 
   return (
@@ -127,7 +131,7 @@ function Layer({
   );
 }
 
-export function ProductionStackDiagram({ progress, activeStep }: ProductionStackDiagramProps) {
+export function ProductionStackDiagram({ progress, activeStep, showAll }: ProductionStackDiagramProps) {
   const reversedLayers = [...LAYERS].reverse();
   const totalSteps = LAYERS.length + 1;
 
@@ -169,6 +173,7 @@ export function ProductionStackDiagram({ progress, activeStep }: ProductionStack
               y={y}
               progress={progress}
               activeStep={activeStep}
+              showAll={showAll}
             />
           );
         })}

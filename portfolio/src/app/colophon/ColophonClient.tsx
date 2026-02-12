@@ -3,7 +3,12 @@
 import { motion, useScroll, useTransform, useInView } from "framer-motion";
 import Link from "next/link";
 import { useRef, useEffect, useState } from "react";
-import { StarsBackground } from "@/components/animations/StarsBackground";
+import dynamic from "next/dynamic";
+
+const StarsBackground = dynamic(
+  () => import("@/components/animations/StarsBackground").then(m => ({ default: m.StarsBackground })),
+  { ssr: false }
+);
 import { useTimeLapse } from "@/components/animations/TimeLapseProvider";
 
 // Animated counter component

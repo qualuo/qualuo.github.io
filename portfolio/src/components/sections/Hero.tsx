@@ -151,7 +151,7 @@ export function Hero() {
                 className="text-xl md:text-2xl lg:text-3xl text-slate-400 font-light max-w-3xl mx-auto leading-relaxed mb-12"
               >
                 I design AI solutions and automation platforms
-                <span className="text-white"> that transform how organizations operate.</span>
+                <span className="text-white"> that transform how organizations operate</span>
               </motion.p>
 
               <motion.div
@@ -242,7 +242,7 @@ export function Hero() {
                 className="text-xl md:text-2xl lg:text-3xl text-slate-400 font-light max-w-3xl mx-auto leading-relaxed mb-12"
               >
                 I craft digital experiences and interactive visuals
-                <span className="text-white"> that blur the line between art and technology.</span>
+                <span className="text-white"> that blur the line between art and technology</span>
               </motion.p>
 
               <motion.div

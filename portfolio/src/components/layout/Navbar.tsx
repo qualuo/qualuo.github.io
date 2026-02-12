@@ -10,6 +10,7 @@ const navLinks = [
   { href: "/demos", label: "Demos", isPage: true },
   { href: "/work", label: "Work", isPage: true },
   { href: "/points", label: "Points", isPage: true },
+  { href: "/rfcs", label: "RFCs", isPage: true },
   { href: "/colophon", label: "60°N", isPage: true },
 ];
 

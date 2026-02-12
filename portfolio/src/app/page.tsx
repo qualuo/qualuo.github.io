@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import { Navbar } from "@/components/layout/Navbar";
 import { Hero } from "@/components/sections/Hero";
 import { Contact } from "@/components/sections/Contact";
-import { StarsBackground } from "@/components/animations/StarsBackground";
-
+import { StarsBackgroundLazy as StarsBackground } from "@/components/animations/StarsBackgroundLazy";
 import { canonicalUrl } from "@/lib/seo";
 
 export const metadata: Metadata = {

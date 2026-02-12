@@ -444,8 +444,8 @@ export function AIArchitecturePaper() {
       </div>
 
       <StickyDiagram
-        diagram={({ progress, activeStep }) => (
-          <RAGPipelineDiagram progress={progress} activeStep={activeStep} />
+        diagram={({ progress, activeStep, showAll }) => (
+          <RAGPipelineDiagram progress={progress} activeStep={activeStep} showAll={showAll} />
         )}
         flipped
         steps={[
@@ -619,8 +619,8 @@ export function AIArchitecturePaper() {
       </div>
 
       <StickyDiagram
-        diagram={({ progress, activeStep }) => (
-          <ProductionStackDiagram progress={progress} activeStep={activeStep} />
+        diagram={({ progress, activeStep, showAll }) => (
+          <ProductionStackDiagram progress={progress} activeStep={activeStep} showAll={showAll} />
         )}
         flipped
         steps={[

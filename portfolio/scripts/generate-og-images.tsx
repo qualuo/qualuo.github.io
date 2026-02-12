@@ -4,6 +4,7 @@ import { writeFileSync, mkdirSync, existsSync } from "fs";
 import { join } from "path";
 import { demos } from "../src/lib/demos";
 import { points } from "../src/lib/points";
+import { rfcs } from "../src/lib/rfcs";
 
 const WIDTH = 1200;
 const HEIGHT = 630;
@@ -75,6 +76,12 @@ function buildPageList(): OGPageDef[] {
       subtitle: "GLSL Shaders, Perlin Noise & Fresnel Iridescence",
       accentColor: "#c084fc",
     },
+    {
+      path: "public/og/rfcs.png",
+      title: "Requests for Comments",
+      subtitle: "Structured Architectural Proposals",
+      accentColor: "#3b82f6",
+    },
   ];
 
   for (const demo of demos.filter((d) => d.status === "live")) {
@@ -92,6 +99,15 @@ function buildPageList(): OGPageDef[] {
       title: point.title,
       subtitle: point.subtitle,
       accentColor: gradientToColor(point.gradient),
+    });
+  }
+
+  for (const rfc of rfcs.filter((r) => r.status === "live")) {
+    pages.push({
+      path: `public/og/rfcs/${rfc.slug}.png`,
+      title: rfc.title,
+      subtitle: rfc.subtitle,
+      accentColor: gradientToColor(rfc.gradient),
     });
   }
 
@@ -218,7 +234,7 @@ async function main() {
   const pages = buildPageList();
 
   const root = join(__dirname, "..");
-  for (const dir of ["public/og", "public/og/demos", "public/og/points"]) {
+  for (const dir of ["public/og", "public/og/demos", "public/og/points", "public/og/rfcs"]) {
     const fullDir = join(root, dir);
     if (!existsSync(fullDir)) mkdirSync(fullDir, { recursive: true });
   }

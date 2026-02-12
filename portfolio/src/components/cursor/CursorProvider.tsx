@@ -8,6 +8,9 @@ import {
   useEffect,
   ReactNode,
 } from "react";
+import { usePathname } from "next/navigation";
+
+const DISABLED_ROUTES = ["/rfcs"];
 
 export type CursorVariant =
   | "default"
@@ -30,6 +33,8 @@ interface CursorContextType {
 const CursorContext = createContext<CursorContextType | null>(null);
 
 export function CursorProvider({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
+  const disabled = DISABLED_ROUTES.some((r) => pathname.startsWith(r));
   const [variant, setVariant] = useState<CursorVariant>("default");
   const [text, setText] = useState("");
   const [isHovering, setIsHovering] = useState(false);
@@ -50,7 +55,7 @@ export function CursorProvider({ children }: { children: ReactNode }) {
 
   // Global event listener for data-cursor attributes
   useEffect(() => {
-    if (isTouchDevice) return;
+    if (isTouchDevice || disabled) return;
 
     const handleMouseOver = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
@@ -110,11 +115,11 @@ export function CursorProvider({ children }: { children: ReactNode }) {
       document.removeEventListener("mouseover", handleMouseOver);
       document.removeEventListener("mouseout", handleMouseOut);
     };
-  }, [isTouchDevice]);
+  }, [isTouchDevice, disabled]);
 
   // Hide default cursor globally
   useEffect(() => {
-    if (isTouchDevice) return;
+    if (isTouchDevice || disabled) return;
 
     document.body.style.cursor = "none";
 
@@ -135,7 +140,7 @@ export function CursorProvider({ children }: { children: ReactNode }) {
         existingStyle.remove();
       }
     };
-  }, [isTouchDevice]);
+  }, [isTouchDevice, disabled]);
 
   const value = {
     variant,

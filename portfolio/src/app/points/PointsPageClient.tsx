@@ -187,7 +187,6 @@ function PointCard({ point, index, variant = "standard" }: { point: Point; index
       : "text-[80px] md:text-[120px]";
 
   const iconSize = isFeatured ? "w-16 h-16 rounded-2xl" : "w-14 h-14 rounded-xl";
-  const iconRound = isFeatured ? "rounded-2xl" : "rounded-xl";
 
   return (
     <Link
@@ -250,8 +249,7 @@ function PointCard({ point, index, variant = "standard" }: { point: Point; index
           <div className={`flex ${isCompact ? "flex-col gap-4" : "flex-col md:flex-row md:items-start gap-6 md:gap-12"}`}>
             {/* Icon */}
             <div className="shrink-0">
-              <div className={`relative ${isCompact ? "w-12 h-12 rounded-xl" : iconSize} bg-white/4 border border-white/6 flex items-center justify-center text-slate-500 group-hover:text-slate-300 transition-colors duration-500`}>
-                <div className={`absolute inset-0 ${isCompact ? "rounded-xl" : iconRound} bg-linear-to-br ${point.gradient} opacity-0 ${!isComingSoon ? "group-hover:opacity-10" : ""} transition-opacity duration-500`} />
+              <div className={`relative ${isCompact ? "w-12 h-12 rounded-xl" : iconSize} bg-linear-to-br ${point.gradient} ${isComingSoon ? "opacity-40" : ""} flex items-center justify-center text-white/90 shadow-lg`}>
                 <div className="relative">
                   {POINT_ICONS[point.icon] ? <DrawSvg>{POINT_ICONS[point.icon] as React.ReactElement}</DrawSvg> : point.icon}
                 </div>

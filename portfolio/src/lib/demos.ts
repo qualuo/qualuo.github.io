@@ -120,6 +120,26 @@ export const demos: Demo[] = [
     tech: ["Three.js", "React Three Fiber", "HDRI"],
     status: "live",
   },
+  {
+    slug: "neural-forward-pass",
+    title: "Neural Network",
+    subtitle: "Interactive Training & Visualization",
+    description: "Build, train, and visualize a neural network in real-time. Draw digits, watch backpropagation learn, and edit the architecture live.",
+    icon: "🧬",
+    gradient: "from-fuchsia-500 via-pink-500 to-rose-500",
+    tech: ["Three.js", "Backpropagation", "SGD Training", "WebGL"],
+    status: "live",
+  },
+  {
+    slug: "million-points",
+    title: "Million-Point Scatter",
+    subtitle: "WebGPU at Scale",
+    description: "Render 1,000,000+ synthetic stars at 60fps using WebGPU compute shaders. Explore the catalog interactively.",
+    icon: "✨",
+    gradient: "from-amber-500 via-orange-500 to-red-500",
+    tech: ["WebGPU", "WGSL Compute", "Star Catalog", "WebGL Fallback"],
+    status: "live",
+  },
 ];
 
 export function getDemoBySlug(slug: string): Demo | undefined {

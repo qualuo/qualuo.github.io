@@ -180,7 +180,6 @@ export default function CreativeClient() {
             >
               Love
             </span>
-            <span className="text-white/20">.</span>
           </motion.h1>
 
           {/* Subtitle */}
@@ -190,7 +189,7 @@ export default function CreativeClient() {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6 }}
           >
-            Experiments in connection, expression, and craft.
+            Experiments in connection, expression, and craft
           </motion.p>
         </motion.div>
 

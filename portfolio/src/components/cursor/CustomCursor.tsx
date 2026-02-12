@@ -1,8 +1,11 @@
 "use client";
 
 import { useEffect, useState, useSyncExternalStore } from "react";
+import { usePathname } from "next/navigation";
 import { motion, useMotionValue, useSpring, AnimatePresence } from "framer-motion";
 import { useCursor } from "./CursorProvider";
+
+const DISABLED_ROUTES = ["/rfcs"];
 
 const CURSOR_SIZE = {
   default: 8,
@@ -25,6 +28,8 @@ const OUTER_SIZE = {
 };
 
 export function CustomCursor() {
+  const pathname = usePathname();
+  const disabled = DISABLED_ROUTES.some((r) => pathname.startsWith(r));
   const { variant, text, isHovering } = useCursor();
   const [isVisible, setIsVisible] = useState(false);
   const isTouchDevice = useSyncExternalStore(
@@ -80,8 +85,7 @@ export function CustomCursor() {
     };
   }, [mouseX, mouseY, isVisible, isTouchDevice]);
 
-  // Don't render on touch devices
-  if (isTouchDevice) return null;
+  if (isTouchDevice || disabled) return null;
 
   const cursorSize = CURSOR_SIZE[variant];
   const outerSize = OUTER_SIZE[variant];

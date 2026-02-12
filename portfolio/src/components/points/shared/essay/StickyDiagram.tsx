@@ -6,7 +6,7 @@ import {
   useMotionValueEvent,
   type MotionValue,
 } from "framer-motion";
-import { useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 
 export interface StickyDiagramStep {
   id: string;
@@ -18,6 +18,7 @@ interface StickyDiagramProps {
   diagram: (props: {
     progress: MotionValue<number>;
     activeStep: number;
+    showAll?: boolean;
   }) => ReactNode;
   steps: StickyDiagramStep[];
   /** Height per step in vh. Default 55. */
@@ -36,6 +37,15 @@ export function StickyDiagram({
 }: StickyDiagramProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [activeStep, setActiveStep] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 1023px)");
+    setIsMobile(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
 
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -74,7 +84,7 @@ export function StickyDiagram({
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
             >
-              {diagram({ progress: scrollYProgress, activeStep })}
+              {diagram({ progress: scrollYProgress, activeStep, showAll: isMobile })}
             </motion.div>
           </div>
         </div>

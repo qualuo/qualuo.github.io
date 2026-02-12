@@ -255,36 +255,39 @@ export function Contact() {
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          className="mt-32 pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 text-slate-600 text-sm"
+          className="mt-32 pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 text-slate-500 text-sm"
         >
           <p>&copy; {new Date().getFullYear()} Quang Luong</p>
           <nav aria-label="Footer navigation" className="flex flex-col md:flex-row items-center gap-4 md:gap-8">
             <div className="flex gap-6">
-              <Link href="/work" data-cursor="pointer" className="hover:text-slate-400 transition-colors">
-                Work
-              </Link>
               <Link href="/demos" data-cursor="pointer" className="hover:text-slate-400 transition-colors">
                 Demos
+              </Link>
+              <Link href="/work" data-cursor="pointer" className="hover:text-slate-400 transition-colors">
+                Work
               </Link>
               <Link href="/points" data-cursor="pointer" className="hover:text-slate-400 transition-colors">
                 Points
               </Link>
+              <Link href="/rfcs" data-cursor="pointer" className="hover:text-slate-400 transition-colors">
+                RFCs
+              </Link>
             </div>
-            <span className="hidden md:block text-slate-700">·</span>
-            <div className="flex gap-6 text-slate-700">
-              <Link href="/colophon" data-cursor="pointer" className="hover:text-slate-500 transition-colors">
+            <span className="hidden md:block text-slate-600">·</span>
+            <div className="flex gap-6 text-slate-600">
+              <Link href="/colophon" data-cursor="pointer" className="hover:text-slate-400 transition-colors">
                 60°N
               </Link>
-              <Link href="/creative" data-cursor="pointer" className="hover:text-slate-500 transition-colors">
+              <Link href="/creative" data-cursor="pointer" className="hover:text-slate-400 transition-colors">
                 Creative
               </Link>
-              <Link href="/blob" data-cursor="pointer" className="hover:text-slate-500 transition-colors">
+              <Link href="/blob" data-cursor="pointer" className="hover:text-slate-400 transition-colors">
                 Blob
               </Link>
             </div>
-            <span className="hidden md:block text-slate-700">·</span>
-            <div className="flex gap-6 text-slate-700">
-              <Link href="/privacy" data-cursor="pointer" className="hover:text-slate-500 transition-colors">
+            <span className="hidden md:block text-slate-600">·</span>
+            <div className="flex gap-6 text-slate-600">
+              <Link href="/privacy" data-cursor="pointer" className="hover:text-slate-400 transition-colors">
                 Privacy
               </Link>
             </div>
