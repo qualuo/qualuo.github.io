@@ -37,11 +37,11 @@ export function RfcPageClient({ rfc, content }: RfcPageClientProps) {
       <Navbar isSubpage hasStars={false} />
 
       {/* Header */}
-      <header className="relative pt-32 pb-16 px-6 text-center max-w-3xl mx-auto">
+      <header className="relative pt-28 md:pt-32 pb-12 md:pb-16 px-6 text-center max-w-3xl mx-auto">
         <p className="text-xs font-mono font-medium tracking-[0.3em] uppercase mb-6 text-slate-500">
           {rfcLabel(rfc)}
         </p>
-        <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-4 leading-tight">
+        <h1 className="text-3xl md:text-6xl font-bold tracking-tight mb-4 leading-tight">
           <span
             className={`bg-linear-to-r ${rfc.gradient} bg-clip-text text-transparent`}
           >
@@ -53,7 +53,7 @@ export function RfcPageClient({ rfc, content }: RfcPageClientProps) {
 
       {/* Markdown body */}
       <article className="max-w-3xl mx-auto px-6 lg:px-10 pb-24">
-        <div className="rfc-prose prose prose-invert prose-lg max-w-none">
+        <div className="rfc-prose prose prose-invert prose-base md:prose-lg max-w-none">
           <ReactMarkdown remarkPlugins={[remarkGfm]}>
             {content}
           </ReactMarkdown>

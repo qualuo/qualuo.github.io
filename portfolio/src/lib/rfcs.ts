@@ -45,6 +45,20 @@ export const rfcs: Rfc[] = [
     date: "2026-02-12",
     sectionCount: 8,
   },
+  {
+    slug: "agentic-workforce",
+    number: 3,
+    title: "The Agentic Workforce",
+    subtitle: "One Container, One Role, One Prompt — The Agentic Workforce",
+    description:
+      "A proposal for deploying AI agents as single-role containers — each with one prompt, one job — composed into an agentic workforce that automates business operations at a fraction of the cost.",
+    icon: "brain-circuit",
+    gradient: "from-emerald-500 via-teal-500 to-cyan-500",
+    tags: ["AI Agents", "Containers", "Agentic Workforce", "Cost Optimization"],
+    status: "live",
+    date: "2026-02-12",
+    sectionCount: 9,
+  },
 ];
 
 export function getRfcBySlug(slug: string): Rfc | undefined {
