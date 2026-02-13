@@ -4,7 +4,7 @@ import { useRef, useState, useEffect, useCallback } from "react";
 import { motion, useMotionValue, useMotionTemplate } from "framer-motion";
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import { demos, Demo } from "@/lib/demos";
+import { demos, Demo, DemoCategory, DEMO_CATEGORIES } from "@/lib/demos";
 import { WaveDivider } from "@/components/animations/WaveDivider";
 import { Navbar } from "@/components/layout/Navbar";
 
@@ -337,6 +337,9 @@ export default function DemosPageClient() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const liveDemos = demos.filter((d) => d.status === "live");
+  const liveCategories = (["ai-ml", "graphics"] as DemoCategory[]).filter(
+    (cat) => liveDemos.some((d) => d.category === cat)
+  );
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
   const [progress, setProgress] = useState(0);
@@ -467,15 +470,28 @@ export default function DemosPageClient() {
               paddingRight: "1.5rem",
             }}
           >
-            {liveDemos.map((demo) => (
-              <div
-                key={demo.slug}
-                data-card
-                className="snap-start shrink-0 w-88"
-              >
-                <DemoCard demo={demo} />
-              </div>
-            ))}
+            {liveCategories.flatMap((cat) => {
+              const group = liveDemos.filter((d) => d.category === cat);
+              return [
+                <div
+                  key={`label-${cat}`}
+                  className="snap-start shrink-0 flex items-center pr-2"
+                >
+                  <span className="text-[11px] font-medium tracking-widest uppercase text-slate-500 [writing-mode:vertical-lr] rotate-180 whitespace-nowrap">
+                    {DEMO_CATEGORIES[cat]}
+                  </span>
+                </div>,
+                ...group.map((demo) => (
+                  <div
+                    key={demo.slug}
+                    data-card
+                    className="snap-start shrink-0 w-88"
+                  >
+                    <DemoCard demo={demo} />
+                  </div>
+                )),
+              ];
+            })}
           </div>
 
         </div>

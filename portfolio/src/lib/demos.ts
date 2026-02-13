@@ -1,3 +1,11 @@
+export type DemoCategory = "ai-ml" | "graphics" | "coming-soon";
+
+export const DEMO_CATEGORIES: Record<DemoCategory, string> = {
+  "ai-ml": "AI & Machine Learning",
+  graphics: "Graphics & Visualization",
+  "coming-soon": "Coming Soon",
+};
+
 export interface Demo {
   slug: string;
   title: string;
@@ -6,10 +14,12 @@ export interface Demo {
   icon: string;
   gradient: string;
   tech: string[];
+  category: DemoCategory;
   status: "live" | "coming-soon";
 }
 
 export const demos: Demo[] = [
+  // — AI / ML —
   {
     slug: "local-llm-chat",
     title: "Local AI Chat",
@@ -18,6 +28,7 @@ export const demos: Demo[] = [
     icon: "🧠",
     gradient: "from-emerald-500 via-teal-500 to-cyan-500",
     tech: ["WebGPU", "WebLLM", "LLMs", "React"],
+    category: "ai-ml",
     status: "live",
   },
   {
@@ -28,6 +39,7 @@ export const demos: Demo[] = [
     icon: "🎙️",
     gradient: "from-violet-500 via-purple-500 to-fuchsia-500",
     tech: ["Whisper", "WebLLM", "Web Speech API", "WebGPU"],
+    category: "ai-ml",
     status: "live",
   },
   {
@@ -38,6 +50,7 @@ export const demos: Demo[] = [
     icon: "📚",
     gradient: "from-orange-500 via-rose-500 to-pink-500",
     tech: ["RAG", "Embeddings", "WebGPU", "PDF.js"],
+    category: "ai-ml",
     status: "live",
   },
   {
@@ -48,6 +61,7 @@ export const demos: Demo[] = [
     icon: "🎵",
     gradient: "from-pink-500 via-rose-500 to-red-500",
     tech: ["MusicGen", "Transformers.js", "WebGPU", "Web Audio"],
+    category: "ai-ml",
     status: "live",
   },
   {
@@ -58,66 +72,7 @@ export const demos: Demo[] = [
     icon: "🤖",
     gradient: "from-indigo-500 via-purple-500 to-violet-500",
     tech: ["Transformers.js", "BERT", "ViT", "DETR"],
-    status: "live",
-  },
-  {
-    slug: "type-experiments",
-    title: "Type Experiments",
-    subtitle: "Kinetic Typography",
-    description: "Dynamic text animations and interactive typography exploring the boundaries of web type.",
-    icon: "◆",
-    gradient: "from-slate-400 via-zinc-400 to-neutral-500",
-    tech: ["Canvas API", "Framer Motion", "CSS Transforms"],
-    status: "live",
-  },
-  {
-    slug: "particle-playground",
-    title: "Particle Playground",
-    subtitle: "Interactive Physics",
-    description: "Explore emergent behaviors with hundreds of particles responding to forces, attractors, and your cursor in real-time.",
-    icon: "✦",
-    gradient: "from-violet-500 via-purple-500 to-fuchsia-500",
-    tech: ["Canvas API", "Physics Simulation", "React"],
-    status: "live",
-  },
-  {
-    slug: "shader-gallery",
-    title: "Shader Gallery",
-    subtitle: "Visual Mathematics",
-    description: "A curated collection of GLSL fragment shaders—from fluid simulations to procedural landscapes.",
-    icon: "◈",
-    gradient: "from-cyan-500 via-blue-500 to-indigo-500",
-    tech: ["GLSL", "Three.js", "WebGL2"],
-    status: "coming-soon",
-  },
-  {
-    slug: "audio-visualizer",
-    title: "Audio Visualizer",
-    subtitle: "Sound & Motion",
-    description: "Transform any audio into mesmerizing visuals with real-time FFT analysis and generative graphics.",
-    icon: "◉",
-    gradient: "from-rose-500 via-pink-500 to-orange-500",
-    tech: ["Web Audio API", "Canvas", "FFT"],
-    status: "coming-soon",
-  },
-  {
-    slug: "generative-art",
-    title: "Generative Art Studio",
-    subtitle: "Algorithmic Beauty",
-    description: "Create unique artworks using algorithms—flow fields, noise patterns, and recursive geometries.",
-    icon: "❖",
-    gradient: "from-emerald-500 via-teal-500 to-cyan-500",
-    tech: ["p5.js", "Perlin Noise", "SVG Export"],
-    status: "coming-soon",
-  },
-  {
-    slug: "3d-sandbox",
-    title: "3D Sandbox",
-    subtitle: "Spatial Computing",
-    description: "Experiment with 3D primitives, lighting, and materials in an interactive WebGL environment.",
-    icon: "◇",
-    gradient: "from-amber-500 via-yellow-500 to-lime-500",
-    tech: ["Three.js", "React Three Fiber", "HDRI"],
+    category: "ai-ml",
     status: "live",
   },
   {
@@ -128,17 +83,87 @@ export const demos: Demo[] = [
     icon: "🧬",
     gradient: "from-fuchsia-500 via-pink-500 to-rose-500",
     tech: ["Three.js", "Backpropagation", "SGD Training", "WebGL"],
+    category: "ai-ml",
     status: "live",
   },
+  // — Graphics / Visualization —
   {
     slug: "million-points",
     title: "Million-Point Scatter",
     subtitle: "WebGPU at Scale",
-    description: "Render 1,000,000+ synthetic stars at 60fps using WebGPU compute shaders. Explore the catalog interactively.",
+    description: "Render 1,000,000+ synthetic data points at 60fps using WebGPU compute shaders. Explore the catalog interactively.",
     icon: "✨",
     gradient: "from-amber-500 via-orange-500 to-red-500",
-    tech: ["WebGPU", "WGSL Compute", "Star Catalog", "WebGL Fallback"],
+    tech: ["WebGPU", "WGSL Compute", "Data Visualization", "WebGL Fallback"],
+    category: "graphics",
     status: "live",
+  },
+  {
+    slug: "3d-sandbox",
+    title: "3D Sandbox",
+    subtitle: "Spatial Computing",
+    description: "Experiment with 3D primitives, lighting, and materials in an interactive WebGL environment.",
+    icon: "◇",
+    gradient: "from-amber-500 via-yellow-500 to-lime-500",
+    tech: ["Three.js", "React Three Fiber", "HDRI"],
+    category: "graphics",
+    status: "live",
+  },
+  {
+    slug: "particle-playground",
+    title: "Particle Playground",
+    subtitle: "Interactive Physics",
+    description: "Explore emergent behaviors with hundreds of particles responding to forces, attractors, and your cursor in real-time.",
+    icon: "✦",
+    gradient: "from-violet-500 via-purple-500 to-fuchsia-500",
+    tech: ["Canvas API", "Physics Simulation", "React"],
+    category: "graphics",
+    status: "live",
+  },
+  {
+    slug: "type-experiments",
+    title: "Type Experiments",
+    subtitle: "Kinetic Typography",
+    description: "Dynamic text animations and interactive typography exploring the boundaries of web type.",
+    icon: "◆",
+    gradient: "from-slate-400 via-zinc-400 to-neutral-500",
+    tech: ["Canvas API", "Framer Motion", "CSS Transforms"],
+    category: "graphics",
+    status: "live",
+  },
+  // — Coming Soon —
+  {
+    slug: "shader-gallery",
+    title: "Shader Gallery",
+    subtitle: "Visual Mathematics",
+    description: "A curated collection of GLSL fragment shaders—from fluid simulations to procedural landscapes.",
+    icon: "◈",
+    gradient: "from-cyan-500 via-blue-500 to-indigo-500",
+    tech: ["GLSL", "Three.js", "WebGL2"],
+    category: "coming-soon",
+    status: "coming-soon",
+  },
+  {
+    slug: "audio-visualizer",
+    title: "Audio Visualizer",
+    subtitle: "Sound & Motion",
+    description: "Transform any audio into mesmerizing visuals with real-time FFT analysis and generative graphics.",
+    icon: "◉",
+    gradient: "from-rose-500 via-pink-500 to-orange-500",
+    tech: ["Web Audio API", "Canvas", "FFT"],
+    category: "coming-soon",
+    status: "coming-soon",
+  },
+  {
+    slug: "generative-art",
+    title: "Generative Art Studio",
+    subtitle: "Algorithmic Beauty",
+    description: "Create unique artworks using algorithms—flow fields, noise patterns, and recursive geometries.",
+    icon: "❖",
+    gradient: "from-emerald-500 via-teal-500 to-cyan-500",
+    tech: ["p5.js", "Perlin Noise", "SVG Export"],
+    category: "coming-soon",
+    status: "coming-soon",
   },
 ];
 

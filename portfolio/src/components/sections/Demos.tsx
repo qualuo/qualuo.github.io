@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { demos, Demo } from "@/lib/demos";
+import { demos, Demo, DemoCategory, DEMO_CATEGORIES } from "@/lib/demos";
 
 function DemoCard({ demo, index }: { demo: Demo; index: number }) {
   const isComingSoon = demo.status === "coming-soon";
@@ -173,12 +173,29 @@ export function Demos() {
           className="w-full h-px bg-linear-to-r from-transparent via-white/20 to-transparent mb-16"
         />
 
-        {/* Demo grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-          {demos.map((demo, index) => (
-            <DemoCard key={demo.slug} demo={demo} index={index} />
-          ))}
-        </div>
+        {/* Demo groups */}
+        {(["ai-ml", "graphics", "coming-soon"] as DemoCategory[]).map((cat) => {
+          const group = demos.filter((d) => d.category === cat);
+          if (group.length === 0) return null;
+          return (
+            <div key={cat} className="mb-16 last:mb-0">
+              <motion.p
+                initial={{ opacity: 0, x: -10 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5 }}
+                className="text-xs font-medium tracking-widest uppercase text-slate-500 mb-6"
+              >
+                {DEMO_CATEGORIES[cat]}
+              </motion.p>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+                {group.map((demo, index) => (
+                  <DemoCard key={demo.slug} demo={demo} index={index} />
+                ))}
+              </div>
+            </div>
+          );
+        })}
 
         {/* View all link */}
         <motion.div

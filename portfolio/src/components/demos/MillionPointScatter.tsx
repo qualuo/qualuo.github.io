@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
@@ -22,11 +22,11 @@ function mulberry32(a: number) {
   };
 }
 
-/* ── Star catalog generation ───────────────────────────────── */
+/* ── Point catalog generation ──────────────────────────────── */
 
-// Generate synthetic star catalog: [ra, dec, magnitude, colorIndex]
+// Generate synthetic point catalog: [ra, dec, magnitude, colorIndex]
 // Uses realistic distributions matching Hipparcos/Tycho-2 patterns
-function generateStarCatalog(count: number, seed = 42): Float32Array {
+function generatePointCatalog(count: number, seed = 42): Float32Array {
   const rng = mulberry32(seed);
   const data = new Float32Array(count * 4);
 
@@ -37,8 +37,8 @@ function generateStarCatalog(count: number, seed = 42): Float32Array {
     // Declination: -90 to 90 (cosine-weighted for uniform sphere)
     const dec = (Math.asin(2 * rng() - 1) * 180) / Math.PI;
 
-    // Magnitude: power-law distribution (more faint stars)
-    // Most stars are magnitude 6-12, few are bright (mag 0-3)
+    // Magnitude: power-law distribution (more faint points)
+    // Most points are magnitude 6-12, few are bright (mag 0-3)
     const u = rng();
     const mag = -1 + 14 * Math.pow(u, 0.3);
 
@@ -95,14 +95,16 @@ function raDec2Xyz(
 
 /* ── WebGPU check ──────────────────────────────────────────── */
 
-async function checkWebGPU(): Promise<GPUDevice | null> {
-  if (typeof navigator === "undefined" || !("gpu" in navigator)) return null;
+async function checkWebGPU(): Promise<{ device: GPUDevice } | { error: string }> {
+  if (typeof navigator === "undefined") return { error: "SSR environment (no navigator)" };
+  if (!("gpu" in navigator)) return { error: "navigator.gpu not found — browser or extension may be blocking WebGPU" };
   try {
-    const adapter = await navigator.gpu?.requestAdapter();
-    if (!adapter) return null;
-    return adapter.requestDevice();
-  } catch {
-    return null;
+    const adapter = await navigator.gpu.requestAdapter();
+    if (!adapter) return { error: "requestAdapter() returned null — GPU may be unsupported or blocklisted" };
+    const device = await adapter.requestDevice();
+    return { device };
+  } catch (e) {
+    return { error: `requestDevice() threw: ${e instanceof Error ? e.message : String(e)}` };
   }
 }
 
@@ -118,7 +120,7 @@ struct Params {
   pointScale: f32,
 };
 
-@group(0) @binding(0) var<storage, read> stars: array<vec4<f32>>;
+@group(0) @binding(0) var<storage, read> points: array<vec4<f32>>;
 @group(0) @binding(1) var<storage, read_write> positions: array<vec4<f32>>;
 @group(0) @binding(2) var<storage, read_write> colors: array<vec4<f32>>;
 @group(0) @binding(3) var<uniform> params: Params;
@@ -147,11 +149,11 @@ fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
   let idx = gid.x;
   if (idx >= params.count) { return; }
 
-  let star = stars[idx];
-  let ra = star.x;
-  let dec = star.y;
-  let mag = star.z;
-  let bv = star.w;
+  let pt = points[idx];
+  let ra = pt.x;
+  let dec = pt.y;
+  let mag = pt.z;
+  let bv = pt.w;
 
   // Magnitude filter
   if (mag < params.minMag || mag > params.maxMag) {
@@ -240,13 +242,13 @@ fn main(@location(0) color: vec4<f32>, @location(1) pointCoord: vec2<f32>) -> @l
 
 /* ── WebGPU Renderer ───────────────────────────────────────── */
 
-class WebGPUStarRenderer {
+class WebGPUPointRenderer {
   device: GPUDevice;
   canvas: HTMLCanvasElement;
   context: GPUCanvasContext;
   computePipeline!: GPUComputePipeline;
   renderPipeline!: GPURenderPipeline;
-  starBuffer!: GPUBuffer;
+  dataBuffer!: GPUBuffer;
   posBuffer!: GPUBuffer;
   colBuffer!: GPUBuffer;
   paramsBuffer!: GPUBuffer;
@@ -257,7 +259,7 @@ class WebGPUStarRenderer {
   format: GPUTextureFormat;
 
   rotY = 0;
-  cameraPos = new Float32Array([0, 0, 100]);
+  cameraPos = new Float32Array([0, 0, 140]);
   params = { minMag: -1, maxMag: 13, pointScale: 3 };
 
   constructor(device: GPUDevice, canvas: HTMLCanvasElement, count: number) {
@@ -269,18 +271,18 @@ class WebGPUStarRenderer {
     this.context.configure({ device, format: this.format, alphaMode: "premultiplied" });
   }
 
-  async init(starData: Float32Array) {
+  async init(pointData: Float32Array) {
     const d = this.device;
     const n = this.count;
 
     // Buffers
-    this.starBuffer = d.createBuffer({ size: n * 16, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST });
+    this.dataBuffer = d.createBuffer({ size: n * 16, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST });
     this.posBuffer = d.createBuffer({ size: n * 16, usage: GPUBufferUsage.STORAGE });
     this.colBuffer = d.createBuffer({ size: n * 16, usage: GPUBufferUsage.STORAGE });
     this.paramsBuffer = d.createBuffer({ size: 32, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST });
     this.cameraBuffer = d.createBuffer({ size: 64, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST });
 
-    d.queue.writeBuffer(this.starBuffer, 0, starData.buffer as ArrayBuffer);
+    d.queue.writeBuffer(this.dataBuffer, 0, pointData.buffer as ArrayBuffer);
 
     // Compute pipeline
     const computeModule = d.createShaderModule({ code: COMPUTE_SHADER });
@@ -292,7 +294,7 @@ class WebGPUStarRenderer {
     this.computeBindGroup = d.createBindGroup({
       layout: this.computePipeline.getBindGroupLayout(0),
       entries: [
-        { binding: 0, resource: { buffer: this.starBuffer } },
+        { binding: 0, resource: { buffer: this.dataBuffer } },
         { binding: 1, resource: { buffer: this.posBuffer } },
         { binding: 2, resource: { buffer: this.colBuffer } },
         { binding: 3, resource: { buffer: this.paramsBuffer } },
@@ -415,7 +417,7 @@ class WebGPUStarRenderer {
   }
 
   destroy() {
-    this.starBuffer?.destroy();
+    this.dataBuffer?.destroy();
     this.posBuffer?.destroy();
     this.colBuffer?.destroy();
     this.paramsBuffer?.destroy();
@@ -426,29 +428,41 @@ class WebGPUStarRenderer {
 /* ── WebGL fallback: Points with BufferGeometry ────────────── */
 
 function WebGLFallback({
-  starData,
+  pointData,
   minMag,
   maxMag,
   pointScale,
 }: {
-  starData: Float32Array;
+  pointData: Float32Array;
   minMag: number;
   maxMag: number;
   pointScale: number;
 }) {
   const pointsRef = useRef<THREE.Points>(null);
-  const count = starData.length / 4;
+  const count = pointData.length / 4;
 
-  const { positions, colors, sizes } = (() => {
+  const { positions, colors, sizes } = useMemo(() => {
     const pos = new Float32Array(count * 3);
     const col = new Float32Array(count * 3);
     const sz = new Float32Array(count);
 
     for (let i = 0; i < count; i++) {
-      const ra = starData[i * 4];
-      const dec = starData[i * 4 + 1];
-      const mag = starData[i * 4 + 2];
-      const bv = starData[i * 4 + 3];
+      const mag = pointData[i * 4 + 2];
+
+      if (mag < minMag || mag > maxMag) {
+        pos[i * 3] = 0;
+        pos[i * 3 + 1] = 0;
+        pos[i * 3 + 2] = 0;
+        col[i * 3] = 0;
+        col[i * 3 + 1] = 0;
+        col[i * 3 + 2] = 0;
+        sz[i] = 0;
+        continue;
+      }
+
+      const ra = pointData[i * 4];
+      const dec = pointData[i * 4 + 1];
+      const bv = pointData[i * 4 + 3];
 
       const [x, y, z] = raDec2Xyz(ra, dec, 50);
       pos[i * 3] = x;
@@ -464,7 +478,7 @@ function WebGLFallback({
       sz[i] = brightness * 2;
     }
     return { positions: pos, colors: col, sizes: sz };
-  })();
+  }, [pointData, count, minMag, maxMag]);
 
   useFrame(({ clock }) => {
     if (pointsRef.current) {
@@ -472,9 +486,11 @@ function WebGLFallback({
     }
   });
 
+  const filterKey = `${minMag}-${maxMag}`;
+
   return (
     <points ref={pointsRef}>
-      <bufferGeometry>
+      <bufferGeometry key={filterKey}>
         <bufferAttribute
           attach="attributes-position"
           args={[positions, 3]}
@@ -502,21 +518,24 @@ function WebGLFallback({
 }
 
 function WebGLScene({
-  starData,
+  pointData,
   minMag,
   maxMag,
   pointScale,
+  fpsTickRef,
 }: {
-  starData: Float32Array;
+  pointData: Float32Array;
   minMag: number;
   maxMag: number;
   pointScale: number;
+  fpsTickRef: React.RefObject<(() => void) | null>;
 }) {
   return (
     <>
       <color attach="background" args={["#010108"]} />
+      <FpsTicker tickRef={fpsTickRef} />
       <WebGLFallback
-        starData={starData}
+        pointData={pointData}
         minMag={minMag}
         maxMag={maxMag}
         pointScale={pointScale}
@@ -534,72 +553,96 @@ function WebGLScene({
 /* ── FPS counter ───────────────────────────────────────────── */
 
 function useFps() {
-  const fpsRef = useRef(0);
   const framesRef = useRef(0);
-  const lastRef = useRef(performance.now());
   const [fps, setFps] = useState(0);
 
   const tick = useCallback(() => {
     framesRef.current++;
-    const now = performance.now();
-    if (now - lastRef.current >= 1000) {
-      fpsRef.current = framesRef.current;
+  }, []);
+
+  useEffect(() => {
+    const id = setInterval(() => {
       setFps(framesRef.current);
       framesRef.current = 0;
-      lastRef.current = now;
-    }
+    }, 1000);
+    return () => clearInterval(id);
   }, []);
 
   return { fps, tick };
+}
+
+/** Tiny R3F component — calls tick ref every frame */
+function FpsTicker({ tickRef }: { tickRef: React.RefObject<(() => void) | null> }) {
+  useFrame(() => { tickRef.current?.(); });
+  return null;
 }
 
 /* ── Main component ────────────────────────────────────────── */
 
 export function MillionPointScatter() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const rendererRef = useRef<WebGPUStarRenderer | null>(null);
+  const rendererRef = useRef<WebGPUPointRenderer | null>(null);
   const animRef = useRef(0);
 
   const [useWebGPU, setUseWebGPU] = useState<boolean | null>(null); // null = detecting
   const [ready, setReady] = useState(false);
+  const [gpuDiag, setGpuDiag] = useState<string | null>(null);
   const [minMag, setMinMag] = useState(-1);
   const [maxMag, setMaxMag] = useState(13);
   const [pointScale, setPointScale] = useState(3);
+  const [pointCount, setPointCount] = useState(WEBGL_POINT_COUNT);
   const { fps, tick: fpsTickFn } = useFps();
+  const fpsTickRef = useRef<(() => void) | null>(fpsTickFn);
+  fpsTickRef.current = fpsTickFn;
 
-  const [starData] = useState(() => {
-    // Start with WebGL count; will regenerate if WebGPU
-    return generateStarCatalog(WEBGL_POINT_COUNT, 42);
-  });
-  const [gpuStarData, setGpuStarData] = useState<Float32Array | null>(null);
+  const pointData = useMemo(() => {
+    return generatePointCatalog(pointCount, 42);
+  }, [pointCount]);
+  const gpuDeviceRef = useRef<GPUDevice | null>(null);
 
-  // Detect WebGPU and initialize
+  // Phase 1: Detect WebGPU (no canvas needed)
   useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const result = await checkWebGPU();
+      if (cancelled) return;
+      if ("device" in result) {
+        gpuDeviceRef.current = result.device;
+        setPointCount(WEBGPU_POINT_COUNT);
+        setUseWebGPU(true);
+      } else {
+        console.warn("[WebGPU]", result.error);
+        setGpuDiag(result.error);
+        setUseWebGPU(false);
+        setReady(true);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  // Phase 2: Initialize renderer once WebGPU is confirmed and canvas is in DOM
+  useEffect(() => {
+    if (useWebGPU !== true) return;
+    const device = gpuDeviceRef.current;
+    const canvas = canvasRef.current;
+    if (!device || !canvas) return;
+
     let cancelled = false;
 
     (async () => {
-      const device = await checkWebGPU();
+      try {
+        const data = generatePointCatalog(pointCount, 42);
 
-      if (cancelled) return;
-
-      if (device && canvasRef.current) {
-        setUseWebGPU(true);
-        const data = generateStarCatalog(WEBGPU_POINT_COUNT, 42);
-        setGpuStarData(data);
-
-        const renderer = new WebGPUStarRenderer(
-          device,
-          canvasRef.current,
-          WEBGPU_POINT_COUNT
-        );
+        const renderer = new WebGPUPointRenderer(device, canvas, pointCount);
         await renderer.init(data);
+        if (cancelled) { renderer.destroy(); return; }
+
         rendererRef.current = renderer;
         setReady(true);
 
-        // Animation loop
         const loop = (time: number) => {
           if (cancelled) return;
-          fpsTickFn();
+          fpsTickRef.current?.();
           renderer.params.minMag = minMag;
           renderer.params.maxMag = maxMag;
           renderer.params.pointScale = pointScale;
@@ -607,7 +650,9 @@ export function MillionPointScatter() {
           animRef.current = requestAnimationFrame(loop);
         };
         animRef.current = requestAnimationFrame(loop);
-      } else {
+      } catch (e) {
+        console.error("[WebGPU] renderer init failed:", e);
+        setGpuDiag(`Renderer init failed: ${e instanceof Error ? e.message : String(e)}`);
         setUseWebGPU(false);
         setReady(true);
       }
@@ -619,7 +664,7 @@ export function MillionPointScatter() {
       rendererRef.current?.destroy();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [useWebGPU, pointCount]);
 
   // Update WebGPU renderer params
   useEffect(() => {
@@ -646,7 +691,6 @@ export function MillionPointScatter() {
     return () => observer.disconnect();
   }, [useWebGPU]);
 
-  const pointCount = useWebGPU ? WEBGPU_POINT_COUNT : WEBGL_POINT_COUNT;
 
   return (
     <div className="relative w-full flex flex-col">
@@ -672,12 +716,13 @@ export function MillionPointScatter() {
         )}
 
         {useWebGPU === false && ready && (
-          <Canvas camera={{ position: [0, 0, 100], fov: 50 }}>
+          <Canvas camera={{ position: [0, 0, 140], fov: 50 }}>
             <WebGLScene
-              starData={starData}
+              pointData={pointData}
               minMag={minMag}
               maxMag={maxMag}
               pointScale={pointScale}
+              fpsTickRef={fpsTickRef}
             />
           </Canvas>
         )}
@@ -696,7 +741,7 @@ export function MillionPointScatter() {
             </div>
             <div className="px-3 py-1.5 rounded-lg bg-black/60 backdrop-blur-sm border border-white/10">
               <span className="text-sm font-mono text-white">
-                {(pointCount / 1000000).toFixed(pointCount >= 1000000 ? 0 : 1)}M points
+                {pointCount.toLocaleString()} points
               </span>
             </div>
             <div className="px-3 py-1.5 rounded-lg bg-black/60 backdrop-blur-sm border border-white/10">
@@ -713,65 +758,101 @@ export function MillionPointScatter() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
-        className="mt-6 flex flex-col md:flex-row gap-6 items-start"
+        className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4"
       >
-        <div className="flex flex-col gap-3 flex-1">
-          <p className="text-xs text-slate-500 uppercase tracking-wider font-medium">
+        {/* Magnitude Filter */}
+        <div className="rounded-xl bg-white/3 border border-white/8 px-5 py-4">
+          <p className="text-[11px] text-slate-500 uppercase tracking-wider font-medium mb-3">
             Magnitude Filter
           </p>
-          <div className="flex items-center gap-3">
-            <span className="text-xs text-slate-400 w-8">Min</span>
-            <input
-              type="range"
-              min={-1}
-              max={13}
-              step={0.5}
-              value={minMag}
-              onChange={(e) => setMinMag(parseFloat(e.target.value))}
-              className="flex-1 accent-white h-1"
-            />
-            <span className="text-xs text-slate-400 w-8 text-right">{minMag}</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="text-xs text-slate-400 w-8">Max</span>
-            <input
-              type="range"
-              min={-1}
-              max={13}
-              step={0.5}
-              value={maxMag}
-              onChange={(e) => setMaxMag(parseFloat(e.target.value))}
-              className="flex-1 accent-white h-1"
-            />
-            <span className="text-xs text-slate-400 w-8 text-right">{maxMag}</span>
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-3">
-          <p className="text-xs text-slate-500 uppercase tracking-wider font-medium">
-            Point Size
-          </p>
-          <div className="flex items-center gap-3">
-            <input
-              type="range"
-              min={0.5}
-              max={8}
-              step={0.5}
-              value={pointScale}
-              onChange={(e) => setPointScale(parseFloat(e.target.value))}
-              className="w-32 accent-white h-1"
-            />
-            <span className="text-xs text-slate-400">{pointScale}</span>
+          <div className="space-y-2.5">
+            <div className="flex items-center gap-3">
+              <span className="text-[11px] text-slate-500 w-7">Min</span>
+              <input
+                type="range"
+                min={-1}
+                max={13}
+                step={0.5}
+                value={minMag}
+                onChange={(e) => setMinMag(parseFloat(e.target.value))}
+                className="flex-1 accent-cyan-400 h-1 cursor-pointer"
+              />
+              <span className="text-xs font-mono text-slate-300 w-8 text-right">{minMag}</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-[11px] text-slate-500 w-7">Max</span>
+              <input
+                type="range"
+                min={-1}
+                max={13}
+                step={0.5}
+                value={maxMag}
+                onChange={(e) => setMaxMag(parseFloat(e.target.value))}
+                className="flex-1 accent-cyan-400 h-1 cursor-pointer"
+              />
+              <span className="text-xs font-mono text-slate-300 w-8 text-right">{maxMag}</span>
+            </div>
           </div>
         </div>
 
-        {!useWebGPU && ready && (
-          <div className="px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
-            <p className="text-xs text-amber-400">
-              WebGPU unavailable. Showing {(WEBGL_POINT_COUNT / 1000).toFixed(0)}K points via WebGL.
+        {/* Point Count */}
+        <div className="rounded-xl bg-white/3 border border-white/8 px-5 py-4">
+          <div className="flex items-baseline justify-between mb-3">
+            <p className="text-[11px] text-slate-500 uppercase tracking-wider font-medium">
+              Point Count
             </p>
+            <span className="text-sm font-mono font-semibold text-white">
+              {pointCount >= 1_000_000
+                ? `${(pointCount / 1_000_000).toFixed(1)}M`
+                : `${(pointCount / 1_000).toFixed(0)}K`}
+            </span>
           </div>
-        )}
+          <input
+            type="range"
+            min={4}
+            max={Math.log10(useWebGPU ? 10_000_000 : 2_000_000)}
+            step={0.05}
+            value={Math.log10(pointCount)}
+            onChange={(e) => setPointCount(Math.round(Math.pow(10, parseFloat(e.target.value))))}
+            className="w-full accent-cyan-400 h-1 cursor-pointer"
+          />
+          <div className="flex justify-between mt-2 text-[10px] text-slate-600">
+            <span>10K</span>
+            <span>100K</span>
+            <span>1M</span>
+            <span>{useWebGPU ? "10M" : "2M"}</span>
+          </div>
+        </div>
+
+        {/* Point Size + Info */}
+        <div className="rounded-xl bg-white/3 border border-white/8 px-5 py-4">
+          <div className="flex items-baseline justify-between mb-3">
+            <p className="text-[11px] text-slate-500 uppercase tracking-wider font-medium">
+              Point Size
+            </p>
+            <span className="text-sm font-mono font-semibold text-white">{pointScale}</span>
+          </div>
+          <input
+            type="range"
+            min={0.5}
+            max={8}
+            step={0.5}
+            value={pointScale}
+            onChange={(e) => setPointScale(parseFloat(e.target.value))}
+            className="w-full accent-cyan-400 h-1 cursor-pointer"
+          />
+
+          {!useWebGPU && ready && (
+            <div className="mt-3 pt-3 border-t border-white/5">
+              <p className="text-[10px] text-amber-400/80">
+                WebGPU unavailable — using WebGL
+              </p>
+              {gpuDiag && (
+                <p className="text-[10px] text-amber-400/40 mt-0.5">{gpuDiag}</p>
+              )}
+            </div>
+          )}
+        </div>
       </motion.div>
     </div>
   );
