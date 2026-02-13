@@ -19,10 +19,10 @@ Custom solutions in Swedish public sector are deployed ad-hoc into shared subscr
 
 Four subscriptions under `mg-customsolutions`, all in Sweden Central:
 
-- `sub-customsolutions-sandbox` — Sandbox / Experimentation
-- `sub-customsolutions-dev` — Development
-- `sub-customsolutions-test` — Test / Staging
-- `sub-customsolutions-prod` — Production
+- `sub-customsolutions-sandbox`: Sandbox / Experimentation
+- `sub-customsolutions-dev`: Development
+- `sub-customsolutions-test`: Test / Staging
+- `sub-customsolutions-prod`: Production
 
 Each solution gets one resource group per subscription: `rg-{solutionname}`
 
@@ -38,13 +38,13 @@ Each solution gets one resource group per subscription: `rg-{solutionname}`
 
 ### Recommended Services
 
-- **Container Apps** — hosting with auto-scaling and Dapr
-- **Azure SQL** — geo-redundant backup within Sweden
-- **API Management** — gateway with auth and rate limiting
-- **Key Vault** — secrets and certificates, never in app config
-- **Application Insights** — distributed tracing and alerts
-- **Azure Policy** — enforce Sweden Central, deny non-compliant SKUs
-- **Bicep** — every resource defined in code
+- **Container Apps**: hosting with auto-scaling and Dapr
+- **Azure SQL**: geo-redundant backup within Sweden
+- **API Management**: gateway with auth and rate limiting
+- **Key Vault**: secrets and certificates, never in app config
+- **Application Insights**: distributed tracing and alerts
+- **Azure Policy**: enforce Sweden Central, deny non-compliant SKUs
+- **Bicep**: every resource defined in code
 
 > Start with managed PaaS exclusively. Container Apps + Azure SQL covers the vast majority of public sector e-services.
 
@@ -69,7 +69,7 @@ The Azure structure is identical across all three levels of government. What cha
 
 |  | Municipality | Region | State Agency |
 |--|-------------|--------|-------------|
-| Health data (PDL — Patient Data Act) | N/A | Required | Rare |
+| Health data (PDL: Patient Data Act) | N/A | Required | Rare |
 | Security classification | Rare | Rare | May apply |
 | Classification model | SKR (municipalities & regions) | SKR + PDL | DIGG (gov digitalization agency) |
 | Procurement | SKL Kommentus | SKL Kommentus | Kammarkollegiet |

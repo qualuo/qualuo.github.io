@@ -24,25 +24,25 @@ This RFC proposes a unified governance model built on seven principles:
 
 Each cloud has its own hierarchy model, but the concept is identical: **platform resources** separated from **landing zones**, with sandbox and quarantine boundaries. The separation matters because platform teams and workload teams operate at different cadences — platform changes are slow, deliberate, and high-blast-radius. Landing zone changes are fast and scoped.
 
-### Azure — Management Group Hierarchy
+### Azure: Management Group Hierarchy
 
-- **Platform** — Identity (Entra ID), Management (Sentinel, Log Analytics), Connectivity (Hub vNets, ExpressRoute)
-- **Landing Zones** — Corp, Online, Regulated (PCI/HIPAA/FedRAMP), Confidential (sovereign)
-- **Sandbox** — Experimentation, no prod connectivity
-- **Quarantine** — Non-compliant subs auto-moved here
+- **Platform**: Identity (Entra ID), Management (Sentinel, Log Analytics), Connectivity (Hub vNets, ExpressRoute)
+- **Landing Zones**: Corp, Online, Regulated (PCI/HIPAA/FedRAMP), Confidential (sovereign)
+- **Sandbox**: Experimentation, no prod connectivity
+- **Quarantine**: Non-compliant subs auto-moved here
 
-### AWS — Organization OU Structure
+### AWS: Organization OU Structure
 
-- **Security OU** — Log Archive, Security Tooling (GuardDuty, Security Hub), Audit
-- **Infrastructure OU** — Network Hub (Transit Gateway), Shared Services
-- **Workloads OU** — Corp / Online / Regulated with Prod, Staging, Dev per OU
-- **Sandbox / Quarantine** — Deny-all SCP
+- **Security OU**: Log Archive, Security Tooling (GuardDuty, Security Hub), Audit
+- **Infrastructure OU**: Network Hub (Transit Gateway), Shared Services
+- **Workloads OU**: Corp / Online / Regulated with Prod, Staging, Dev per OU
+- **Sandbox / Quarantine**: Deny-all SCP
 
-### GCP — Resource Hierarchy
+### GCP: Resource Hierarchy
 
-- **Platform** — Networking (Shared VPC), Logging (centralized sink), Security (SCC, KMS)
-- **Landing Zones** — Corp, Analytics (BigQuery, Vertex AI), Regulated (Assured Workloads)
-- **Sandbox / Quarantine** — Deny-all org policy
+- **Platform**: Networking (Shared VPC), Logging (centralized sink), Security (SCC, KMS)
+- **Landing Zones**: Corp, Analytics (BigQuery, Vertex AI), Regulated (Assured Workloads)
+- **Sandbox / Quarantine**: Deny-all org policy
 
 ### Cross-Cloud Mapping
 
@@ -69,7 +69,7 @@ Identity is the most critical layer. Get it wrong and every other control is com
 | Authentication | Entra ID with phishing-resistant MFA (FIDO2 / passkeys) |
 | Authorization | RBAC via group-to-role mappings, per cloud, per scope |
 | Privileged access | PIM (Azure) / temporary elevated access (AWS, GCP) |
-| Service-to-service | Workload Identity Federation — no long-lived keys |
+| Service-to-service | Workload Identity Federation: no long-lived keys |
 | Break-glass | Sealed emergency accounts, hardware tokens in safe |
 
 > **Long-lived service account keys are prohibited.** Workload Identity Federation for all service-to-service and CI/CD authentication eliminates the largest class of credential exposure.
@@ -189,7 +189,7 @@ Cost visibility is only useful if it's actionable. Every resource is tagged with
 |--------|---------------|
 | Visibility | All resources tagged with cost-center, owner, environment (policy-enforced) |
 | Allocation | Chargeback to BU based on actual usage |
-| Optimization | RIs, Savings Plans, CUDs reviewed quarterly — 70% coverage target |
+| Optimization | RIs, Savings Plans, CUDs reviewed quarterly: 70% coverage target |
 | Governance | Budget alerts at 50/75/90/100%. Auto-notify owner + manager |
 
 ### Disaster Recovery
