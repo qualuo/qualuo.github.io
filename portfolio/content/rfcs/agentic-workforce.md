@@ -173,7 +173,7 @@ Not every mistake needs to be caught. The goal is to reduce the error rate below
 
 ---
 
-## Cost / Benefit
+## Cost-Benefit
 
 The business case for an agentic workforce is not "AI is exciting." It's arithmetic. A back-office worker processing invoices costs money, works fixed hours, and processes at a fixed rate. An agent container costs fractions of a cent per transaction, runs 24/7, and scales horizontally. The question is whether the math works after you account for infrastructure, quality checks, human escalations, and error costs.
 

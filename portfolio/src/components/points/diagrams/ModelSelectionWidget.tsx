@@ -15,9 +15,11 @@ const ACCENT = "167,139,250";
 interface ModelSelectionWidgetProps {
   progress: MotionValue<number>;
   activeStep: number;
+  /** Show all tiers as highlighted with no per-step dimming (mobile). */
+  showAll?: boolean;
 }
 
-export function ModelSelectionWidget({ progress, activeStep }: ModelSelectionWidgetProps) {
+export function ModelSelectionWidget({ progress, activeStep, showAll }: ModelSelectionWidgetProps) {
   // 6 steps: 0=intro, 1=frontier, 2=workhorse, 3=speed, 4=specialized, 5=router
   const routerOpacity = useTransform(progress, [0.82, 0.92], [0, 1]);
   const CARD_H = 52;
@@ -44,14 +46,15 @@ export function ModelSelectionWidget({ progress, activeStep }: ModelSelectionWid
           const y = TOP + i * (CARD_H + CARD_GAP);
 
           // Step 0: all dimmed. Steps 1-4: one tier per step. Step 5: all + router.
-          const isHighlighted =
-            activeStep === 0
+          const isHighlighted = showAll
+            ? true
+            : activeStep === 0
               ? false
               : activeStep >= 1 && activeStep <= 4
                 ? i === activeStep - 1
                 : true; // step 5
 
-          const isCurrent = activeStep >= 1 && activeStep <= 4 && i === activeStep - 1;
+          const isCurrent = showAll ? false : activeStep >= 1 && activeStep <= 4 && i === activeStep - 1;
 
           return (
             <motion.g

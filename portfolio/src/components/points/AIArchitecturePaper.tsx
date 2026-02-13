@@ -338,8 +338,8 @@ export function AIArchitecturePaper() {
       </div>
 
       <StickyDiagram
-        diagram={({ progress, activeStep }) => (
-          <ModelSelectionWidget progress={progress} activeStep={activeStep} />
+        diagram={({ progress, activeStep, showAll }) => (
+          <ModelSelectionWidget progress={progress} activeStep={activeStep} showAll={showAll} />
         )}
         steps={[
           {

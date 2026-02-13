@@ -63,6 +63,32 @@ export function StickyDiagram({
   // Add a small buffer so the last step has room
   const totalHeight = (steps.length + 0.3) * stepHeight;
 
+  /* ── Mobile: static layout, no scroll animation ── */
+  if (isMobile) {
+    return (
+      <div className={`${className}`}>
+        <div className="max-w-6xl mx-auto">
+          {/* Diagram — static, shows all */}
+          <div className="px-2 mb-8">
+            <div className="w-full max-w-xl mx-auto rounded-2xl border border-white/8 bg-white/3 backdrop-blur-md overflow-hidden p-3 sm:p-4">
+              {diagram({ progress: scrollYProgress, activeStep: steps.length - 1, showAll: true })}
+            </div>
+          </div>
+
+          {/* All steps visible at once */}
+          <div className="space-y-6 px-6">
+            {steps.map((step) => (
+              <div key={step.id} className="max-w-md mx-auto">
+                {step.content}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  /* ── Desktop: sticky scroll-driven animation ── */
   return (
     <div
       ref={containerRef}
@@ -72,19 +98,19 @@ export function StickyDiagram({
       <div
         className={`relative max-w-6xl mx-auto lg:grid lg:gap-0 lg:grid-cols-[1fr_1fr]`}
       >
-        {/* Diagram column — sticky on all breakpoints */}
+        {/* Diagram column — sticky */}
         <div
           className={`${flipped ? "lg:order-2" : "lg:order-1"}`}
         >
-          <div className="sticky top-16 lg:top-[8vh] z-10 h-[36vh] lg:h-[70vh] flex items-center justify-center px-2 lg:px-8">
+          <div className="sticky top-[8vh] z-10 h-[70vh] flex items-center justify-center px-8">
             <motion.div
-              className="w-full max-w-xl h-full rounded-2xl border border-white/8 bg-white/3 backdrop-blur-md lg:backdrop-blur-sm overflow-hidden p-2 sm:p-4 lg:p-6"
+              className="w-full max-w-xl h-full rounded-2xl border border-white/8 bg-white/3 backdrop-blur-sm overflow-hidden p-6"
               key={activeStep}
               initial={{ opacity: 0.8, scale: 0.98 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
             >
-              {diagram({ progress: scrollYProgress, activeStep, showAll: isMobile })}
+              {diagram({ progress: scrollYProgress, activeStep, showAll: false })}
             </motion.div>
           </div>
         </div>
@@ -93,8 +119,8 @@ export function StickyDiagram({
         <div
           className={`relative ${flipped ? "lg:order-1" : "lg:order-2"}`}
         >
-          {/* Step progress track (desktop only) */}
-          <div className="hidden lg:block absolute left-0 top-0 bottom-0 w-px">
+          {/* Step progress track */}
+          <div className="absolute left-0 top-0 bottom-0 w-px">
             <div className="sticky top-[8vh] h-[70vh] flex flex-col justify-center">
               <div className="relative h-[min(300px,60%)]">
                 {/* Track line */}
@@ -135,7 +161,7 @@ export function StickyDiagram({
             return (
               <div
                 key={step.id}
-                className="flex items-center justify-center px-6 lg:px-10"
+                className="flex items-center justify-center px-10"
                 style={{ minHeight: `${stepHeight}vh` }}
               >
                 <motion.div
