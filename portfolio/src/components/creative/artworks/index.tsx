@@ -1,5 +1,6 @@
 "use client";
 
+import { useSyncExternalStore } from "react";
 import { MotionValue } from "framer-motion";
 import { NeuralDreamsArt } from "./NeuralDreamsArt";
 import { VoiceIntimacyArt } from "./VoiceIntimacyArt";
@@ -8,6 +9,8 @@ import { PulseVisualizerArt } from "./PulseVisualizerArt";
 import { DigitalGardensArt } from "./DigitalGardensArt";
 import { ThreeWorldsArt } from "./ThreeWorldsArt";
 import { SakuraArt } from "./SakuraArt";
+
+const emptySubscribe = () => () => {};
 
 interface ArtworkProps {
   color: string;
@@ -33,8 +36,11 @@ export function SectionArtwork({
   color: string;
   scrollProgress: MotionValue<number>;
 }) {
+  // Render artworks client-only to avoid hydration mismatches from
+  // Math.sin/Math.cos floating-point differences between Node.js and browser
+  const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
   const Art = ARTWORK_MAP[workId];
-  if (!Art) return null;
+  if (!Art || !mounted) return null;
   return <Art color={color} scrollProgress={scrollProgress} />;
 }
 
