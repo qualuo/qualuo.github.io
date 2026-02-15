@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { canonicalUrl } from "@/lib/seo";
+import { BreadcrumbSchema } from "@/components/seo/BreadcrumbSchema";
 import BlobClient from "./BlobClient";
 
 export const metadata: Metadata = {
@@ -23,5 +24,10 @@ export const metadata: Metadata = {
 };
 
 export default function BlobPage() {
-  return <BlobClient />;
+  return (
+    <>
+      <BreadcrumbSchema items={[{ name: "Iridescent", href: "/blob/" }]} />
+      <BlobClient />
+    </>
+  );
 }

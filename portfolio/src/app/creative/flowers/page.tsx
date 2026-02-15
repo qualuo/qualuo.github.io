@@ -13,6 +13,13 @@ export const metadata: Metadata = {
     description:
       "An interactive flower garden simulation. Plant seeds and watch them bloom.",
     url: canonicalUrl("/creative/flowers"),
+    images: [{ url: "/og/creative/flowers.png", width: 1200, height: 630, alt: "Flower Garden" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Flower Garden | Quang Luong",
+    description: "An interactive flower garden simulation. Plant seeds and watch them bloom.",
+    images: ["/og/creative/flowers.png"],
   },
 };
 

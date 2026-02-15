@@ -13,6 +13,13 @@ export const metadata: Metadata = {
     description:
       "A beautiful typing speed game. Test your speed with flower-themed passages.",
     url: canonicalUrl("/creative/type-race"),
+    images: [{ url: "/og/creative/type-race.png", width: 1200, height: 630, alt: "Type Race" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Type Race | Quang Luong",
+    description: "A beautiful typing speed game. Test your speed with flower-themed passages.",
+    images: ["/og/creative/type-race.png"],
   },
 };
 

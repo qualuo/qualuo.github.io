@@ -88,6 +88,24 @@ function buildPageList(): OGPageDef[] {
       subtitle: "Structured Architectural Proposals",
       accentColor: "#3b82f6",
     },
+    {
+      path: "public/og/creative/flowers.png",
+      title: "Flower Garden",
+      subtitle: "An Interactive Digital Garden",
+      accentColor: "#FDBA74",
+    },
+    {
+      path: "public/og/creative/sakura.png",
+      title: "Sakura",
+      subtitle: "Transient Beauty in Bloom",
+      accentColor: "#F9A8D4",
+    },
+    {
+      path: "public/og/creative/type-race.png",
+      title: "Type Race",
+      subtitle: "A Beautiful Typing Speed Game",
+      accentColor: "#FBBF24",
+    },
   ];
 
   for (const demo of demos.filter((d) => d.status === "live")) {
@@ -240,7 +258,7 @@ async function main() {
   const pages = buildPageList();
 
   const root = join(__dirname, "..");
-  for (const dir of ["public/og", "public/og/demos", "public/og/points", "public/og/rfcs"]) {
+  for (const dir of ["public/og", "public/og/demos", "public/og/points", "public/og/rfcs", "public/og/creative"]) {
     const fullDir = join(root, dir);
     if (!existsSync(fullDir)) mkdirSync(fullDir, { recursive: true });
   }
