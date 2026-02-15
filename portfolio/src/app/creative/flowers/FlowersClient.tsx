@@ -457,17 +457,7 @@ function drawMoon(ctx: CanvasRenderingContext2D, vw: number, vh: number, time: n
   ctx.fillStyle = "rgba(220, 220, 245, 0.12)";
   ctx.fill();
 
-  // Crescent mask (overlapping circle to cut away)
-  ctx.save();
-  ctx.globalCompositeOperation = "destination-out";
-  ctx.beginPath();
-  ctx.arc(mx + r * 0.55, my - r * 0.2, r * 0.85, 0, Math.PI * 2);
-  ctx.fillStyle = "rgba(0,0,0,1)";
-  ctx.fill();
-  ctx.restore();
-
-  // Re-draw crescent with the bg color to "erase" properly on canvas
-  // Instead use a clipping approach: draw crescent as intersection
+  // Crescent via clipping: draw moon circle, then cut shadow with destination-out
   ctx.save();
   ctx.beginPath();
   ctx.arc(mx, my, r, 0, Math.PI * 2);
@@ -636,8 +626,9 @@ export default function FlowersClient() {
           stars[i] = stars[stars.length - 1]; stars.pop();
           continue;
         }
-        const tailX = s.x - s.vx * s.length / Math.hypot(s.vx, s.vy) * 0.4;
-        const tailY = s.y - s.vy * s.length / Math.hypot(s.vx, s.vy) * 0.4;
+        const speed = Math.hypot(s.vx, s.vy);
+        const tailX = s.x - s.vx * s.length / speed * 0.4;
+        const tailY = s.y - s.vy * s.length / speed * 0.4;
         const grad = ctx.createLinearGradient(tailX, tailY, s.x, s.y);
         grad.addColorStop(0, "transparent");
         grad.addColorStop(1, `rgba(255,255,255,${s.life * 0.6})`);
@@ -922,7 +913,7 @@ export default function FlowersClient() {
       cancelAnimationFrame(frameRef.current);
       window.removeEventListener("resize", resize);
     };
-  }, []);
+  }, [plantFlower]);
 
   // Pointer handlers (drag to paint)
   const getXPct = useCallback((clientX: number) => {
@@ -1024,6 +1015,7 @@ export default function FlowersClient() {
     firefliesRef.current = [];
     seedsRef.current = [];
     raindropsRef.current = [];
+    shootingStarsRef.current = [];
     setFlowerCount(0);
     setShowHint(true);
   }, []);
@@ -1032,6 +1024,10 @@ export default function FlowersClient() {
     flowersRef.current = [];
     particlesRef.current = [];
     butterfliesRef.current = [];
+    firefliesRef.current = [];
+    seedsRef.current = [];
+    raindropsRef.current = [];
+    shootingStarsRef.current = [];
     const count = 15 + Math.floor(Math.random() * 11);
     for (let i = 0; i < count; i++) {
       const xPct = 0.05 + Math.random() * 0.9;
@@ -1046,6 +1042,8 @@ export default function FlowersClient() {
       {/* Canvas */}
       <canvas
         ref={canvasRef}
+        role="img"
+        aria-label="Interactive flower garden canvas. Click to plant flowers, drag to paint, double-click to spread seeds."
         className="absolute inset-0 cursor-crosshair"
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
