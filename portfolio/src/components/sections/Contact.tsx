@@ -272,6 +272,9 @@ export function Contact() {
               <Link href="/rfcs" data-cursor="pointer" className="hover:text-slate-400 transition-colors">
                 RFCs
               </Link>
+              <Link href="/about" data-cursor="pointer" className="hover:text-slate-400 transition-colors">
+                About
+              </Link>
             </div>
             <span className="hidden md:block text-slate-600">·</span>
             <div className="flex gap-6 text-slate-600">

@@ -41,6 +41,12 @@ function buildPageList(): OGPageDef[] {
       accentColor: "#60a5fa",
     },
     {
+      path: "public/og/about.png",
+      title: "About",
+      subtitle: "Systems Architect & Creative Technologist",
+      accentColor: "#60a5fa",
+    },
+    {
       path: "public/og/work.png",
       title: "Selected Work",
       subtitle: "Enterprise AI, Automation, 3D Visualization & More",

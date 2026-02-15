@@ -11,6 +11,7 @@ const navLinks = [
   { href: "/work", label: "Work", isPage: true },
   { href: "/points", label: "Points", isPage: true },
   { href: "/rfcs", label: "RFCs", isPage: true },
+  { href: "/about", label: "About", isPage: true },
   { href: "/colophon", label: "60°N", isPage: true },
 ];
 
