@@ -112,6 +112,39 @@ body {
   --tw-prose-td-borders: rgba(255, 255, 255, 0.05);
 }
 
+.rfc-prose blockquote {
+  background: rgba(255, 255, 255, 0.03);
+  border-left: 2px solid rgba(255, 255, 255, 0.15);
+  border-radius: 0 8px 8px 0;
+  padding: 1em 1.25em;
+  margin-left: 0;
+  margin-right: 0;
+  font-style: normal;
+  position: relative;
+}
+.rfc-prose blockquote::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 0 8px 8px 0;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-left: none;
+  pointer-events: none;
+}
+.rfc-prose blockquote p { color: #94a3b8; }
+.rfc-prose blockquote strong { color: #e2e8f0; font-weight: 600; }
+
+/* Quotes nested inside callouts */
+.rfc-prose blockquote blockquote {
+  background: rgba(255, 255, 255, 0.02);
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0 6px 6px 0;
+  margin-top: 0.75em;
+  margin-bottom: 0.25em;
+  padding: 0.75em 1em;
+}
+.rfc-prose blockquote blockquote p { color: #64748b; font-style: italic; }
+
 .rfc-prose :not(pre) > code {
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.12);

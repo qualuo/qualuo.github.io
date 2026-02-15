@@ -53,6 +53,17 @@ export const rfcs: Rfc[] = [
     status: "live",
     date: "2026-02-12",
   },
+  {
+    slug: "ai-governance",
+    number: 4,
+    title: "AI Governance & Trust Architecture",
+    subtitle: "Governance Through Infrastructure, Not Policy Documents",
+    icon: "shield-check",
+    gradient: "from-amber-500 via-orange-500 to-red-500",
+    tags: ["AI Governance", "Trust Architecture", "Compliance", "Audit"],
+    status: "live",
+    date: "2026-02-14",
+  },
 ];
 
 export function getRfcBySlug(slug: string): Rfc | undefined {

@@ -1,0 +1,391 @@
+A proposal for governing AI systems through infrastructure, not policy documents — covering decision classification, authorization boundaries, audit trails, override mechanisms, and the operating model that keeps humans accountable for what AI does.
+
+---
+
+## Motivation
+
+Every organization adopting AI will eventually face the same question: who is responsible when the AI makes a wrong decision? Not a hallucinated email — a wrong decision that costs money, violates a regulation, or harms a customer.
+
+The instinct is to write a policy. An "AI Ethics Framework" goes on the intranet. A governance board meets quarterly. Principles are drafted: fairness, transparency, accountability. The document is thorough, well-intentioned, and completely unenforceable.
+
+| Approach | What Happens |
+|----------|-------------|
+| Policy document | PDF on the intranet. Nobody reads it. No mechanism to enforce it. Discovered during an audit — after the incident. |
+| Ethics board | Meets quarterly. Reviews proposals in theory. Has no visibility into what's actually running in production. |
+| Manual review | Works at low volume. Breaks when you have 50 agents processing 10,000 decisions per day. |
+| No governance | Fast until the first incident. Then everything stops while legal and compliance figure out what happened. |
+
+The problem is not a lack of principles. The problem is that governance without infrastructure is fiction. You can't audit what you don't log. You can't override what you don't control. You can't classify decisions you can't see.
+
+This RFC proposes a governance architecture — the systems, APIs, and operational patterns that make AI governance enforceable, auditable, and real.
+
+> **Governance is a system property, not a document.** If your governance framework can't answer "what did the AI decide, why, and who approved it?" for any decision in the last 90 days within 5 minutes, it's not governance. It's theater.
+
+---
+
+## The Governance Stack
+
+AI governance operates in four layers. Each layer depends on the one below it — policy without controls is aspiration, controls without infrastructure are manual, infrastructure without observability is blind.
+
+```
+┌─────────────────────────────────────────────┐
+│              POLICY LAYER                   │
+│  Principles, risk appetite, decision rights │
+├─────────────────────────────────────────────┤
+│              CONTROL LAYER                  │
+│  Decision classification, authorization,    │
+│  approval workflows, escalation rules       │
+├─────────────────────────────────────────────┤
+│           INFRASTRUCTURE LAYER              │
+│  Audit logs, kill switches, rate limits,    │
+│  model gateway, prompt registry             │
+├─────────────────────────────────────────────┤
+│           OBSERVABILITY LAYER               │
+│  Decision traces, drift detection,          │
+│  compliance dashboards, anomaly alerts      │
+└─────────────────────────────────────────────┘
+```
+
+### What Each Layer Does
+
+| Layer | Owns | Example |
+|-------|------|---------|
+| Policy | What AI is allowed to do and why | "AI may not make final hiring decisions" |
+| Control | How the policy is enforced | "Hiring recommendations require human approval before the offer is sent" |
+| Infrastructure | The systems that enforce controls | Authorization middleware rejects any AI action tagged `hiring.offer` without a human approval token |
+| Observability | Evidence that controls are working | Dashboard showing 100% of hiring recommendations were human-approved, with audit trail |
+
+### The Policy-Infrastructure Gap
+
+In practice, policy and infrastructure develop in parallel — and they pull in different directions.
+
+| What Happens | Why |
+|-------------|-----|
+| Policy writes rules the infrastructure can't enforce | Policy teams don't know what's technically feasible. They mandate "all AI decisions must be explainable" without asking whether the model supports it. |
+| Infrastructure builds controls nobody asked for | Engineering teams anticipate requirements, build sophisticated monitoring — then discover the organization doesn't care about those metrics. |
+| They drift apart over time | Policy gets updated after a board meeting. Infrastructure gets updated after an incident. Neither team tells the other. |
+| Each side tries to steer the other | Policy says "we need X." Engineering says "we can only do Y." The compromise satisfies neither and governs nothing. |
+
+This tension is permanent. It doesn't resolve with a kickoff meeting or a phased rollout. The stack diagram above is not a build sequence — it's a negotiation framework between two groups that will never fully agree.
+
+### What Actually Works
+
+The organizations that make this work don't eliminate the tension. They manage it with a short feedback loop.
+
+| Mechanism | Purpose |
+|-----------|---------|
+| Shared governance backlog | Policy and infrastructure teams work from the same prioritized list — not separate roadmaps |
+| Monthly alignment review | Policy states what it needs enforced. Infrastructure states what it can enforce. The gap is visible and tracked. |
+| Enforceability tagging | Every policy rule is tagged: `enforced`, `monitored`, or `aspirational`. No pretending. |
+| Infrastructure-informed policy | Before a new rule is written, engineering provides a feasibility assessment — what it costs, how long, what trade-offs |
+| Policy-informed infrastructure | Before a new control is built, governance confirms it maps to an actual requirement — no speculative tooling |
+
+The goal is not alignment — that implies agreement. The goal is **visibility into the gap**. When policy says "all T3 decisions require explainability" and infrastructure says "we can provide reasoning traces but not causal explanations," that disagreement should be documented, not buried.
+
+> **The gap between policy and infrastructure is not a bug — it's the permanent state of governance.** Policy will always want more than infrastructure can deliver. Infrastructure will always know things policy doesn't. The governance framework's job is to make the gap visible, small, and shrinking — not to pretend it doesn't exist.
+
+---
+
+## Decision Classification
+
+Not all AI decisions carry the same risk. A chatbot suggesting a help article is not the same as an agent approving a $50,000 purchase order. Governance should be proportional — light for low-risk decisions, rigorous for high-risk ones.
+
+### The Four Tiers
+
+| Tier | Risk Level | Description | Examples |
+|------|-----------|-------------|----------|
+| T1 | Informational | AI generates content for human consumption — no action is taken automatically | Drafting emails, summarizing documents, generating reports |
+| T2 | Operational | AI takes routine actions within well-defined boundaries | Categorizing support tickets, routing emails, extracting invoice data |
+| T3 | Consequential | AI makes decisions with financial, legal, or customer impact | Approving expense reports, generating invoices, escalating compliance flags |
+| T4 | Critical | AI makes decisions that are difficult or impossible to reverse | Terminating access, submitting regulatory filings, executing financial transactions |
+
+### Governance Requirements by Tier
+
+| Requirement | T1 | T2 | T3 | T4 |
+|------------|-----|-----|-----|-----|
+| Audit logging | Required (lightweight) | Required | Required | Required |
+| Human approval | No | No | Configurable | Always |
+| Override mechanism | No | Yes | Yes | Yes + kill switch |
+| Explainability | Best effort | On request | Automatic | Automatic + review |
+| Compliance review | Annual | Quarterly | Per-change | Per-change + legal sign-off |
+| Incident response | Standard | Standard | Expedited | Immediate |
+
+### Classification in Practice
+
+Every AI agent or system is assigned a tier at deployment. The tier determines which controls apply. The tier is stored in the agent's metadata and enforced by the infrastructure layer.
+
+```yaml
+agent:
+  name: "invoice-processor"
+  tier: T3  # consequential — financial impact
+  controls:
+    audit: required
+    human_approval: "above_threshold"
+    approval_threshold: 10000  # human approval for invoices > $10,000
+    override: enabled
+    explainability: automatic
+```
+
+Tier assignment is not self-service. It requires sign-off from a domain owner and a governance reviewer. Getting the tier wrong — classifying a T4 decision as T2 — is the most dangerous governance failure.
+
+> **When in doubt, tier up.** It's cheaper to over-govern a low-risk decision temporarily than to under-govern a high-risk one permanently. You can always reclassify downward after observation.
+
+### Autonomy Model
+
+The tier classifies what is being decided. The autonomy model classifies how much human involvement exists in the decision. These are independent axes — a T3 decision with a human in the loop is a fundamentally different governance problem than a T3 decision made autonomously.
+
+| Pattern | Definition | Governance Implication |
+|---------|-----------|----------------------|
+| Human-in-the-loop | AI recommends, human decides and executes | AI is advisory. Governance focuses on recommendation quality and whether humans can meaningfully evaluate the output — not just rubber-stamp it. |
+| Human-on-the-loop | AI decides and executes, human monitors and can intervene | AI has authority. Governance requires real-time monitoring, override capability, and evidence that human oversight is substantive. |
+| Human-out-of-the-loop | AI decides and executes autonomously, human reviews post-hoc | Full autonomy. Highest governance burden. Requires tight blast radius limits and high eval confidence. |
+
+The combination of tier and autonomy model determines the actual governance posture:
+
+| | Human-in-the-loop | Human-on-the-loop | Human-out-of-the-loop |
+|--|-------------------|-------------------|----------------------|
+| T1 | Minimal controls | Minimal controls | Minimal controls |
+| T2 | Light controls | Standard controls | Standard controls |
+| T3 | Standard controls | Elevated controls | Requires explicit governance approval |
+| T4 | Elevated controls | Maximum controls | Not permitted |
+
+T4 decisions are never human-out-of-the-loop. T3 decisions default to human-on-the-loop unless the governance lead explicitly approves full autonomy with documented justification.
+
+---
+
+## Authorization & Boundaries
+
+Every AI system operates within an authorization boundary — what it can access, what actions it can take, and what decisions it can make. These boundaries are enforced by infrastructure, not by the prompt.
+
+### The Authorization Model
+
+| Boundary | What It Controls | Enforcement |
+|----------|-----------------|-------------|
+| Data access | What data the AI can read | API scopes, database row-level security, network segmentation |
+| Action scope | What the AI can do | Tool allowlists per agent, action-level permissions |
+| Decision scope | What the AI can decide | Tier-based approval gates, threshold limits |
+| Blast radius | How much damage a single decision can cause | Transaction limits, rate limits, budget ceilings |
+
+### Why Prompts Are Not Boundaries
+
+A system prompt that says "do not access customer financial data" is not an access control. It's a suggestion. Prompts can be circumvented — by prompt injection, by model updates that change behavior, or by edge cases the prompt author didn't anticipate.
+
+| Enforcement Method | Reliability | Use For |
+|-------------------|-------------|---------|
+| System prompt instruction | Low — advisory only | Guiding agent behavior within its authorized scope |
+| Application-layer validation | Medium — can be bypassed by bugs | Input/output filtering, format validation |
+| Infrastructure-layer enforcement | High — agent cannot circumvent | Data access controls, action permissions, budget limits |
+
+The rule: **anything that matters must be enforced at the infrastructure layer.** The prompt shapes behavior. The infrastructure enforces boundaries. These are different things.
+
+> **Treat AI authorization like service-to-service auth.** The same way a microservice gets scoped IAM credentials — not root access and a note saying "please be careful" — an AI agent gets scoped tool access and data permissions. Zero trust applies to AI too.
+
+---
+
+## Audit & Traceability
+
+Every AI decision must be traceable. When a regulator, auditor, or incident responder asks "what happened and why," the answer must be available within minutes — not reconstructed from logs over weeks.
+
+### The Audit Record
+
+Every AI decision produces an immutable audit record with these fields:
+
+| Field | Description | Example |
+|-------|-------------|---------|
+| `decision_id` | Unique identifier | `dec-2026-02-14-a8f3c` |
+| `agent_id` | Which AI system made the decision | `invoice-processor-v3` |
+| `tier` | Decision classification | `T3` |
+| `timestamp` | When the decision was made | `2026-02-14T09:23:41Z` |
+| `input_hash` | Hash of the input data | `sha256:e3b0c44...` |
+| `input_summary` | Human-readable summary of what was processed | "Invoice #4821 from Acme Corp, $12,400" |
+| `decision` | What the AI decided | `approved` |
+| `reasoning` | AI-generated explanation of why | "Amount matches PO #3921, vendor verified, within budget" |
+| `confidence` | Model's confidence signal — treat as uncalibrated unless independently validated. Not a reliability metric. | `0.94 (uncalibrated)` |
+| `human_review` | Whether a human reviewed this decision | `not_required` (below threshold) |
+| `model_version` | Exact model and prompt version used | `claude-sonnet-4-5@prompt-v7` |
+| `tools_invoked` | Which tools were called | `[vendor_lookup, po_match, approve_invoice]` |
+| `outcome` | Final outcome after any overrides | `approved` |
+
+### Retention & Access
+
+| Tier | Retention | Access |
+|------|-----------|--------|
+| T1 | 30 days | Ops team |
+| T2 | 90 days | Ops + compliance |
+| T3 | 5 years (or regulatory requirement) | Ops + compliance + legal |
+| T4 | 7 years (or regulatory requirement) | Ops + compliance + legal + auditors |
+
+### Audit as a Product
+
+The audit trail is not a log dump. It's a queryable, searchable system that answers questions like:
+
+- "Show me all T3 decisions made by the invoice processor in January where the amount exceeded $10,000"
+- "How many decisions were overridden by humans last quarter, and why?"
+- "Which agent has the highest override rate?"
+- "Show me the full decision chain for transaction #4821 — every agent that touched it, every decision made"
+
+> **If you can't query it, it's not an audit trail — it's a log file.** Structured, queryable audit records are the foundation of everything else in governance. This is the first infrastructure component to build once the policy mandate is in place.
+
+---
+
+## Override & Kill Switches
+
+Every AI system must have a mechanism for humans to intervene — from correcting a single decision to shutting down an entire agent fleet. The override architecture has three levels.
+
+### Override Levels
+
+| Level | Scope | Mechanism | Who Can Trigger | Response Time |
+|-------|-------|-----------|----------------|---------------|
+| Decision override | Single decision | Reject or modify a specific AI output before it takes effect | Process owner, reviewer | Real-time |
+| Agent pause | One agent | Halt processing for a specific agent, queue messages for later | Ops team, on-call | < 5 minutes |
+| Fleet kill switch | All agents | Shut down all AI decision-making, fall back to manual processes | Incident commander | < 1 minute |
+
+### Design Requirements
+
+| Requirement | Why |
+|------------|-----|
+| Overrides are always available | No scenario where "the system doesn't let me stop it" |
+| Overrides are logged | Every override becomes an audit record — who, when, why |
+| Overrides don't require the AI system to cooperate | Kill switches operate at infrastructure level (stop containers, drain queues) — not by asking the agent to stop |
+| Fallback procedures exist | When agents are stopped, the business process must continue manually — runbooks must be maintained |
+| Override authority is pre-assigned | Don't figure out who can pull the kill switch during an incident — define it in advance |
+
+### The Kill Switch Problem
+
+The most dangerous failure mode in AI governance is not an AI making a bad decision. It's an organization that can't stop the AI from continuing to make bad decisions because:
+
+1. Nobody knows who has authority to shut it down
+2. The shutdown mechanism requires access that's not available at 2 AM
+3. Shutting down one agent breaks downstream agents with no fallback
+4. The business has become so dependent on AI that stopping it causes more damage than the original problem
+
+All four must be addressed before any T3 or T4 system goes live.
+
+> **Practice the kill switch.** Run a quarterly "AI fire drill" — trigger the fleet kill switch, verify agents stop, verify fallback processes activate, verify the business continues to operate. If you've never tested it, it doesn't work.
+
+---
+
+## Drift Detection & Continuous Compliance
+
+AI systems drift. Models get updated, prompts get tuned, input distributions shift, edge cases accumulate. A system that was compliant at deployment may not be compliant six months later — not because someone changed the rules, but because the world changed under it.
+
+### What Drifts
+
+| Drift Type | What Changes | How to Detect |
+|-----------|-------------|---------------|
+| Model drift | Provider updates the model — behavior shifts subtly | Eval suite regression (run golden set weekly) |
+| Prompt drift | Prompts are edited without re-evaluation | Prompt version tracking, mandatory eval on change |
+| Input drift | The distribution of real-world inputs changes over time | Statistical monitoring on input features |
+| Accuracy drift | Decision quality degrades gradually | Human spot-check sampling, downstream error rates |
+| Scope drift | The agent starts being used for tasks it wasn't designed for | Action and tool usage pattern monitoring |
+
+### Continuous Compliance
+
+| Control | Frequency | Action on Failure |
+|---------|-----------|-------------------|
+| Eval suite (golden set) | Weekly automated run | Alert if accuracy drops > 2% from baseline |
+| Human spot-check | Ongoing (sample rate based on tier) | Review failures, retrain or adjust prompt |
+| Input distribution check | Daily automated | Alert if distribution shifts beyond threshold |
+| Authorization audit | Monthly | Verify agent permissions match current policy |
+| Override rate monitoring | Continuous | Investigate if override rate exceeds tier threshold (T2: 10%, T3: 3%, T4: 1%) |
+| Cost anomaly detection | Daily | Alert if cost exceeds 120% of 30-day rolling average (tighter for T3/T4) |
+
+> **Compliance is not a point-in-time assessment.** It's continuous monitoring. A system that passed review in January may be non-compliant by March — not because someone broke a rule, but because the inputs changed, the model was updated, or the business rules evolved.
+
+---
+
+## Vendor & Third-Party Model Governance
+
+Most organizations don't train their own models. They consume third-party APIs where model updates happen without notice, pricing changes overnight, and the provider's safety policies may shift in ways that affect your compliance posture. The governance framework must account for the parts of the system you don't control.
+
+### What You Don't Control
+
+| Risk | What Happens | Why It Matters |
+|------|-------------|----------------|
+| Silent model updates | Provider deploys a new model version — behavior changes subtly | Your eval baseline is invalidated. Decisions that were compliant yesterday may not be today. |
+| Provider policy changes | Safety filters, content policies, or rate limits change | Workflows that relied on specific model behavior break or produce different outputs. |
+| Provider outage | API goes down during business hours | If you have no fallback, your AI-dependent business processes stop. |
+| Data handling changes | Provider changes how they store, log, or use your prompt data | Your data governance posture changes without your knowledge. |
+| Concentration risk | 90% of decisions flow through one provider | A single vendor incident becomes an organizational incident. |
+
+### Vendor Governance Requirements
+
+| Requirement | What to Specify |
+|------------|----------------|
+| Model change notification | Contractual SLA for advance notice of model updates — minimum 30 days for major versions, 7 days for minor. Evaluate whether your contracts actually include this. |
+| Eval-gated rollover | When a vendor updates a model, production traffic stays on the previous version until the eval suite passes on the new one. No automatic rollover. |
+| Fallback strategy | Define per tier: T1/T2 may tolerate degraded service. T3/T4 need a fallback — a second provider, a cached model, or a manual process with defined activation criteria. |
+| Data processing agreement | Where prompts are processed, how they're stored, whether they're used for training, and deletion SLAs. Reviewed annually or on contract renewal. |
+| Vendor risk assessment | Annual review of provider's security certifications (SOC 2, ISO 27001), incident history, and regulatory compliance posture. |
+
+> **You are accountable for decisions made by models you don't own.** A regulator will not accept "the vendor updated the model" as an explanation for a compliance failure. Vendor governance is not optional — it's the gap between the infrastructure you control and the infrastructure you depend on.
+
+---
+
+## Incident Response
+
+When an AI system makes a consequential error — a wrong financial decision, a compliance violation, a customer harm — the response must be fast, structured, and different from a traditional software incident.
+
+### What's Different About AI Incidents
+
+| Aspect | Traditional Software | AI System |
+|--------|---------------------|-----------|
+| Root cause | Bug in code — deterministic, reproducible | Probabilistic — the same input might produce a different output tomorrow |
+| Blast radius | Usually bounded by the bug's scope | Potentially unbounded — if the model is wrong on one case, it may be wrong on similar cases |
+| Fix | Deploy a code fix | May require prompt change, model rollback, or retraining — none of which are instant |
+| Recurrence | Fix the bug, it doesn't come back | Fix one failure mode, a new one may emerge |
+
+### AI Incident Playbook
+
+| Step | Action | Owner |
+|------|--------|-------|
+| 1. Detect | Alert fires from observability layer — anomaly, override spike, compliance failure | Automated |
+| 2. Classify | Determine tier and blast radius — how many decisions are affected? | On-call + governance lead |
+| 3. Contain | Pause the agent or trigger kill switch — stop further damage | On-call (pre-authorized) |
+| 4. Assess | Query audit trail — what decisions were made, how many, what's the impact? | Incident team |
+| 5. Remediate | Correct affected decisions (reverse transactions, notify customers, file amended reports) | Domain team + legal |
+| 6. Root cause | Analyze why — model behavior, prompt gap, input drift, missing validation? | Engineering + prompt team |
+| 7. Prevent | Update controls — add validation rule, tighten tier, increase human review rate | Governance team |
+| 8. Report | Document the incident, update the governance framework, share lessons | Governance lead |
+
+> **AI incidents are not just engineering incidents.** They may involve legal, compliance, and customer-facing teams. The incident playbook must include these stakeholders from the start — not as an afterthought when someone realizes there's a regulatory dimension.
+
+---
+
+## The Governance Operating Model
+
+Governance is not a one-time setup. It's an ongoing operating model with defined roles, cadences, and decision rights.
+
+### Roles
+
+| Role | Responsibility | Scope |
+|------|---------------|-------|
+| AI Governance Lead | Owns the governance framework, chairs the review board, reports to leadership | Organization-wide |
+| Domain Owners | Accountable for AI decisions in their domain — they own the outcomes | Per business function |
+| Platform Team | Builds and maintains governance infrastructure (audit, authorization, kill switches) | Technical |
+| Compliance & Legal | Regulatory alignment, incident escalation, audit readiness | Advisory + approval |
+| On-Call / Ops | Day-to-day monitoring, first responder for incidents, override authority | Operational |
+
+### Cadences
+
+| Activity | Frequency | Participants | Output |
+|----------|-----------|-------------|--------|
+| Governance review board | Monthly | Governance lead, domain owners, compliance | Tier reviews, policy updates, incident retrospectives |
+| Eval suite review | Weekly | Platform team, prompt engineers | Accuracy trends, drift detection results |
+| AI fire drill | Quarterly | All roles | Kill switch test, fallback activation, response time measurement |
+| Compliance audit | Annually (or per regulation) | Governance lead, legal, external auditors | Formal compliance assessment |
+| Incident retrospective | After every T3/T4 incident | Incident team + governance lead | Root cause analysis, control updates |
+
+### Decision Rights
+
+| Decision | Who Decides | Who Approves |
+|----------|-------------|-------------|
+| Deploy a new AI agent | Platform team | Domain owner + governance lead |
+| Assign a decision tier | Domain owner | Governance lead |
+| Change a prompt for T3/T4 agent | Prompt engineer | Domain owner + eval suite pass |
+| Override a single AI decision | Process owner | Self (logged) |
+| Pause an agent | On-call | Self (logged, notify governance lead) |
+| Fleet kill switch | Incident commander | Self (logged, immediate notification to leadership) |
+| Reclassify a tier downward | Domain owner | Governance lead + compliance |
+
+> **Governance that nobody owns is governance that nobody follows.** Assign a named human to the governance lead role. Give them authority to pause deployments, require tier changes, and block agents that don't meet governance requirements. Without authority, the role is decoration.
