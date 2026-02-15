@@ -1,10 +1,11 @@
 "use client";
 
-import { motion, useScroll, useTransform, AnimatePresence, useMotionValue, useSpring } from "framer-motion";
+import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useRef, useState, useCallback, useEffect } from "react";
 import { MagneticButton } from "@/components/animations/MagneticButton";
 import { DelicateAccent } from "@/components/animations/DelicateAccent";
+import { usePolarisParallax } from "@/hooks/usePolarisParallax";
 
 const ease: [number, number, number, number] = [0.25, 0.1, 0.25, 1];
 
@@ -75,20 +76,7 @@ export function Hero() {
     window.dispatchEvent(new CustomEvent('hero-slide-change', { detail: { slide } }));
   }, [slide]);
 
-  // Mouse parallax — match starfield's Polaris offset (near layer: (mouse-0.5)*20px)
-  const mouseParallaxX = useMotionValue(0);
-  const mouseParallaxY = useMotionValue(0);
-  const bloomX = useSpring(mouseParallaxX, { stiffness: 50, damping: 18 });
-  const bloomY = useSpring(mouseParallaxY, { stiffness: 50, damping: 18 });
-
-  useEffect(() => {
-    const onMouse = (e: MouseEvent) => {
-      mouseParallaxX.set((e.clientX / window.innerWidth - 0.5) * 20);
-      mouseParallaxY.set((e.clientY / window.innerHeight - 0.5) * 20);
-    };
-    window.addEventListener("mousemove", onMouse, { passive: true });
-    return () => window.removeEventListener("mousemove", onMouse);
-  }, [mouseParallaxX, mouseParallaxY]);
+  const { x: bloomX, y: bloomY } = usePolarisParallax();
 
   return (
     <section
