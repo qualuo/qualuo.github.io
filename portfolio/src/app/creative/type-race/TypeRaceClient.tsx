@@ -56,13 +56,14 @@ function pickRandom() {
 }
 
 export default function TypeRaceClient() {
-  const [passageIndex, setPassageIndex] = useState(pickRandom);
+  const [passageIndex, setPassageIndex] = useState(0);
   const [charStates, setCharStates] = useState<CharState[]>(() =>
-    PASSAGES[passageIndex].text.split("").map((char, i) => ({
+    PASSAGES[0].text.split("").map((char, i) => ({
       char,
       status: i === 0 ? ("current" as const) : ("pending" as const),
     }))
   );
+
   const [cursor, setCursor] = useState(0);
   const [startTime, setStartTime] = useState(0);
   const [elapsed, setElapsed] = useState(0);
@@ -114,6 +115,14 @@ export default function TypeRaceClient() {
     wpmHistory.current = [];
     lastSampleTime.current = 0;
     charErrors.current.clear();
+  }, []);
+
+  // Randomize on mount to avoid hydration mismatch from Math.random()
+  useEffect(() => {
+    const idx = pickRandom();
+    setPassageIndex(idx);
+    initChars(PASSAGES[idx].text);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Auto-focus
@@ -181,6 +190,7 @@ export default function TypeRaceClient() {
         if (e.key === "Enter") nextPassage();
         return;
       }
+      if (e.ctrlKey || e.metaKey || e.altKey) return; // allow native shortcuts
       if (e.key.length !== 1 && e.key !== "Backspace") return;
       e.preventDefault();
 
