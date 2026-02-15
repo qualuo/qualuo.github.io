@@ -52,7 +52,7 @@ export function LoveCard({ work, index, onHover }: LoveCardProps) {
     setTimeout(() => setIsBlossomed(true), 150);
   };
 
-  const { colors, heartbeat } = loveTheme;
+  const { colors, bloom } = loveTheme;
 
   return (
     <motion.div
@@ -157,11 +157,11 @@ export function LoveCard({ work, index, onHover }: LoveCardProps) {
                 className="w-2 h-2 rounded-full"
                 style={{ backgroundColor: work.color }}
                 animate={{
-                  scale: heartbeat.scale,
-                  opacity: heartbeat.opacity,
+                  scale: bloom.scale,
+                  opacity: bloom.opacity,
                 }}
                 transition={{
-                  duration: heartbeat.duration,
+                  duration: bloom.duration,
                   repeat: Infinity,
                   ease: "easeInOut",
                 }}

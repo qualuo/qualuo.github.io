@@ -2,8 +2,9 @@
 
 import { useRef, useEffect } from "react";
 import { motion, useScroll, useTransform, useSpring } from "framer-motion";
+import Link from "next/link";
 import { CreativeWork } from "@/lib/creativeWorks";
-import { SectionArtwork, OrnateFrame } from "./artworks";
+import { SectionArtwork } from "./artworks";
 
 interface CreativeSectionProps {
   work: CreativeWork;
@@ -57,11 +58,6 @@ export function CreativeSection({
   const artworkScale = useSpring(rawArtworkScale, smooth);
   const artworkParallax = useTransform(scrollYProgress, [0, 1], [80, -80]);
 
-  // Parallax decorative elements
-  const parallax1 = useTransform(scrollYProgress, [0, 1], [120, -120]);
-  const parallax2 = useTransform(scrollYProgress, [0, 1], [80, -80]);
-  const parallax3 = useTransform(scrollYProgress, [0, 1], [-60, 60]);
-
   // Stagger transforms for text
   const rawSubtitleOpacity = useTransform(scrollYProgress, [0.2, 0.38, 0.62, 0.8], [0, 1, 1, 0]);
   const subtitleOpacity = useSpring(rawSubtitleOpacity, snappy);
@@ -76,67 +72,14 @@ export function CreativeSection({
       <div className="sticky top-0 h-screen overflow-hidden">
         {/* Clip-path reveal layer */}
         <motion.div className="absolute inset-0" style={{ clipPath }}>
-          {/* Background radial glow */}
+          {/* Background radial glow — single subtle layer */}
           <motion.div
             className="absolute inset-0"
             style={{
               opacity: bgOpacity,
-              background: `radial-gradient(ellipse at ${isEven ? "30%" : "70%"} 50%, ${work.bgColor}dd 0%, ${work.bgColor}44 40%, transparent 70%)`,
+              background: `radial-gradient(ellipse at ${isEven ? "30%" : "70%"} 50%, ${work.bgColor}ee 0%, ${work.bgColor}66 35%, transparent 65%)`,
             }}
           />
-          <motion.div
-            className="absolute inset-0"
-            style={{
-              opacity: bgOpacity,
-              background: `radial-gradient(circle at ${isEven ? "70%" : "30%"} 60%, ${work.color}08 0%, transparent 50%)`,
-            }}
-          />
-        </motion.div>
-
-
-        {/* Parallax decorative shapes */}
-        <motion.div
-          className="absolute pointer-events-none"
-          style={{
-            y: parallax1,
-            top: "10%",
-            right: isEven ? "8%" : undefined,
-            left: isEven ? undefined : "8%",
-          }}
-        >
-          <svg width="120" height="120" viewBox="0 0 120 120" fill="none">
-            <circle cx="60" cy="60" r="58" stroke={work.color} strokeWidth="0.5" opacity="0.06" />
-            <circle cx="60" cy="60" r="40" stroke={work.color} strokeWidth="0.3" opacity="0.04" />
-            <circle cx="60" cy="60" r="20" stroke={work.color} strokeWidth="0.3" opacity="0.03" />
-          </svg>
-        </motion.div>
-
-        <motion.div
-          className="absolute pointer-events-none"
-          style={{
-            y: parallax2,
-            bottom: "25%",
-            left: isEven ? "3%" : undefined,
-            right: isEven ? undefined : "3%",
-          }}
-        >
-          <svg width="80" height="2" viewBox="0 0 80 2">
-            <line x1="0" y1="1" x2="80" y2="1" stroke={work.color} strokeWidth="0.5" opacity="0.15" />
-          </svg>
-        </motion.div>
-
-        <motion.div
-          className="absolute pointer-events-none"
-          style={{
-            y: parallax3,
-            top: "55%",
-            right: isEven ? "15%" : undefined,
-            left: isEven ? undefined : "15%",
-          }}
-        >
-          <svg width="8" height="8" viewBox="0 0 8 8">
-            <circle cx="4" cy="4" r="3" fill={work.color} opacity="0.2" />
-          </svg>
         </motion.div>
 
         {/* === Main two-column layout === */}
@@ -147,7 +90,7 @@ export function CreativeSection({
             style={{ opacity: contentOpacity, y: contentY }}
           >
             {/* Title with gradient on last word */}
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-light text-white mb-4 leading-[1.1]" style={{ perspective: "600px" }}>
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-light text-white mb-4 leading-[1.1]">
               {words.map((word, wi) => {
                 const isLastWord = wi === words.length - 1;
                 return (
@@ -187,25 +130,51 @@ export function CreativeSection({
               {work.description}
             </motion.p>
 
+            {/* CTA link */}
+            {work.href && (
+              <motion.div style={{ opacity: descOpacity }}>
+                <Link
+                  href={work.href}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm tracking-wide transition-all border"
+                  style={{
+                    color: work.color,
+                    borderColor: `${work.color}30`,
+                    backgroundColor: `${work.color}08`,
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = `${work.color}60`;
+                    e.currentTarget.style.backgroundColor = `${work.color}15`;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = `${work.color}30`;
+                    e.currentTarget.style.backgroundColor = `${work.color}08`;
+                  }}
+                >
+                  Experience
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                  </svg>
+                </Link>
+              </motion.div>
+            )}
+
           </motion.div>
 
           {/* Artwork column (desktop) */}
           <motion.div
             className="hidden lg:flex w-1/2 items-center justify-center px-8"
-            style={{ y: artworkParallax }}
+            style={{ y: artworkParallax, opacity: artworkOpacity, scale: artworkScale }}
           >
-            <OrnateFrame
-              color={work.color}
-              opacity={artworkOpacity}
-              scale={artworkScale}
-              className="w-full max-w-md"
+            <div
+              className="w-full max-w-md rounded-lg overflow-hidden"
+              style={{ border: `1px solid ${work.color}20` }}
             >
               <SectionArtwork
                 workId={work.id}
                 color={work.color}
                 scrollProgress={scrollYProgress}
               />
-            </OrnateFrame>
+            </div>
           </motion.div>
         </div>
 

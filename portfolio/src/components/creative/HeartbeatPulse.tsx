@@ -10,7 +10,7 @@ function createPRNG(seed = 1) {
 }
 
 export function HeartbeatPulse() {
-  const { heartbeat, colors } = loveTheme;
+  const { bloom, colors } = loveTheme;
 
   const particles = useMemo(() => {
     const rand = createPRNG(77);
@@ -28,11 +28,11 @@ export function HeartbeatPulse() {
       <motion.div
         className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
         animate={{
-          scale: heartbeat.scale,
-          opacity: heartbeat.opacity,
+          scale: bloom.scale,
+          opacity: bloom.opacity,
         }}
         transition={{
-          duration: heartbeat.duration,
+          duration: bloom.duration,
           repeat: Infinity,
           ease: "easeInOut",
         }}
@@ -53,7 +53,7 @@ export function HeartbeatPulse() {
           opacity: [0.4, 0.7, 0.4],
         }}
         transition={{
-          duration: heartbeat.duration * 1.1,
+          duration: bloom.duration * 1.1,
           repeat: Infinity,
           ease: "easeInOut",
           delay: 0.2,
@@ -75,7 +75,7 @@ export function HeartbeatPulse() {
           opacity: [0.3, 0.6, 0.3],
         }}
         transition={{
-          duration: heartbeat.duration * 0.9,
+          duration: bloom.duration * 0.9,
           repeat: Infinity,
           ease: "easeInOut",
           delay: 0.4,

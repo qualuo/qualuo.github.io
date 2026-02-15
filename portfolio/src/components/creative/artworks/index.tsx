@@ -7,6 +7,7 @@ import { LivingTypographyArt } from "./LivingTypographyArt";
 import { PulseVisualizerArt } from "./PulseVisualizerArt";
 import { DigitalGardensArt } from "./DigitalGardensArt";
 import { ThreeWorldsArt } from "./ThreeWorldsArt";
+import { SakuraArt } from "./SakuraArt";
 
 interface ArtworkProps {
   color: string;
@@ -20,6 +21,7 @@ const ARTWORK_MAP: Record<string, React.ComponentType<ArtworkProps>> = {
   "pulse-visualizer": PulseVisualizerArt,
   "digital-gardens": DigitalGardensArt,
   "three-worlds": ThreeWorldsArt,
+  "sakura-dreams": SakuraArt,
 };
 
 export function SectionArtwork({

@@ -11,9 +11,25 @@ export interface CreativeWork {
   gridArea?: string; // For custom grid placement
   bgColor: string; // Dark background tint for scroll sections
   particleColor: string; // WebGL particle accent color
+  flower: string; // Botanical name for floral theme
 }
 
 export const creativeWorks: CreativeWork[] = [
+  {
+    id: "sakura-dreams",
+    title: "Sakura Dreams",
+    subtitle: "Transient beauty in bloom",
+    description:
+      "A cherry blossom tree, swaying in the wind. Petals drift like memories — beautiful, fleeting, and endlessly renewed.",
+    category: "visual",
+    tags: ["Sakura", "Simulation", "Canvas"],
+    color: "#F9A8D4",
+    connections: ["digital-gardens", "neural-dreams"],
+    href: "/creative/sakura/",
+    bgColor: "#1a0f1e",
+    particleColor: "#F9A8D4",
+    flower: "Yoshino Cherry",
+  },
   {
     id: "neural-dreams",
     title: "Neural Dreams",
@@ -22,10 +38,11 @@ export const creativeWorks: CreativeWork[] = [
       "Generative visualizations born from neural networks. Patterns that emerge from the space between logic and intuition.",
     category: "generative",
     tags: ["ML", "Generative", "Visual"],
-    color: "#FB7185",
+    color: "#C4B5FD",
     connections: ["voice-intimacy", "living-typography"],
     bgColor: "#1a0a1e",
-    particleColor: "#FB7185",
+    particleColor: "#C4B5FD",
+    flower: "Wisteria",
   },
   {
     id: "voice-intimacy",
@@ -35,10 +52,11 @@ export const creativeWorks: CreativeWork[] = [
       "Explorations in voice interfaces. The vulnerability of speaking aloud. The connection formed through listening.",
     category: "interactive",
     tags: ["Voice", "AI", "Connection"],
-    color: "#F472B6",
+    color: "#F9A8D4",
     connections: ["neural-dreams", "pulse-visualizer"],
     bgColor: "#1a0f1e",
-    particleColor: "#F472B6",
+    particleColor: "#F9A8D4",
+    flower: "Night Jasmine",
   },
   {
     id: "living-typography",
@@ -50,8 +68,10 @@ export const creativeWorks: CreativeWork[] = [
     tags: ["Typography", "Animation", "Expression"],
     color: "#FBBF24",
     connections: ["neural-dreams", "digital-gardens"],
+    href: "/creative/type-race/",
     bgColor: "#1a1408",
     particleColor: "#FBBF24",
+    flower: "Sunflower",
   },
   {
     id: "pulse-visualizer",
@@ -61,10 +81,11 @@ export const creativeWorks: CreativeWork[] = [
       "Audio-reactive experiences. Music translated into motion. The heartbeat of sound given form.",
     category: "visual",
     tags: ["Audio", "Reactive", "Rhythm"],
-    color: "#9D174D",
+    color: "#FB7185",
     connections: ["voice-intimacy"],
     bgColor: "#1a0515",
-    particleColor: "#9D174D",
+    particleColor: "#FB7185",
+    flower: "Dahlia",
   },
   {
     id: "digital-gardens",
@@ -74,10 +95,12 @@ export const creativeWorks: CreativeWork[] = [
       "Interactive environments that evolve. Ecosystems of ideas. Places to wander and discover.",
     category: "interactive",
     tags: ["Generative", "Exploration", "Growth"],
-    color: "#FB923C",
+    color: "#FDBA74",
     connections: ["living-typography", "three-worlds"],
+    href: "/creative/flowers/",
     bgColor: "#1a1008",
-    particleColor: "#FB923C",
+    particleColor: "#FDBA74",
+    flower: "Cherry Blossom",
   },
   {
     id: "three-worlds",
@@ -91,10 +114,11 @@ export const creativeWorks: CreativeWork[] = [
     connections: ["digital-gardens"],
     bgColor: "#150a1e",
     particleColor: "#E879F9",
+    flower: "Lotus",
   },
 ];
 
-// Love theme palette
+// Love & garden theme palette
 export const loveTheme = {
   colors: {
     deepRose: "#9D174D",
@@ -104,10 +128,14 @@ export const loveTheme = {
     warmBlack: "#1C1917",
     roseGlow: "rgba(251, 113, 133, 0.15)",
     goldGlow: "rgba(251, 191, 36, 0.1)",
+    blossom: "#F9A8D4",
+    lavender: "#C4B5FD",
+    sage: "#86EFAC",
+    peach: "#FDBA74",
   },
-  heartbeat: {
-    duration: 1.2, // seconds
-    scale: [1, 1.02, 1],
-    opacity: [0.6, 1, 0.6],
+  bloom: {
+    duration: 2, // seconds — slow, like a flower opening
+    scale: [1, 1.03, 1],
+    opacity: [0.5, 1, 0.5],
   },
 };
