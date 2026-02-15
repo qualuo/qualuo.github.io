@@ -102,13 +102,56 @@ export default function CreativeClient() {
       </motion.nav>
 
       {/* ===== Hero Section ===== */}
-      <section ref={heroRef} className="relative h-screen flex items-center justify-center z-10">
+      <section ref={heroRef} className="relative h-screen flex items-center justify-center z-10 overflow-hidden">
+        {/* Ambient radial glow */}
+        <motion.div
+          className="absolute pointer-events-none"
+          initial={{ opacity: 0, scale: 0.6 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 2.5, delay: 0.3, ease: "easeOut" }}
+          style={{
+            width: "min(700px, 90vw)",
+            height: "min(700px, 90vw)",
+            background: `radial-gradient(circle, ${colors.blossom}20 0%, ${colors.lavender}12 30%, ${colors.warmBlush}08 55%, transparent 70%)`,
+            animation: "glowPulse 8s ease-in-out infinite",
+          }}
+        />
+
+        {/* Floating petals */}
+        {[
+          { x: "12%", y: "25%", size: 5, color: colors.blossom, delay: 0, dur: 14 },
+          { x: "82%", y: "20%", size: 4, color: colors.lavender, delay: 2, dur: 16 },
+          { x: "25%", y: "70%", size: 6, color: colors.softGold, delay: 1, dur: 12 },
+          { x: "75%", y: "65%", size: 4, color: colors.warmBlush, delay: 3, dur: 18 },
+          { x: "50%", y: "15%", size: 3, color: colors.lavender, delay: 4, dur: 15 },
+          { x: "90%", y: "50%", size: 5, color: colors.blossom, delay: 1.5, dur: 13 },
+        ].map((p, i) => (
+          <motion.div
+            key={i}
+            className="absolute pointer-events-none"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0.15 }}
+            transition={{ duration: 2, delay: 1.5 + p.delay * 0.3 }}
+            style={{
+              left: p.x,
+              top: p.y,
+              width: p.size,
+              height: p.size * 1.4,
+              background: p.color,
+              borderRadius: "50% 50% 50% 0%",
+              filter: "blur(1px)",
+              animation: `petalFloat${i % 3} ${p.dur}s ease-in-out infinite`,
+              animationDelay: `${p.delay}s`,
+            }}
+          />
+        ))}
+
         <motion.div
           className="text-center px-6 relative z-10"
           style={{ opacity: heroOpacity, y: heroY, scale: heroScale }}
         >
           {/* Title — staggered word entrance */}
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-light text-white mb-6 leading-[1.1]">
+          <h1 className="text-5xl md:text-7xl lg:text-8xl font-light text-white/80 mb-4 leading-[1.1]">
             <motion.span
               className="inline-block"
               initial={{ opacity: 0, y: 40, filter: "blur(10px)" }}
@@ -119,12 +162,12 @@ export default function CreativeClient() {
             </motion.span>
             <br />
             <motion.span
-              className="inline-block font-semibold"
+              className="inline-block font-semibold relative"
               initial={{ opacity: 0, y: 50, scale: 0.8, filter: "blur(12px)" }}
               animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
               transition={{ duration: 1.2, delay: 0.6, ease: "easeOut" }}
               style={{
-                background: `linear-gradient(135deg, ${colors.blossom}, ${colors.warmBlush}, ${colors.softGold}, ${colors.lavender})`,
+                background: `linear-gradient(135deg, ${colors.blossom}, ${colors.warmBlush}, ${colors.peach}, ${colors.lavender})`,
                 backgroundSize: "300% 300%",
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
@@ -135,9 +178,26 @@ export default function CreativeClient() {
             </motion.span>
           </h1>
 
+          {/* Decorative heart */}
+          <motion.svg
+            width="24"
+            height="22"
+            viewBox="0 0 24 22"
+            className="mx-auto mb-5"
+            initial={{ opacity: 0, scale: 0 }}
+            animate={{ opacity: 0.3, scale: 1 }}
+            transition={{ delay: 0.9, duration: 1, ease: "easeOut" }}
+          >
+            <path
+              d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
+              fill={colors.warmBlush}
+              opacity="0.6"
+            />
+          </motion.svg>
+
           {/* Subtitle */}
           <motion.p
-            className="text-lg md:text-xl text-white/40 leading-relaxed max-w-lg mx-auto"
+            className="text-lg md:text-xl text-white/40 leading-relaxed max-w-lg mx-auto tracking-wide"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 1, duration: 0.8 }}
@@ -177,6 +237,25 @@ export default function CreativeClient() {
         @keyframes gradientShift {
           0%, 100% { background-position: 0% 50%; }
           50% { background-position: 100% 50%; }
+        }
+        @keyframes glowPulse {
+          0%, 100% { transform: scale(1); opacity: 0.7; }
+          50% { transform: scale(1.08); opacity: 1; }
+        }
+        @keyframes petalFloat0 {
+          0%, 100% { transform: translate(0, 0) rotate(0deg); }
+          33% { transform: translate(12px, -18px) rotate(15deg); }
+          66% { transform: translate(-8px, -10px) rotate(-10deg); }
+        }
+        @keyframes petalFloat1 {
+          0%, 100% { transform: translate(0, 0) rotate(0deg); }
+          33% { transform: translate(-15px, -12px) rotate(-20deg); }
+          66% { transform: translate(10px, -20px) rotate(12deg); }
+        }
+        @keyframes petalFloat2 {
+          0%, 100% { transform: translate(0, 0) rotate(0deg); }
+          33% { transform: translate(8px, -22px) rotate(10deg); }
+          66% { transform: translate(-12px, -8px) rotate(-15deg); }
         }
       `}</style>
 
