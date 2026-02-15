@@ -496,11 +496,11 @@ export default function FlowersClient() {
   const [showHint, setShowHint] = useState(true);
   const [isRaining, setIsRaining] = useState(false);
   const isRainingRef = useRef(false);
-  isRainingRef.current = isRaining;
+  useEffect(() => { isRainingRef.current = isRaining; }, [isRaining]);
 
   // Stable ref for selected type so animation loop sees latest
   const selectedRef = useRef(selectedType);
-  selectedRef.current = selectedType;
+  useEffect(() => { selectedRef.current = selectedType; }, [selectedType]);
 
   const plantFlower = useCallback((xPct: number, typeOverride?: number, timeOffset?: number) => {
     if (flowersRef.current.length >= MAX_FLOWERS) {
@@ -1038,7 +1038,7 @@ export default function FlowersClient() {
   }, [plantFlower]);
 
   return (
-    <div className="relative w-full h-screen overflow-hidden bg-black select-none touch-none">
+    <div id="main-content" className="relative w-full h-screen overflow-hidden bg-black select-none touch-none">
       {/* Canvas */}
       <canvas
         ref={canvasRef}

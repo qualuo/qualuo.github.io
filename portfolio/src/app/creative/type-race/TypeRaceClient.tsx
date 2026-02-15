@@ -265,19 +265,19 @@ export default function TypeRaceClient() {
     [finished, started, cursor, text, startTime, spawnBloom, nextPassage]
   );
 
-  // Snapshot analytics when finished
-  const wpmData = useMemo(() => {
-    if (!finished) return [];
-    return [...wpmHistory.current];
-  }, [finished]);
-
-  const difficultChars = useMemo(() => {
-    if (!finished) return [];
-    return Array.from(charErrors.current.entries())
-      .filter(([, v]) => v.errors > 0)
-      .map(([char, v]) => ({ char, errorRate: v.errors / v.total, errors: v.errors }))
-      .sort((a, b) => b.errors - a.errors)
-      .slice(0, 5);
+  // Snapshot analytics into state when finished (avoids reading refs during render)
+  const [wpmData, setWpmData] = useState<number[]>([]);
+  const [difficultChars, setDifficultChars] = useState<{ char: string; errorRate: number; errors: number }[]>([]);
+  useEffect(() => {
+    if (!finished) return;
+    setWpmData([...wpmHistory.current]);
+    setDifficultChars(
+      Array.from(charErrors.current.entries())
+        .filter(([, v]) => v.errors > 0)
+        .map(([char, v]) => ({ char, errorRate: v.errors / v.total, errors: v.errors }))
+        .sort((a, b) => b.errors - a.errors)
+        .slice(0, 5)
+    );
   }, [finished]);
 
   // Save personal best when finished
@@ -323,6 +323,7 @@ export default function TypeRaceClient() {
 
   return (
     <div
+      id="main-content"
       ref={containerRef}
       className="relative w-full min-h-screen bg-[#060608] text-white overflow-hidden select-none"
       onClick={() => inputRef.current?.focus()}

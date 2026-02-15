@@ -798,7 +798,7 @@ export default function SakuraClient() {
   }, []);
 
   return (
-    <div className="relative w-full h-screen overflow-hidden bg-[#FAF8F5] select-none touch-none">
+    <div id="main-content" className="relative w-full h-screen overflow-hidden bg-[#FAF8F5] select-none touch-none">
       <canvas
         ref={canvasRef}
         className="absolute inset-0"

@@ -1,5 +1,5 @@
 import { JsonLd } from "./JsonLd";
-import { SITE_CONFIG } from "@/lib/seo";
+import { SITE_CONFIG, canonicalUrl } from "@/lib/seo";
 
 interface BreadcrumbItem {
   name: string;
@@ -23,7 +23,7 @@ export function BreadcrumbSchema({ items }: { items: BreadcrumbItem[] }) {
             "@type": "ListItem",
             position: index + 2,
             name: item.name,
-            item: `${SITE_CONFIG.url}${item.href}`,
+            item: canonicalUrl(item.href),
           })),
         ],
       }}
