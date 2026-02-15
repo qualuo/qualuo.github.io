@@ -9,9 +9,11 @@
 export function DelicateAccent({
   variant = "goldenbloom",
   className = "",
+  persistent = false,
 }: {
   variant?: "goldenbloom" | "compass" | "timeline";
   className?: string;
+  persistent?: boolean;
 }) {
   const stroke = "rgba(255,255,255,0.30)";
   const strokeFaint = "rgba(255,255,255,0.26)";
@@ -135,7 +137,7 @@ export function DelicateAccent({
           <path key={`sp${ai}`} d={mkSpiral(off)} fill="none"
             stroke="rgba(255,255,255,0.18)" strokeWidth="0.5" strokeLinecap="round"
             pathLength={1} strokeDasharray="1" strokeDashoffset={1}
-            style={{ animation: `gbl-pd ${2.4 + ai * 0.2}s cubic-bezier(0.16,1,0.3,1) ${2.18 + ai * 0.1}s forwards, gbl-pdo 1.3s ease-in ${9.1 + ai * 0.1}s forwards` }}
+            style={{ animation: `gbl-pd ${2.4 + ai * 0.2}s cubic-bezier(0.16,1,0.3,1) ${2.18 + ai * 0.1}s forwards${persistent ? '' : `, gbl-pdo 1.3s ease-in ${9.1 + ai * 0.1}s forwards`}` }}
           />
         ))}
 
@@ -146,7 +148,7 @@ export function DelicateAccent({
           const star = `M${x},${y - s} L${x + n},${y - n} L${x + s},${y} L${x + n},${y + n} L${x},${y + s} L${x - n},${y + n} L${x - s},${y} L${x - n},${y - n}Z`;
           return (
             <path key={`ix${i}`} d={star} fill={strokeFaint} stroke="none"
-              style={{ opacity: 0, transformOrigin: `${x}px ${y}px`, animation: `gbl-bloom 0.2s ease-out ${d}s forwards, gbl-wilt 0.3s ease-in ${(8.6 + (2 - ri) * 0.25).toFixed(2)}s forwards` }}
+              style={{ opacity: 0, transformOrigin: `${x}px ${y}px`, animation: `gbl-bloom 0.2s ease-out ${d}s forwards${persistent ? '' : `, gbl-wilt 0.3s ease-in ${(8.6 + (2 - ri) * 0.25).toFixed(2)}s forwards`}` }}
             />
           );
         })}
@@ -163,14 +165,14 @@ export function DelicateAccent({
           return (
             <circle key={`ph${n}`} cx={x} cy={y} r={sz}
               fill={n % 5 === 0 ? strokeFaint : strokeGhost}
-              style={{ opacity: 0, transformOrigin: `${x}px ${y}px`, animation: `gbl-bloom 0.3s ease-out ${d}s forwards, gbl-wilt 0.25s ease-in ${(8.3 + (33 - n) * 0.025).toFixed(2)}s forwards` }}
+              style={{ opacity: 0, transformOrigin: `${x}px ${y}px`, animation: `gbl-bloom 0.3s ease-out ${d}s forwards${persistent ? '' : `, gbl-wilt 0.25s ease-in ${(8.3 + (33 - n) * 0.025).toFixed(2)}s forwards`}` }}
             />
           );
         })}
 
         {/* ④ Center seed — the origin */}
         <circle cx={200} cy={200} r={2} fill={stroke}
-          style={{ opacity: 0, transformOrigin: "200px 200px", animation: `gbl-bloom 0.55s cubic-bezier(0.16,1,0.3,1) 2s forwards, gbl-wilt 0.45s ease-in 10s forwards` }}
+          style={{ opacity: 0, transformOrigin: "200px 200px", animation: `gbl-bloom 0.55s cubic-bezier(0.16,1,0.3,1) 2s forwards${persistent ? '' : ', gbl-wilt 0.45s ease-in 10s forwards'}` }}
         />
 
         </g>

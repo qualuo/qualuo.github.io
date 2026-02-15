@@ -1,8 +1,8 @@
 "use client";
 
-import { motion, useScroll, useTransform, useInView } from "framer-motion";
+import { motion, useScroll, useTransform, useInView, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, useCallback } from "react";
 import dynamic from "next/dynamic";
 
 const StarsBackground = dynamic(
@@ -10,6 +10,8 @@ const StarsBackground = dynamic(
   { ssr: false }
 );
 import { useTimeLapse } from "@/components/animations/TimeLapseProvider";
+import { DelicateAccent } from "@/components/animations/DelicateAccent";
+import { usePolarisParallax } from "@/hooks/usePolarisParallax";
 
 // Animated counter component
 function AnimatedNumber({ value, suffix = "", duration = 2 }: { value: number; suffix?: string; duration?: number }) {
@@ -172,6 +174,54 @@ function TimeLapsePrompt() {
   );
 }
 
+function GoldenBloomSection({ onPlay }: { onPlay: () => void }) {
+  const ref = useRef<HTMLElement>(null);
+  const isInView = useInView(ref, { once: true, margin: "-20px" });
+  const [hasClicked, setHasClicked] = useState(false);
+
+  const handleClick = () => {
+    setHasClicked(true);
+    onPlay();
+  };
+
+  return (
+    <motion.section
+      ref={ref}
+      className="mb-20 cursor-pointer group"
+      initial={{ opacity: 0, y: 30 }}
+      animate={isInView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.8, ease: [0.23, 1, 0.32, 1] }}
+      onClick={handleClick}
+    >
+      <RevealText>
+        <h2 className="text-xs uppercase tracking-[0.2em] text-slate-500 mb-4">The Golden Bloom</h2>
+      </RevealText>
+      <div className="space-y-4 text-slate-400 leading-relaxed">
+        <p>
+          Upon entering, a geometric composition unfolds from Polaris&mdash;an
+          introduction to the starfield rotating behind it. Three logarithmic
+          spirals, each offset by exactly 137.508&deg;&mdash;the golden angle,
+          360&deg; divided by &phi;&sup2;. The same irrational rotation that
+          sunflower seeds use to pack without ever repeating.
+        </p>
+        <p>
+          34 dots&mdash;a Fibonacci number&mdash;cascade outward along a Fermat
+          spiral, every fifth one glowing brighter. The intersection stars sit at
+          radii whose consecutive ratios converge on &phi;. The entire composition
+          revolves once every 60&times;&phi; seconds: approximately 97, unhurried
+          and irrational, like the constant itself.
+        </p>
+        <p>
+          It blooms, holds, and wilts. Ten seconds. Then the sky is just the sky again.
+        </p>
+      </div>
+      <p className="text-slate-600 text-xs mt-4 group-hover:text-slate-400 transition-colors">
+        {hasClicked ? "Click to replay" : "Click to see it"}
+      </p>
+    </motion.section>
+  );
+}
+
 export default function ColophonClient() {
   const containerRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
@@ -182,10 +232,53 @@ export default function ColophonClient() {
   const headerOpacity = useTransform(scrollYProgress, [0, 0.1], [1, 0]);
   const headerScale = useTransform(scrollYProgress, [0, 0.1], [1, 0.95]);
 
+  const [bloomPlaying, setBloomPlaying] = useState(false);
+  const [bloomKey, setBloomKey] = useState(0);
+
+  const handleBloomPlay = useCallback(() => {
+    setBloomKey(k => k + 1);
+    setBloomPlaying(true);
+  }, []);
+
+  // Auto-hide after bloom wilts (~12s: 2s entrance delay + 10s hold)
+  useEffect(() => {
+    if (!bloomPlaying) return;
+    const timer = setTimeout(() => setBloomPlaying(false), 12000);
+    return () => clearTimeout(timer);
+  }, [bloomPlaying, bloomKey]);
+
+  const { x: bloomX, y: bloomY } = usePolarisParallax();
+
   return (
     <>
       <StarsBackground />
-      <main id="main-content" ref={containerRef} className="min-h-screen text-white">
+
+      {/* Bloom overlay — plays against bare starfield */}
+      <AnimatePresence>
+        {bloomPlaying && (
+          <motion.div
+            key={`bloom-${bloomKey}`}
+            className="fixed inset-0 pointer-events-none z-50"
+            style={{ x: bloomX, y: bloomY }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <div className="absolute w-80 h-80 md:w-120 md:h-120 -translate-x-1/2 -translate-y-1/2" style={{ left: "42%", top: "28%" }}>
+              <DelicateAccent variant="goldenbloom" />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <motion.main
+        id="main-content"
+        ref={containerRef}
+        className="min-h-screen text-white"
+        animate={{ opacity: bloomPlaying ? 0 : 1 }}
+        transition={{ duration: 0.8 }}
+      >
       <motion.div
         className="h-dvh flex flex-col items-center justify-center relative"
         style={{ opacity: headerOpacity, scale: headerScale }}
@@ -387,6 +480,9 @@ export default function ColophonClient() {
           </p>
         </Section>
 
+        {/* Golden Bloom */}
+        <GoldenBloomSection onPlay={handleBloomPlay} />
+
         {/* Closing */}
         <Section className="text-center">
           <motion.p
@@ -400,7 +496,7 @@ export default function ColophonClient() {
           </motion.p>
         </Section>
       </div>
-    </main>
+    </motion.main>
     </>
   );
 }

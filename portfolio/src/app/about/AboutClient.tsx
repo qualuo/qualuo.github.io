@@ -388,7 +388,7 @@ function PhilosophyWord({
     return () => { unsubX(); unsubY(); };
   }, [mouseX, mouseY, rawMX, rawMY]);
 
-  const y = useTransform([scrollY, magnetY], ([sy, my]) => sy + my);
+  const y = useTransform([scrollY, magnetY], ([sy, my]: number[]) => sy + my);
 
   return (
     <motion.span
