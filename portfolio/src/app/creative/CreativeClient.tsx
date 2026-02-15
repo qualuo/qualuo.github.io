@@ -204,6 +204,7 @@ export default function CreativeClient() {
           >
             Where feelings take root and bloom
           </motion.p>
+
         </motion.div>
 
         {/* Scroll indicator */}
@@ -284,13 +285,16 @@ export default function CreativeClient() {
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 1 }}
         >
-          <div className="flex items-center justify-center gap-6 mb-4">
+          <div className="flex items-center justify-center gap-6 mb-3">
             <div className="w-16 h-px bg-white/8" />
             <span className="text-white/20 text-xs tracking-[0.3em] uppercase">
               {creativeWorks.length} experiences
             </span>
             <div className="w-16 h-px bg-white/8" />
           </div>
+          <p className="text-white/15 text-xs tracking-wide">
+            A living sandbox — things may be rough around the edges
+          </p>
         </motion.div>
       </section>
 
