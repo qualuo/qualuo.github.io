@@ -32,22 +32,13 @@ export default function PrivacyClient() {
           <h1 className="text-3xl font-semibold mb-8">Privacy Policy</h1>
 
           <div className="space-y-6 text-slate-400 text-sm leading-relaxed">
-            <p>Last updated: {new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" })}</p>
+            <p>Last updated: February 2026</p>
 
             <section>
               <h2 className="text-white text-lg font-medium mb-3">Analytics</h2>
               <p>
-                This website uses Google Analytics to understand how visitors interact with the site.
-                This service collects anonymous data about page views, time spent on pages, and general
-                location (country/city level). No personally identifiable information is collected.
-              </p>
-            </section>
-
-            <section>
-              <h2 className="text-white text-lg font-medium mb-3">Cookies</h2>
-              <p>
-                Google Analytics uses cookies to distinguish unique users and sessions. These cookies
-                do not collect personal information and are used solely for analytical purposes.
+                This website uses Cloudflare Web Analytics to understand how visitors interact with the site.
+                This service collects aggregate data about page views, referrers, and browser/device type.
               </p>
             </section>
 
@@ -56,22 +47,6 @@ export default function PrivacyClient() {
               <p>
                 When you submit the contact form, your name, email, and message are sent to me directly.
                 This information is used only to respond to your inquiry and is not shared with third parties.
-              </p>
-            </section>
-
-            <section>
-              <h2 className="text-white text-lg font-medium mb-3">Opt-Out</h2>
-              <p>
-                You can opt out of Google Analytics tracking by using the{" "}
-                <a
-                  href="https://tools.google.com/dlpage/gaoptout"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-white underline underline-offset-2 hover:text-slate-300"
-                >
-                  Google Analytics Opt-out Browser Add-on
-                </a>
-                .
               </p>
             </section>
 

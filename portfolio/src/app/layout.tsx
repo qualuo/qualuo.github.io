@@ -83,22 +83,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="preconnect" href="https://www.googletagmanager.com" />
-        <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
         <PersonSchema />
         <WebSiteSchema />
         <Script
-          src="https://www.googletagmanager.com/gtag/js?id=G-C3Y8KL4145"
-          strategy="afterInteractive"
+          defer
+          src="https://static.cloudflareinsights.com/beacon.min.js"
+          data-cf-beacon='{"token": "27578cdb8c824407814c136efddbf70e"}'
         />
-        <Script id="gtag-init" strategy="afterInteractive">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'G-C3Y8KL4145');
-          `}
-        </Script>
       </head>
       <body className={`${poppins.variable} font-sans antialiased`}>
         <a
