@@ -806,19 +806,20 @@ export default function SakuraClient() {
         onClick={handleClick}
       />
 
-      <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-6 py-4">
+      <div className="absolute top-0 left-0 right-0 z-20 px-6 py-4">
         <Link
           href="/creative/"
-          className="flex items-center gap-2 text-neutral-400 hover:text-neutral-600 transition-colors text-sm"
+          className="flex items-center gap-2 text-neutral-400 hover:text-neutral-600 transition-colors text-sm w-fit"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
           </svg>
           Creative
         </Link>
-        <span className="text-neutral-400/60 text-xs tracking-widest uppercase">Sakura <span className="text-neutral-400/40 text-sm">桜</span></span>
-        <div className="w-16" />
+        <span className="absolute top-4 left-1/2 -translate-x-1/2 text-neutral-400/60 text-sm tracking-widest uppercase">Sakura</span>
       </div>
+
+      <span className="absolute top-9 left-1/2 -translate-x-1/2 z-20 text-neutral-400/40 text-sm">桜</span>
 
       <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-3">
         <AnimatePresence>

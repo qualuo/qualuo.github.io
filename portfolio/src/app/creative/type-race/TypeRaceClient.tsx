@@ -340,18 +340,17 @@ export default function TypeRaceClient() {
       />
 
       {/* Top bar */}
-      <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-6 py-4">
+      <div className="absolute top-0 left-0 right-0 z-20 px-6 py-4">
         <Link
           href="/creative/"
-          className="flex items-center gap-2 text-white/50 hover:text-white/80 transition-colors text-sm"
+          className="flex items-center gap-2 text-white/50 hover:text-white/80 transition-colors text-sm w-fit"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
           </svg>
           Creative
         </Link>
-        <span className="text-white/30 text-xs tracking-widest uppercase">Type Race</span>
-        <div className="w-16" />
+        <span className="absolute top-4 left-1/2 -translate-x-1/2 text-white/30 text-sm tracking-widest uppercase">Type Race</span>
       </div>
 
       {/* Progress bar */}
