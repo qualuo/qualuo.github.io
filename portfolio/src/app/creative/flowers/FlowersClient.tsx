@@ -1053,7 +1053,7 @@ export default function FlowersClient() {
       />
 
       {/* Top bar */}
-      <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between px-6 py-4">
+      <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-6 py-4">
         <Link
           href="/creative/"
           className="flex items-center gap-2 text-white/50 hover:text-white/80 transition-colors text-sm"
@@ -1063,39 +1063,33 @@ export default function FlowersClient() {
           </svg>
           Creative
         </Link>
+        <span className="text-white/30 text-xs tracking-widest uppercase">Flower Garden</span>
+        <div className="w-16" />
+      </div>
 
-        <motion.h1
-          className="text-white/70 text-sm tracking-widest uppercase"
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
+      {/* Controls */}
+      <div className="absolute top-12 right-6 z-20 flex items-center gap-4">
+        <span className="text-white/30 text-xs">{flowerCount} flower{flowerCount !== 1 ? "s" : ""}</span>
+        <button
+          onClick={() => setIsRaining(prev => !prev)}
+          className={`text-xs transition-colors ${isRaining ? "text-blue-300/60" : "text-white/30 hover:text-white/60"}`}
         >
-          Flower Garden
-        </motion.h1>
-
-        <div className="flex items-center gap-4">
-          <span className="text-white/30 text-xs">{flowerCount} flower{flowerCount !== 1 ? "s" : ""}</span>
+          {isRaining ? "Raining" : "Rain"}
+        </button>
+        <button
+          onClick={handleRandom}
+          className="text-white/30 hover:text-white/60 transition-colors text-xs"
+        >
+          Random
+        </button>
+        {flowerCount > 0 && (
           <button
-            onClick={() => setIsRaining(prev => !prev)}
-            className={`text-xs transition-colors ${isRaining ? "text-blue-300/60" : "text-white/30 hover:text-white/60"}`}
-          >
-            {isRaining ? "Raining" : "Rain"}
-          </button>
-          <button
-            onClick={handleRandom}
+            onClick={handleClear}
             className="text-white/30 hover:text-white/60 transition-colors text-xs"
           >
-            Random
+            Clear
           </button>
-          {flowerCount > 0 && (
-            <button
-              onClick={handleClear}
-              className="text-white/30 hover:text-white/60 transition-colors text-xs"
-            >
-              Clear
-            </button>
-          )}
-        </div>
+        )}
       </div>
 
       {/* Hint */}

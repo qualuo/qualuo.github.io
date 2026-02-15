@@ -57,7 +57,12 @@ function pickRandom() {
 
 export default function TypeRaceClient() {
   const [passageIndex, setPassageIndex] = useState(pickRandom);
-  const [charStates, setCharStates] = useState<CharState[]>([]);
+  const [charStates, setCharStates] = useState<CharState[]>(() =>
+    PASSAGES[passageIndex].text.split("").map((char, i) => ({
+      char,
+      status: i === 0 ? ("current" as const) : ("pending" as const),
+    }))
+  );
   const [cursor, setCursor] = useState(0);
   const [startTime, setStartTime] = useState(0);
   const [elapsed, setElapsed] = useState(0);
@@ -65,6 +70,7 @@ export default function TypeRaceClient() {
   const [totalKeystrokes, setTotalKeystrokes] = useState(0);
   const [finished, setFinished] = useState(false);
   const [blooms, setBlooms] = useState<{ id: number; x: number; color: string }[]>([]);
+  const [showNewPB, setShowNewPB] = useState(false);
   const [caretPos, setCaretPos] = useState({ left: 0, top: 0, height: 0, ready: false });
   const bloomId = useRef(0);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -76,8 +82,13 @@ export default function TypeRaceClient() {
   const lastSampleTime = useRef(0);
   const charErrors = useRef<Map<string, { total: number; errors: number }>>(new Map());
 
-  // Personal best
-  const [personalBest, setPersonalBest] = useState(0);
+  // Personal best (lazy-init from localStorage)
+  const [personalBest, setPersonalBest] = useState(() => {
+    try {
+      const pb = typeof window !== "undefined" ? localStorage.getItem("typerace-pb") : null;
+      return pb ? parseInt(pb, 10) : 0;
+    } catch { return 0; }
+  });
 
   const passage = PASSAGES[passageIndex];
   const text = passage.text;
@@ -98,29 +109,17 @@ export default function TypeRaceClient() {
     setStartTime(0);
     setFinished(false);
     setBlooms([]);
+    setShowNewPB(false);
     setCaretPos((p) => ({ ...p, ready: false }));
     wpmHistory.current = [];
     lastSampleTime.current = 0;
     charErrors.current.clear();
   }, []);
 
-  // Init on mount and when passage changes
-  useEffect(() => {
-    initChars(PASSAGES[passageIndex].text);
-  }, [passageIndex, initChars]);
-
   // Auto-focus
   useEffect(() => {
     inputRef.current?.focus();
   }, [passageIndex]);
-
-  // Load personal best from localStorage
-  useEffect(() => {
-    try {
-      const pb = localStorage.getItem("typerace-pb");
-      if (pb) setPersonalBest(parseInt(pb, 10));
-    } catch { /* SSR or private browsing */ }
-  }, []);
 
   // Derived stats — net WPM: only correct keystrokes count
   const correctChars = totalKeystrokes - errors;
@@ -167,7 +166,8 @@ export default function TypeRaceClient() {
     let idx = pickRandom();
     while (idx === passageIndex && PASSAGES.length > 1) idx = pickRandom();
     setPassageIndex(idx);
-  }, [passageIndex]);
+    initChars(PASSAGES[idx].text);
+  }, [passageIndex, initChars]);
 
   // Keystroke handler
   const handleKey = useCallback(
@@ -260,9 +260,17 @@ export default function TypeRaceClient() {
           const remaining = text.length % 5 || 5;
           wpmHistory.current.push(Math.round((remaining / 5 / segSec) * 60));
         }
+        // Update personal best
+        const finalCorrect = (totalKeystrokes + 1) - (errors + (isCorrect ? 0 : 1));
+        const finalWpm = finalElapsed > 0 ? Math.round((finalCorrect / 5 / finalElapsed) * 60) : 0;
+        if (finalWpm > 0 && finalWpm > personalBest) {
+          setPersonalBest(finalWpm);
+          setShowNewPB(true);
+          try { localStorage.setItem("typerace-pb", String(finalWpm)); } catch { /* ignore */ }
+        }
       }
     },
-    [finished, started, cursor, text, startTime, spawnBloom, nextPassage]
+    [finished, started, cursor, text, startTime, spawnBloom, nextPassage, totalKeystrokes, errors, personalBest]
   );
 
   // Snapshot analytics into state when finished (avoids reading refs during render)
@@ -279,15 +287,6 @@ export default function TypeRaceClient() {
         .slice(0, 5)
     );
   }, [finished]);
-
-  // Save personal best when finished
-  const isNewPB = finished && wpm > 0 && wpm > personalBest;
-  useEffect(() => {
-    if (isNewPB) {
-      setPersonalBest(wpm);
-      try { localStorage.setItem("typerace-pb", String(wpm)); } catch { /* ignore */ }
-    }
-  }, [isNewPB, wpm]);
 
   // Sparkline path computation
   const sparkline = useMemo(() => {
@@ -526,7 +525,7 @@ export default function TypeRaceClient() {
                 <span style={{ color: ratingColor }}>{wpm}</span>
               </motion.div>
               <p className="text-white/30 text-sm mb-2">words per minute</p>
-              {isNewPB ? (
+              {showNewPB ? (
                 <motion.p
                   className="text-xs font-medium tracking-wide mb-6"
                   style={{ color: "#FDE047" }}

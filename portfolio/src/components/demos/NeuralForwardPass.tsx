@@ -133,64 +133,6 @@ function forwardPassFull(
   return { activations: acts, preActivations: preActs };
 }
 
-/* ── Backpropagation ───────────────────────────────────────── */
-
-function backprop(
-  net: Layer[],
-  acts: Float32Array[],
-  preActs: Float32Array[],
-  target: number,
-  activation: ActivationFn,
-  lr: number
-): number {
-  const L = net.length;
-  const output = acts[L];
-  const loss = -Math.log(Math.max(1e-10, output[target]));
-  const derivFn = ACTIVATIONS[activation].derivative;
-
-  // Output delta: softmax + cross-entropy simplification
-  let delta = new Float32Array(output.length);
-  for (let i = 0; i < output.length; i++) {
-    delta[i] = output[i] - (i === target ? 1 : 0);
-  }
-
-  for (let l = L - 1; l >= 0; l--) {
-    const layer = net[l];
-    const prevActs = acts[l];
-
-    // Update weights and biases
-    for (let j = 0; j < layer.fanOut; j++) {
-      for (let i = 0; i < layer.fanIn; i++) {
-        layer.weights[i * layer.fanOut + j] -= lr * prevActs[i] * delta[j];
-      }
-      layer.biases[j] -= lr * delta[j];
-    }
-
-    // Propagate delta backward
-    if (l > 0) {
-      const prevDelta = new Float32Array(layer.fanIn);
-      for (let i = 0; i < layer.fanIn; i++) {
-        let sum = 0;
-        for (let j = 0; j < layer.fanOut; j++) {
-          sum += layer.weights[i * layer.fanOut + j] * delta[j];
-        }
-        prevDelta[i] = sum * derivFn(preActs[l][i], acts[l][i]);
-      }
-      delta = prevDelta;
-    }
-  }
-
-  return loss;
-}
-
-function argmax(arr: Float32Array): number {
-  let best = 0;
-  for (let i = 1; i < arr.length; i++) {
-    if (arr[i] > arr[best]) best = i;
-  }
-  return best;
-}
-
 /* ── Normalize activations for visualization ───────────────── */
 
 function normalize(a: Float32Array): Float32Array {
@@ -231,49 +173,6 @@ function parseDigit(template: string): Float32Array {
     }
   }
   return pixels;
-}
-
-function generateTrainingData(
-  seed: number
-): { pixels: Float32Array; label: number }[] {
-  const rng = mulberry32(seed);
-  const data: { pixels: Float32Array; label: number }[] = [];
-
-  for (let digit = 0; digit < 10; digit++) {
-    const baseRows = DIGIT_7x7[digit].split("\n");
-
-    for (let v = 0; v < 50; v++) {
-      const pixels = new Float32Array(784);
-      const dx = Math.floor(rng() * 3) - 1;
-      const dy = Math.floor(rng() * 3) - 1;
-      const noiseProb = rng() * 0.15;
-
-      for (let y = 0; y < 7; y++) {
-        for (let x = 0; x < 7; x++) {
-          const srcY = y - dy;
-          const srcX = x - dx;
-          let val = 0;
-          if (srcY >= 0 && srcY < 7 && srcX >= 0 && srcX < 7) {
-            val = baseRows[srcY]?.[srcX] === "#" ? 1.0 : 0.0;
-          }
-          if (rng() < noiseProb) val = val > 0.5 ? 0.0 : 1.0;
-          for (let py = 0; py < 4; py++) {
-            for (let px = 0; px < 4; px++) {
-              pixels[(y * 4 + py) * 28 + (x * 4 + px)] = val;
-            }
-          }
-        }
-      }
-      data.push({ pixels, label: digit });
-    }
-  }
-
-  // Fisher-Yates shuffle
-  for (let i = data.length - 1; i > 0; i--) {
-    const j = Math.floor(rng() * (i + 1));
-    [data[i], data[j]] = [data[j], data[i]];
-  }
-  return data;
 }
 
 /* ── Layer position helpers ────────────────────────────────── */
@@ -759,7 +658,6 @@ function DrawingCanvas({
 
   useEffect(() => {
     clear();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

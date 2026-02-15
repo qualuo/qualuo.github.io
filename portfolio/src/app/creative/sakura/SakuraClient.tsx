@@ -806,7 +806,7 @@ export default function SakuraClient() {
         onClick={handleClick}
       />
 
-      <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between px-6 py-4">
+      <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-6 py-4">
         <Link
           href="/creative/"
           className="flex items-center gap-2 text-neutral-400 hover:text-neutral-600 transition-colors text-sm"
@@ -816,18 +816,8 @@ export default function SakuraClient() {
           </svg>
           Creative
         </Link>
-
-        <motion.div
-          className="relative text-center"
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5, duration: 1 }}
-        >
-          <h1 className="text-neutral-400 text-sm tracking-[0.3em] uppercase">Sakura</h1>
-          <span className="text-lg text-neutral-400/50">桜</span>
-        </motion.div>
-
-        <div className="w-20" />
+        <span className="text-neutral-400/60 text-xs tracking-widest uppercase">Sakura <span className="text-neutral-400/40 text-sm">桜</span></span>
+        <div className="w-16" />
       </div>
 
       <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-3">

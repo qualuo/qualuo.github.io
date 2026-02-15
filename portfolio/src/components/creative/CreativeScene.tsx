@@ -109,13 +109,11 @@ function Soul({
   sectionCount,
   sectionColors,
   windRef,
-  pointerRef,
 }: {
   scrollRef: React.RefObject<number>;
   sectionCount: number;
   sectionColors: THREE.Color[];
   windRef: React.RefObject<number>;
-  pointerRef: React.RefObject<PointerPos>;
 }) {
   const isMobile = useThree((s) => s.size.width < 768);
   const trailCount = isMobile ? 5 : 9;
@@ -528,7 +526,6 @@ function SceneContent({
           sectionCount={sectionCount}
           sectionColors={sectionColors}
           windRef={windRef}
-          pointerRef={pointerRef as React.RefObject<PointerPos>}
         />
         <ForestMotes
           scrollRef={scrollRef}
