@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { rfcs, getRfcBySlug } from "@/lib/rfcs";
-import { getRfcContent } from "@/lib/rfc-content";
+import { rfcs } from "@/lib/rfcs";
+import { getRfcContent, getEnrichedRfc } from "@/lib/rfc-content";
 import { RfcPageClient } from "./RfcPageClient";
 import { canonicalUrl, SITE_CONFIG } from "@/lib/seo";
 import { BreadcrumbSchema } from "@/components/seo/BreadcrumbSchema";
@@ -18,7 +18,7 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const rfc = getRfcBySlug(slug);
+  const rfc = getEnrichedRfc(slug);
 
   if (!rfc) {
     return { title: "RFC Not Found" };
@@ -58,7 +58,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function RfcPage({ params }: PageProps) {
   const { slug } = await params;
-  const rfc = getRfcBySlug(slug);
+  const rfc = getEnrichedRfc(slug);
 
   let content = "";
   if (rfc && rfc.status === "live") {

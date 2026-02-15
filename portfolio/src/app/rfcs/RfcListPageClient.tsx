@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRef, useEffect } from "react";
-import { rfcs, rfcLabel, Rfc } from "@/lib/rfcs";
+import { rfcLabel, type EnrichedRfc } from "@/lib/rfcs";
 import { Navbar } from "@/components/layout/Navbar";
 
 /* ── Blueprint Grid Background ───────────────────────────────── */
@@ -168,7 +168,7 @@ const RFC_ICONS: Record<string, React.ReactNode> = {
 
 /* ── Card ─────────────────────────────────────────────────────── */
 
-function RfcCard({ rfc }: { rfc: Rfc }) {
+function RfcCard({ rfc }: { rfc: EnrichedRfc }) {
   return (
     <Link
       href={`/rfcs/${rfc.slug}`}
@@ -242,10 +242,8 @@ function RfcCard({ rfc }: { rfc: Rfc }) {
 
 /* ── Page ─────────────────────────────────────────────────────── */
 
-export default function RfcListPageClient() {
-  const liveRfcs = rfcs
-    .filter((r) => r.status === "live")
-    .sort((a, b) => b.number - a.number);
+export default function RfcListPageClient({ rfcs }: { rfcs: EnrichedRfc[] }) {
+  const liveRfcs = [...rfcs].sort((a, b) => b.number - a.number);
 
   return (
     <main id="main-content" className="relative min-h-screen">

@@ -1,4 +1,4 @@
-Four environment-separated Azure subscriptions under one Management Group, hosted in **Sweden Central**. Aligned with GDPR, eSam, and sector-specific regulations. IaC and managed PaaS from day one.
+Four environment-separated Azure subscriptions under one Management Group, hosted in Sweden Central. Aligned with GDPR, eSam, and sector-specific regulations. IaC and managed PaaS from day one.
 
 ---
 

@@ -1,8 +1,8 @@
 import { JsonLd } from "./JsonLd";
 import { SITE_CONFIG, canonicalUrl } from "@/lib/seo";
-import type { Rfc } from "@/lib/rfcs";
+import type { EnrichedRfc } from "@/lib/rfcs";
 
-export function RfcSchema({ rfc }: { rfc: Rfc }) {
+export function RfcSchema({ rfc }: { rfc: EnrichedRfc }) {
   return (
     <JsonLd
       data={{

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { canonicalUrl } from "@/lib/seo";
 import { BreadcrumbSchema } from "@/components/seo/BreadcrumbSchema";
+import { getEnrichedRfcs } from "@/lib/rfc-content";
 import RfcListPageClient from "./RfcListPageClient";
 
 export const metadata: Metadata = {
@@ -25,10 +26,12 @@ export const metadata: Metadata = {
 };
 
 export default function RfcListPage() {
+  const rfcs = getEnrichedRfcs();
+
   return (
     <>
       <BreadcrumbSchema items={[{ name: "RFCs", href: "/rfcs/" }]} />
-      <RfcListPageClient />
+      <RfcListPageClient rfcs={rfcs} />
     </>
   );
 }

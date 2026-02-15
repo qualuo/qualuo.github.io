@@ -3,12 +3,15 @@ export interface Rfc {
   number: number;
   title: string;
   subtitle: string;
-  description: string;
   icon: string;
   gradient: string;
   tags: string[];
   status: "live" | "coming-soon";
   date: string;
+}
+
+export interface EnrichedRfc extends Rfc {
+  description: string;
   sectionCount: number;
 }
 
@@ -22,42 +25,33 @@ export const rfcs: Rfc[] = [
     number: 1,
     title: "Custom Solutions in Azure",
     subtitle: "A Well-Architected Proposal for Swedish Public Sector",
-    description:
-      "A proposal to adopt Azure Well-Architected principles for custom-built solutions in Swedish public sector organizations \u2014 covering tenant structure, data residency, compliance across municipal, regional, and state levels.",
     icon: "cloud-cog",
     gradient: "from-sky-500 via-blue-500 to-indigo-500",
     tags: ["Azure", "Well-Architected", "Swedish Public Sector", "Compliance"],
     status: "live",
     date: "2026-02-11",
-    sectionCount: 6,
   },
   {
     slug: "global-multi-cloud-governance",
     number: 2,
     title: "Global Multi-Cloud Governance",
     subtitle: "A Reference Architecture for Azure, AWS, and GCP",
-    description:
-      "A reference architecture for operating globally distributed infrastructure across Azure, AWS, and GCP \u2014 covering organizational structure, identity federation, networking, compliance, security operations, and FinOps.",
     icon: "globe-lock",
     gradient: "from-violet-500 via-purple-500 to-fuchsia-500",
     tags: ["Multi-Cloud", "Azure", "AWS", "GCP", "Compliance", "Global"],
     status: "live",
     date: "2026-02-12",
-    sectionCount: 8,
   },
   {
     slug: "agentic-workforce",
     number: 3,
     title: "The Agentic Workforce",
-    subtitle: "One Container, One Role, One Prompt — The Agentic Workforce",
-    description:
-      "A proposal for deploying AI agents as single-role containers — each with one prompt, one job — composed into an agentic workforce that automates business operations at a fraction of the cost.",
+    subtitle: "One Container, One Role, One Prompt",
     icon: "brain-circuit",
     gradient: "from-emerald-500 via-teal-500 to-cyan-500",
     tags: ["AI Agents", "Containers", "Agentic Workforce", "Cost Optimization"],
     status: "live",
     date: "2026-02-12",
-    sectionCount: 9,
   },
 ];
 
