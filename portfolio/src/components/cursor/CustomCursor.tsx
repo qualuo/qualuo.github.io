@@ -119,11 +119,11 @@ export function CustomCursor() {
             opacity: { duration: 0.15 },
           }}
         >
-          {/* Inner dot - always visible */}
+          {/* Inner dot - white with dark outline for universal visibility */}
           <motion.div
             className="absolute rounded-full"
             style={{
-              mixBlendMode: showBlend ? "difference" : "normal",
+              boxShadow: showBlend ? "0 0 0 1.5px rgba(0,0,0,0.18)" : "none",
             }}
             animate={{
               width: cursorSize,
@@ -235,7 +235,7 @@ export function CustomCursor() {
           style={{
             marginLeft: -outerSize / 2,
             marginTop: -outerSize / 2,
-            mixBlendMode: "difference",
+            boxShadow: "0 0 0 1px rgba(0,0,0,0.1)",
           }}
           animate={{
             width: outerSize,
