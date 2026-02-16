@@ -93,11 +93,18 @@ function seededRandom(seed: number) {
 
 // ─── Drawing Helpers ────────────────────────────────────────────────
 
-function petalPath(ctx: CanvasRenderingContext2D, s: number) {
-  ctx.moveTo(0, 0);
-  ctx.bezierCurveTo(s * 0.5, -s * 0.2, s * 0.45, -s * 0.7, s * 0.12, -s);
-  ctx.quadraticCurveTo(0, -s * 0.82, -s * 0.12, -s);
-  ctx.bezierCurveTo(-s * 0.45, -s * 0.7, -s * 0.5, -s * 0.2, 0, 0);
+// Unit-scale petal Path2D — reused for every petal draw, no path rebuild
+// Lazy-init: Path2D is a browser API, unavailable during SSR module evaluation
+let PETAL_PATH: Path2D | null = null;
+function getPetalPath(): Path2D {
+  if (!PETAL_PATH) {
+    PETAL_PATH = new Path2D();
+    PETAL_PATH.moveTo(0, 0);
+    PETAL_PATH.bezierCurveTo(0.5, -0.2, 0.45, -0.7, 0.12, -1);
+    PETAL_PATH.quadraticCurveTo(0, -0.82, -0.12, -1);
+    PETAL_PATH.bezierCurveTo(-0.45, -0.7, -0.5, -0.2, 0, 0);
+  }
+  return PETAL_PATH;
 }
 
 function drawSakuraPetal(
@@ -109,11 +116,10 @@ function drawSakuraPetal(
   ctx.save();
   ctx.translate(cx, cy);
   ctx.rotate(angle);
+  ctx.scale(size, size);
   ctx.globalAlpha = alpha;
-  ctx.beginPath();
-  petalPath(ctx, size);
   ctx.fillStyle = color;
-  ctx.fill();
+  ctx.fill(getPetalPath());
   ctx.restore();
 }
 
@@ -127,11 +133,12 @@ function drawBlossom(
   const breathing = 1 + Math.sin(time * 0.6 + blossom.phase) * 0.04;
   const s = blossom.size * scale * breathing * blossom.bloom;
 
-  if (blossom.bloom < 0.3) {
-    ctx.globalAlpha = 0.8;
+  // Tiny or barely-bloomed blossoms — cheap circle (canopy cloud covers them)
+  if (s < 3.5) {
+    ctx.globalAlpha = 0.6;
     ctx.beginPath();
-    ctx.ellipse(x, y, s * 0.4, s * 0.6, 0, 0, TAU);
-    ctx.fillStyle = PETAL_COLORS[0];
+    ctx.arc(x, y, s * 0.5, 0, TAU);
+    ctx.fillStyle = PETAL_COLORS[Math.abs(Math.round(blossom.hue)) % PETAL_COLORS.length];
     ctx.fill();
     ctx.globalAlpha = 1;
     return;
@@ -248,6 +255,37 @@ function drawBranch(
   }
 }
 
+// ─── Canopy Cloud — soft pink mass behind individual blossoms ─────
+// Real sakura canopies look like a continuous pink cloud. This pass
+// draws large, low-alpha circles at every blossom cluster. Overlap
+// accumulates into a dense, volumetric mass — cheap and effective.
+
+function drawCanopyCloud(
+  ctx: CanvasRenderingContext2D,
+  branch: Branch,
+  vw: number, vh: number,
+  time: number, wind: number, scale: number,
+  parentSwayX: number, parentSwayY: number,
+) {
+  const sway = Math.sin(time * 0.8 + branch.swayPhase) * branch.swayAmp * wind;
+  const d1 = branch.depth + 1;
+  const swayX = parentSwayX + sway * d1 * 8;
+  const swayY = parentSwayY + Math.abs(sway) * branch.depth * 2;
+  const bx = branch.x1 * vw + swayX;
+  const by = branch.y1 * vh + swayY;
+
+  if (branch.blossoms.length > 0) {
+    const r = (16 + branch.blossoms.length * 2.2) * scale;
+    ctx.beginPath();
+    ctx.arc(bx, by, r, 0, TAU);
+    ctx.fill();
+  }
+
+  for (const child of branch.children) {
+    drawCanopyCloud(ctx, child, vw, vh, time, wind, scale, swayX, swayY);
+  }
+}
+
 // Reusable position buffer for petal spawning
 const _positionBuf: { x: number; y: number }[] = [];
 
@@ -314,11 +352,11 @@ function generateTreeStructure(seed: number): Branch {
   function addBlossoms(b: Branch, n: number) {
     for (let i = 0; i < n; i++) {
       b.blossoms.push({
-        ox: (rng() - 0.5) * 24, oy: (rng() - 0.5) * 20 - 3,
-        size: 4 + rng() * 5.5,
+        ox: (rng() - 0.5) * 30, oy: (rng() - 0.5) * 26 - 3,
+        size: 4.5 + rng() * 6,
         petalOffsets: Array.from({ length: 5 }, () => rng() * 0.4 - 0.2),
         phase: rng() * TAU,
-        bloom: 0.35 + rng() * 0.65,
+        bloom: 0.5 + rng() * 0.5,
         hue: rng() * 10 - 5,
       });
     }
@@ -328,7 +366,7 @@ function generateTreeStructure(seed: number): Branch {
   function grow(parent: Branch, stopDepth: number) {
     if (parent.depth >= stopDepth) {
       // Terminal clusters — dense blossom clouds
-      addBlossoms(parent, 5 + (rng() * 6 | 0));
+      addBlossoms(parent, 6 + (rng() * 7 | 0));
       return;
     }
 
@@ -336,7 +374,7 @@ function generateTreeStructure(seed: number): Branch {
     const curve = (rng() - 0.5) * 0.25;
     const cont = br(parent.x1, parent.y1,
       parent.angle + (rng() - 0.5) * 0.3,
-      parent.length * (0.65 + rng() * 0.15),
+      parent.length * (0.58 + rng() * 0.14),
       parent.thickness * 0.6, parent.depth + 1, curve);
     parent.children.push(cont);
     grow(cont, stopDepth);
@@ -348,7 +386,7 @@ function generateTreeStructure(seed: number): Branch {
       const t = 0.3 + rng() * 0.35;
       const pt = along(parent, t);
       const sb = br(pt.x, pt.y,
-        parent.angle + side * (0.35 + rng() * 0.5),
+        parent.angle + side * (0.3 + rng() * 0.4),
         parent.length * (0.5 + rng() * 0.2),
         parent.thickness * (0.35 + rng() * 0.2),
         parent.depth + 1, (rng() - 0.5) * 0.2);
@@ -362,7 +400,7 @@ function generateTreeStructure(seed: number): Branch {
       const t = 0.5 + rng() * 0.3;
       const pt = along(parent, t);
       const sb2 = br(pt.x, pt.y,
-        parent.angle + side * (0.45 + rng() * 0.45),
+        parent.angle + side * (0.35 + rng() * 0.4),
         parent.length * (0.4 + rng() * 0.18),
         parent.thickness * (0.28 + rng() * 0.17),
         parent.depth + 2, (rng() - 0.5) * 0.3);
@@ -371,7 +409,7 @@ function generateTreeStructure(seed: number): Branch {
     }
 
     // Scattered blossoms along mature branches (ma — not everywhere)
-    if (parent.depth >= 1 && rng() > 0.35) {
+    if (parent.depth >= 1 && rng() > 0.3) {
       addBlossoms(parent, 2 + (rng() * 3 | 0));
     }
   }
@@ -389,6 +427,8 @@ function generateTreeStructure(seed: number): Branch {
     -Math.PI / 2 + leanDir * leanAmount,
     trunkLen, trunkThick, 0, trunkCurve,
   );
+  // Trunk exits ground vertically — curvature applies above the base
+  trunk.cx = trunk.x0;
 
   // Crown — continues upward, sustaining the lean
   const crownLean = leanDir * leanAmount * 0.3 + (rng() - 0.5) * 0.12;
@@ -422,8 +462,8 @@ function generateTreeStructure(seed: number): Branch {
     if (side < 0) hasLeft = true; else hasRight = true;
 
     // Higher attachments produce longer, thicker arms
-    const hf = 0.6 + t * 0.8;
-    const armAngle = -Math.PI / 2 + side * (0.4 + rng() * 0.55) + leanDir * leanAmount * 0.2;
+    const hf = Math.min(0.6 + t * 0.8, 1.0);
+    const armAngle = -Math.PI / 2 + side * (0.35 + rng() * 0.4) + leanDir * leanAmount * 0.2;
     const armLen = (0.08 + rng() * 0.12) * hf;
     const armThick = (3 + rng() * 4) * hf;
     const armCurve = side * rng() * 0.2;
@@ -503,6 +543,32 @@ export default function SakuraClient() {
   const [showHint, setShowHint] = useState(true);
   const [seed, setSeed] = useState(String(DEFAULT_SEED));
 
+  // Read seed from URL or sessionStorage (404 redirect) on mount
+  useEffect(() => {
+    const redirected = sessionStorage.getItem("sakura-seed");
+    if (redirected) {
+      sessionStorage.removeItem("sakura-seed");
+      setSeed(redirected);
+      return;
+    }
+    const match = window.location.pathname.match(/\/creative\/sakura\/([^/]+)/);
+    if (match?.[1]) {
+      setSeed(decodeURIComponent(match[1]));
+    }
+  }, []);
+
+  // Sync seed to URL
+  useEffect(() => {
+    const trimmed = seed.trim();
+    const base = "/creative/sakura/";
+    const target = trimmed && trimmed !== String(DEFAULT_SEED)
+      ? `${base}${encodeURIComponent(trimmed)}`
+      : base;
+    if (window.location.pathname !== target) {
+      window.history.replaceState(null, "", target);
+    }
+  }, [seed]);
+
   useEffect(() => {
     treeRef.current = generateTreeStructure(seedToNumber(seed));
     // Clear petals when tree changes
@@ -530,16 +596,82 @@ export default function SakuraClient() {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d")!;
-    let dpr = window.devicePixelRatio || 1;
+    let dpr = 1;
     let vw = 0, vh = 0;
     let isMobile = false;
     let hidden = false;
+    let bgCanvas: OffscreenCanvas | HTMLCanvasElement | null = null;
 
-    let maxPetals = 350;
-    let maxGroundPetals = 180;
+    let maxPetals = 600;
+    let maxGroundPetals = 400;
+
+    function createOffscreen(w: number, h: number) {
+      try { return new OffscreenCanvas(w, h); }
+      catch { const c = document.createElement("canvas"); c.width = w; c.height = h; return c; }
+    }
+
+    function renderBackground(target: OffscreenCanvas | HTMLCanvasElement) {
+      const bgCtx = target.getContext("2d")! as CanvasRenderingContext2D;
+      bgCtx.clearRect(0, 0, target.width, target.height);
+      bgCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const groundY = vh * GROUND_Y;
+
+      bgCtx.fillStyle = "#FAF8F5";
+      bgCtx.fillRect(0, 0, vw, vh);
+
+      bgCtx.fillStyle = "#8B9DAF";
+      bgCtx.globalAlpha = 0.022;
+      bgCtx.beginPath();
+      bgCtx.moveTo(0, groundY);
+      bgCtx.lineTo(0, groundY * 0.56);
+      bgCtx.quadraticCurveTo(vw * 0.09, groundY * 0.36, vw * 0.19, groundY * 0.50);
+      bgCtx.quadraticCurveTo(vw * 0.29, groundY * 0.30, vw * 0.40, groundY * 0.46);
+      bgCtx.lineTo(vw * 0.54, groundY);
+      bgCtx.closePath();
+      bgCtx.fill();
+
+      bgCtx.fillStyle = "#9B8E82";
+      bgCtx.globalAlpha = 0.028;
+      bgCtx.beginPath();
+      bgCtx.moveTo(vw * 0.46, groundY);
+      bgCtx.quadraticCurveTo(vw * 0.56, groundY * 0.48, vw * 0.68, groundY * 0.40);
+      bgCtx.quadraticCurveTo(vw * 0.80, groundY * 0.36, vw * 0.90, groundY * 0.52);
+      bgCtx.lineTo(vw, groundY * 0.60);
+      bgCtx.lineTo(vw, groundY);
+      bgCtx.closePath();
+      bgCtx.fill();
+
+      bgCtx.fillStyle = "#A09488";
+      bgCtx.globalAlpha = 0.016;
+      bgCtx.beginPath();
+      bgCtx.moveTo(vw * 0.70, groundY);
+      bgCtx.quadraticCurveTo(vw * 0.82, groundY * 0.68, vw * 0.94, groundY * 0.63);
+      bgCtx.lineTo(vw, groundY * 0.70);
+      bgCtx.lineTo(vw, groundY);
+      bgCtx.closePath();
+      bgCtx.fill();
+      bgCtx.globalAlpha = 1;
+
+      const mistGrad = bgCtx.createLinearGradient(0, groundY * 0.45, 0, groundY * 0.92);
+      mistGrad.addColorStop(0, "rgba(251,245,236,0)");
+      mistGrad.addColorStop(0.3, "rgba(250,248,245,0.65)");
+      mistGrad.addColorStop(0.6, "rgba(250,248,245,0.45)");
+      mistGrad.addColorStop(1, "rgba(250,248,245,0)");
+      bgCtx.fillStyle = mistGrad;
+      bgCtx.fillRect(0, groundY * 0.45, vw, groundY * 0.47);
+
+      bgCtx.globalAlpha = 0.04;
+      bgCtx.strokeStyle = "#9B9590";
+      bgCtx.lineWidth = 0.5;
+      bgCtx.beginPath();
+      bgCtx.moveTo(0, groundY);
+      bgCtx.quadraticCurveTo(vw * 0.5, groundY - 2, vw, groundY);
+      bgCtx.stroke();
+      bgCtx.globalAlpha = 1;
+    }
 
     const resize = () => {
-      dpr = window.devicePixelRatio || 1;
+      dpr = Math.min(window.devicePixelRatio || 1, 1.5);
       vw = window.innerWidth;
       vh = window.innerHeight;
       canvas.width = vw * dpr;
@@ -549,19 +681,14 @@ export default function SakuraClient() {
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
       isMobile = vw < 768;
-      maxPetals = isMobile ? 150 : 350;
-      maxGroundPetals = isMobile ? 80 : 180;
+      maxPetals = isMobile ? 280 : 600;
+      maxGroundPetals = isMobile ? 180 : 400;
 
-
-      try {
-        groundCanvasRef.current = new OffscreenCanvas(vw * dpr, vh * dpr);
-      } catch {
-        const c = document.createElement("canvas");
-        c.width = vw * dpr;
-        c.height = vh * dpr;
-        groundCanvasRef.current = c;
-      }
+      groundCanvasRef.current = createOffscreen(vw * dpr, vh * dpr);
       groundDirtyRef.current = true;
+
+      bgCanvas = createOffscreen(vw * dpr, vh * dpr);
+      renderBackground(bgCanvas);
     };
     resize();
     window.addEventListener("resize", resize);
@@ -576,6 +703,9 @@ export default function SakuraClient() {
       const now = performance.now();
       const time = now / 1000;
       const scale = Math.min(vh / 800, 1.4);
+      // Cap horizontal stretch — on wide screens, tree stays proportional
+      const treeW = vh * Math.min(vw / vh, 1.4);
+      const treeOx = (vw - treeW) * 0.5;
       const groundY = vh * GROUND_Y;
 
       const gust = gustRef.current;
@@ -587,64 +717,14 @@ export default function SakuraClient() {
       smoothWindRef.current += (targetWind - smoothWindRef.current) * 0.03;
       const wind = smoothWindRef.current + gust * 2;
 
-      ctx.clearRect(0, 0, vw, vh);
-
-      // ── Background ──
-      ctx.fillStyle = "#FAF8F5";
-      ctx.fillRect(0, 0, vw, vh);
-
-      // ── Distant mountains — sumi-e shansuiga ──
-      ctx.fillStyle = "#8B9DAF";
-      ctx.globalAlpha = 0.022;
-      ctx.beginPath();
-      ctx.moveTo(0, groundY);
-      ctx.lineTo(0, groundY * 0.56);
-      ctx.quadraticCurveTo(vw * 0.09, groundY * 0.36, vw * 0.19, groundY * 0.50);
-      ctx.quadraticCurveTo(vw * 0.29, groundY * 0.30, vw * 0.40, groundY * 0.46);
-      ctx.lineTo(vw * 0.54, groundY);
-      ctx.closePath();
-      ctx.fill();
-
-      ctx.fillStyle = "#9B8E82";
-      ctx.globalAlpha = 0.028;
-      ctx.beginPath();
-      ctx.moveTo(vw * 0.46, groundY);
-      ctx.quadraticCurveTo(vw * 0.56, groundY * 0.48, vw * 0.68, groundY * 0.40);
-      ctx.quadraticCurveTo(vw * 0.80, groundY * 0.36, vw * 0.90, groundY * 0.52);
-      ctx.lineTo(vw, groundY * 0.60);
-      ctx.lineTo(vw, groundY);
-      ctx.closePath();
-      ctx.fill();
-
-      ctx.fillStyle = "#A09488";
-      ctx.globalAlpha = 0.016;
-      ctx.beginPath();
-      ctx.moveTo(vw * 0.70, groundY);
-      ctx.quadraticCurveTo(vw * 0.82, groundY * 0.68, vw * 0.94, groundY * 0.63);
-      ctx.lineTo(vw, groundY * 0.70);
-      ctx.lineTo(vw, groundY);
-      ctx.closePath();
-      ctx.fill();
-      ctx.globalAlpha = 1;
-
-      // ── Mist — veils the mountain feet, pure 間 ──
-      const mistGrad = ctx.createLinearGradient(0, groundY * 0.45, 0, groundY * 0.92);
-      mistGrad.addColorStop(0, "rgba(251,245,236,0)");
-      mistGrad.addColorStop(0.3, "rgba(250,248,245,0.65)");
-      mistGrad.addColorStop(0.6, "rgba(250,248,245,0.45)");
-      mistGrad.addColorStop(1, "rgba(250,248,245,0)");
-      ctx.fillStyle = mistGrad;
-      ctx.fillRect(0, groundY * 0.45, vw, groundY * 0.47);
-
-      // ── Subtle horizon curve ──
-      ctx.globalAlpha = 0.04;
-      ctx.strokeStyle = "#9B9590";
-      ctx.lineWidth = 0.5;
-      ctx.beginPath();
-      ctx.moveTo(0, groundY);
-      ctx.quadraticCurveTo(vw * 0.5, groundY - 2, vw, groundY);
-      ctx.stroke();
-      ctx.globalAlpha = 1;
+      // ── Background (cached offscreen) ──
+      if (bgCanvas) {
+        ctx.save();
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.drawImage(bgCanvas as CanvasImageSource, 0, 0);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.restore();
+      }
 
       // ── Ground petals (offscreen canvas, redrawn only when dirty) ──
       const gPetals = groundPetalsRef.current;
@@ -669,7 +749,7 @@ export default function SakuraClient() {
       // ── Tree ──
       const tree = treeRef.current;
       if (tree) {
-        const trunkBaseX = tree.x0 * vw;
+        const trunkBaseX = tree.x0 * treeW + treeOx;
 
         // ── Soft shadow beneath tree ──
         ctx.globalAlpha = 0.035;
@@ -705,15 +785,25 @@ export default function SakuraClient() {
         ctx.stroke();
         ctx.globalAlpha = 1;
 
-        drawBranch(ctx, tree, vw, vh, time, wind, scale, 0, 0);
+        // ── Canopy cloud + tree — rendered in aspect-capped space ──
+        ctx.save();
+        ctx.translate(treeOx, 0);
+        ctx.globalAlpha = 0.06;
+        ctx.fillStyle = "#F2C4D4";
+        drawCanopyCloud(ctx, tree, treeW, vh, time, wind, scale, 0, 0);
+        ctx.globalAlpha = 1;
+
+        drawBranch(ctx, tree, treeW, vh, time, wind, scale, 0, 0);
+        ctx.restore();
 
         // ── Spawn falling petals ──
         const petals = petalsRef.current;
 
-        const spawnChance = 0.28 + gust * 0.6;
+        const spawnChance = 0.42 + gust * 0.6;
         if (petals.length < maxPetals && Math.random() < spawnChance) {
           _positionBuf.length = 0;
-          collectBlossomPositions(tree, vw, vh, time, wind, 0, 0, _positionBuf);
+          collectBlossomPositions(tree, treeW, vh, time, wind, 0, 0, _positionBuf);
+          for (let j = 0; j < _positionBuf.length; j++) _positionBuf[j].x += treeOx;
           if (_positionBuf.length > 0) {
             const src = _positionBuf[(Math.random() * _positionBuf.length) | 0];
             spawnPetal(petals, src.x, src.y);
@@ -724,7 +814,8 @@ export default function SakuraClient() {
         if (gust > 0.3) {
           const burstCount = (gust * 8) | 0;
           if (_positionBuf.length === 0) {
-            collectBlossomPositions(tree, vw, vh, time, wind, 0, 0, _positionBuf);
+            collectBlossomPositions(tree, treeW, vh, time, wind, 0, 0, _positionBuf);
+            for (let j = 0; j < _positionBuf.length; j++) _positionBuf[j].x += treeOx;
           }
           for (let i = 0; i < burstCount && petals.length < maxPetals && _positionBuf.length > 0; i++) {
             const src = _positionBuf[(Math.random() * _positionBuf.length) | 0];
@@ -732,7 +823,7 @@ export default function SakuraClient() {
           }
         }
 
-        // ── Update & draw falling petals ──
+        // ── Update falling petals (physics pass) ──
         for (let i = petals.length - 1; i >= 0; i--) {
           const p = petals[i];
 
@@ -749,7 +840,6 @@ export default function SakuraClient() {
 
           if (p.y >= groundY - 2) {
             if (gPetals.length < maxGroundPetals) {
-              // Gently bias toward trunk base — petals pool at the foot
               const bias = Math.random() * 0.3;
               const landX = p.x + (trunkBaseX - p.x) * bias;
               gPetals.push({
@@ -768,21 +858,25 @@ export default function SakuraClient() {
 
           if (p.x < -30 || p.x > vw + 30) {
             petals[i] = petals[petals.length - 1]; petals.pop();
-            continue;
           }
+        }
 
-          const tumbleScale = 0.3 + Math.abs(Math.cos(p.tumble)) * 0.7;
-          const tumbleY = 0.6 + Math.abs(Math.sin(p.tumble * 0.7)) * 0.4;
-          ctx.save();
-          ctx.translate(p.x, p.y);
-          ctx.rotate(p.rotation);
-          ctx.scale(tumbleScale, tumbleY);
-          ctx.globalAlpha = p.alpha;
-          ctx.beginPath();
-          petalPath(ctx, p.size);
-          ctx.fillStyle = PETAL_COLORS[p.colorIdx];
-          ctx.fill();
-          ctx.restore();
+        // ── Draw falling petals (batched by color — minimizes fillStyle changes) ──
+        for (let c = 0; c < PETAL_COLORS.length; c++) {
+          ctx.fillStyle = PETAL_COLORS[c];
+          for (let i = 0; i < petals.length; i++) {
+            const p = petals[i];
+            if (p.colorIdx !== c) continue;
+            const tumbleScale = 0.3 + Math.abs(Math.cos(p.tumble)) * 0.7;
+            const tumbleY = 0.6 + Math.abs(Math.sin(p.tumble * 0.7)) * 0.4;
+            ctx.save();
+            ctx.translate(p.x, p.y);
+            ctx.rotate(p.rotation);
+            ctx.scale(tumbleScale * p.size, tumbleY * p.size);
+            ctx.globalAlpha = p.alpha;
+            ctx.fill(getPetalPath());
+            ctx.restore();
+          }
         }
       }
 
