@@ -145,6 +145,15 @@ body {
 }
 .rfc-prose blockquote blockquote p { color: #64748b; font-style: italic; }
 
+.rfc-prose pre {
+  overflow-x: auto;
+}
+
+.rfc-prose table {
+  display: block;
+  overflow-x: auto;
+}
+
 .rfc-prose :not(pre) > code {
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.12);
