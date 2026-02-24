@@ -1,10 +1,13 @@
 "use client";
 
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, lazy, Suspense } from "react";
 import { MotionValue } from "framer-motion";
 import Image from "next/image";
 import { Project } from "@/lib/projects";
-import { AbstractVisual } from "./visuals/AbstractVisual";
+
+const AbstractVisual = lazy(() =>
+  import("./visuals/AbstractVisual").then(m => ({ default: m.AbstractVisual }))
+);
 
 interface ProjectVisualProps {
   project: Project;
@@ -63,11 +66,13 @@ export function ProjectVisual({ project, scrollProgress }: ProjectVisualProps) {
   // Otherwise, render abstract visual based on category
   if (project.visualConfig) {
     return (
-      <AbstractVisual
-        type={project.visualConfig.type}
-        colors={project.visualConfig.colors}
-        scrollProgress={scrollProgress}
-      />
+      <Suspense fallback={<div className="absolute inset-0 bg-linear-to-br from-slate-900 via-slate-800 to-slate-900" />}>
+        <AbstractVisual
+          type={project.visualConfig.type}
+          colors={project.visualConfig.colors}
+          scrollProgress={scrollProgress}
+        />
+      </Suspense>
     );
   }
 

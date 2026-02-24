@@ -1,16 +1,23 @@
 "use client";
 
-import { useRef, useState, useEffect, useCallback, useSyncExternalStore } from "react";
-import { Canvas } from "@react-three/fiber";
-import { View } from "@react-three/drei";
+import { useRef, useState, useEffect, useCallback, useSyncExternalStore, lazy, Suspense } from "react";
+import dynamic from "next/dynamic";
 import { motion, useScroll } from "framer-motion";
 import Image from "next/image";
 import { projects, Project, categoryThemes } from "@/lib/projects";
 import { ProjectHero } from "@/components/projects/ProjectHero";
 import { ProjectProgress } from "@/components/projects/ProjectProgress";
-import { AbstractVisual } from "@/components/projects/visuals/AbstractVisual";
-import { WebGLErrorBoundary } from "@/components/ui/WebGLErrorBoundary";
 import { DelicateAccent } from "@/components/animations/DelicateAccent";
+
+const AbstractVisual = lazy(() =>
+  import("@/components/projects/visuals/AbstractVisual").then(m => ({ default: m.AbstractVisual }))
+);
+
+// Defer Three.js (~2MB) — loads after initial paint instead of blocking it
+const ProjectsWebGL = dynamic(
+  () => import("@/components/projects/ProjectsWebGL").then(m => ({ default: m.ProjectsWebGL })),
+  { ssr: false }
+);
 
 const ease = [0.23, 1, 0.32, 1] as const;
 const AUTO_SCROLL_VH_S = 5; // desktop: % of viewport height per second
@@ -66,10 +73,14 @@ function MobileProjectCard({ project, index, onActive }: { project: Project; ind
             />
           )
         ) : project.visualConfig ? (
-          <AbstractVisual
-            type={project.visualConfig.type}
-            colors={project.visualConfig.colors}
-          />
+          <Suspense fallback={
+            <div className="w-full h-full" style={{ background: `radial-gradient(ellipse at center, ${theme.primary}30, ${theme.secondary}15, transparent)` }} />
+          }>
+            <AbstractVisual
+              type={project.visualConfig.type}
+              colors={project.visualConfig.colors}
+            />
+          </Suspense>
         ) : (
           <div
             className="w-full h-full"
@@ -340,32 +351,9 @@ export function Projects() {
         ))}
       </div>
 
-      {/* Shared WebGL Canvas — all View portals render here (single GL context) */}
+      {/* Shared WebGL Canvas — deferred so Three.js doesn't block initial paint */}
       {mounted && (
-        <WebGLErrorBoundary fallback={null}>
-          <Canvas
-            style={{
-              position: "fixed",
-              top: 0,
-              left: 0,
-              width: "100vw",
-              height: "100vh",
-              pointerEvents: "none",
-              zIndex: 1,
-            }}
-            eventSource={sectionRef as React.RefObject<HTMLElement>}
-            eventPrefix="client"
-            gl={{
-              antialias: true,
-              alpha: true,
-              powerPreference: "high-performance",
-            }}
-            dpr={[1, 1.5]}
-            camera={{ position: [0, 0, 8] }}
-          >
-            <View.Port />
-          </Canvas>
-        </WebGLErrorBoundary>
+        <ProjectsWebGL sectionRef={sectionRef as React.RefObject<HTMLElement>} />
       )}
       {/* Fade overlay for seamless auto-scroll loop */}
       <div
