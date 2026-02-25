@@ -1,6 +1,6 @@
 export const SITE_CONFIG = {
   name: "Quang Luong",
-  title: "Quang Luong | Maker",
+  title: "Quang Luong",
   description:
     "Systems Architect and Creative Technologist designing AI solutions, enterprise automation, and interactive digital experiences.",
   url: "https://qualuo.github.io",
@@ -10,7 +10,7 @@ export const SITE_CONFIG = {
   github: "https://github.com/qualuo",
   author: {
     name: "Quang Luong",
-    jobTitle: "Systems Architect & Creative Technologist",
+    jobTitle: "Building Systems. Crafting Experiences.",
     knowsAbout: [
       "Enterprise Architecture",
       "Generative AI",
