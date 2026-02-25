@@ -1,22 +1,21 @@
 import Link from "next/link";
 
-// ─── Sakura seed URL support ─────────────────────────────────────────
-// Sakura trees have shareable URLs like /creative/sakura/qualuo/.
-// Since this is a static export (GitHub Pages), those paths don't have
-// pre-rendered HTML files — they hit this 404 page instead.
-// The inline script below detects sakura seed URLs, stashes the seed
-// in sessionStorage, and redirects to /creative/sakura/ where
-// SakuraClient picks it up and restores the full URL via replaceState.
-// Non-sakura 404s are unaffected — they just see the normal 404 UI.
+// ─── Seed URL support for creative demos ─────────────────────────────
+// Demos have shareable URLs like /creative/sakura/qualuo/ and
+// /creative/embers/qualuo/. Since this is a static export (GitHub Pages),
+// those paths don't have pre-rendered HTML — they hit this 404 page.
+// The inline script detects seed URLs, stashes the seed in sessionStorage,
+// and redirects to the base demo page where the client picks it up.
+// Non-demo 404s are unaffected — they just see the normal 404 UI.
 // ─────────────────────────────────────────────────────────────────────
 
 export default function NotFound() {
   return (
     <>
-      {/* Sakura seed redirect — see comment above */}
+      {/* Seed URL redirects — see comment above */}
       <script
         dangerouslySetInnerHTML={{
-          __html: `(function(){var m=window.location.pathname.match(/^\\/creative\\/sakura\\/([^/]+)/);if(m&&m[1]){sessionStorage.setItem('sakura-seed',decodeURIComponent(m[1]));window.location.replace('/creative/sakura/')}})()`,
+          __html: `(function(){var p=window.location.pathname;var m;m=p.match(/^\\/creative\\/sakura\\/([^/]+)/);if(m&&m[1]){sessionStorage.setItem('sakura-seed',decodeURIComponent(m[1]));window.location.replace('/creative/sakura/');return;}m=p.match(/^\\/creative\\/embers\\/([^/]+)/);if(m&&m[1]){sessionStorage.setItem('embers-seed',decodeURIComponent(m[1]));window.location.replace('/creative/embers/');}})()`,
         }}
       />
       <main

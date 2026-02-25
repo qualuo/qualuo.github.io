@@ -24,7 +24,7 @@ export const creativeWorks: CreativeWork[] = [
     category: "visual",
     tags: ["Sakura", "Simulation", "Canvas"],
     color: "#F9A8D4",
-    connections: ["digital-gardens", "neural-dreams"],
+    connections: ["neural-dreams", "digital-gardens"],
     href: "/creative/sakura/",
     bgColor: "#1a0f1e",
     particleColor: "#F9A8D4",
