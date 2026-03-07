@@ -394,10 +394,10 @@ export function DelicateAccent({
         return (
           <line
             key={i}
-            x1={200 + Math.cos(angle) * gap}
-            y1={200 + Math.sin(angle) * gap}
-            x2={200 + Math.cos(angle) * reach}
-            y2={200 + Math.sin(angle) * reach}
+            x1={+((200 + Math.cos(angle) * gap).toFixed(3))}
+            y1={+((200 + Math.sin(angle) * gap).toFixed(3))}
+            x2={+((200 + Math.cos(angle) * reach).toFixed(3))}
+            y2={+((200 + Math.sin(angle) * reach).toFixed(3))}
             stroke={i % 3 === 0 ? stroke : strokeFaint}
             strokeWidth="0.75"
             strokeDasharray={lineLen}

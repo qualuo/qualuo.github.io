@@ -8,7 +8,7 @@ export interface Point {
   tags: string[];
   status: "live" | "coming-soon";
   sectionCount?: number;
-  format?: "slides" | "paper";
+  format?: "slides" | "paper" | "whiteboard";
 }
 
 export const points: Point[] = [
@@ -24,6 +24,19 @@ export const points: Point[] = [
     status: "live",
     sectionCount: 10,
     format: "paper",
+  },
+  {
+    slug: "system-landscape-map",
+    title: "System Landscape Map",
+    subtitle: "An Interactive Municipal IT Whiteboard",
+    description:
+      "An interactive whiteboard mapping the current system landscape against a rationalized target architecture — making the gap visceral and the path obvious.",
+    icon: "map",
+    gradient: "from-indigo-500 via-blue-500 to-cyan-500",
+    tags: ["IT Strategy", "System Rationalization", "Interactive"],
+    status: "live",
+    sectionCount: 5,
+    format: "whiteboard",
   },
   {
     slug: "system-landscape",

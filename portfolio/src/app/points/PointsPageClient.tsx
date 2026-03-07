@@ -73,6 +73,18 @@ const POINT_ICONS: Record<string, React.ReactNode> = {
       <path d="M17.5 19H9a7 7 0 116.71-9h1.79a4.5 4.5 0 010 9z" />
     </svg>
   ),
+  map: (
+    <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="3" width="7" height="7" rx="1" />
+      <rect x="14" y="3" width="7" height="7" rx="1" />
+      <rect x="3" y="14" width="7" height="7" rx="1" />
+      <rect x="14" y="14" width="7" height="7" rx="1" />
+      <line x1="10" y1="6.5" x2="14" y2="6.5" />
+      <line x1="10" y1="17.5" x2="14" y2="17.5" />
+      <line x1="6.5" y1="10" x2="6.5" y2="14" />
+      <line x1="17.5" y1="10" x2="17.5" y2="14" />
+    </svg>
+  ),
 };
 
 // ──────────────────────────────────────────────
@@ -82,6 +94,7 @@ const POINT_ICONS: Record<string, React.ReactNode> = {
 const GLOW_COLORS: Record<string, string> = {
   "ai-architecture": "167,139,250",
   "system-landscape": "20,184,166",
+  "system-landscape-map": "99,102,241",
   togaf: "245,158,11",
 };
 
@@ -92,6 +105,7 @@ const GLOW_COLORS: Record<string, string> = {
 const POINT_META: Record<string, { time: string; audience: string }> = {
   "ai-architecture": { time: "12 min read", audience: "Technical Leaders" },
   "system-landscape": { time: "10 min", audience: "CxOs & Architects" },
+  "system-landscape-map": { time: "Interactive", audience: "IT Directors & Architects" },
   togaf: { time: "8 min", audience: "Enterprise Architects" },
 };
 
@@ -150,7 +164,8 @@ function PointCard({ point, index, variant = "standard" }: { point: Point; index
   const isFeatured = variant === "featured";
   const isCompact = variant === "compact";
   const isPaper = point.format === "paper";
-  const isSlides = point.format === "slides" || !point.format;
+  const isWhiteboard = point.format === "whiteboard";
+  const isSlides = !isPaper && !isWhiteboard;
   const cardRef = useRef<HTMLDivElement>(null);
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
@@ -282,7 +297,7 @@ function PointCard({ point, index, variant = "standard" }: { point: Point; index
                   {point.sectionCount && (
                     <>
                       <span className="w-0.5 h-0.5 rounded-full bg-slate-700" />
-                      <span>{point.sectionCount} {isPaper ? "sections" : "slides"}</span>
+                      <span>{point.sectionCount} {isPaper ? "sections" : isWhiteboard ? "levels" : "slides"}</span>
                     </>
                   )}
                 </div>
@@ -314,7 +329,7 @@ function PointCard({ point, index, variant = "standard" }: { point: Point; index
                   <span className="text-slate-600">In development</span>
                 ) : (
                   <span className="flex items-center gap-3 text-slate-400 group-hover:text-white transition-colors duration-500">
-                    {isPaper ? "Read paper" : "View presentation"}
+                    {isPaper ? "Read paper" : isWhiteboard ? "Explore whiteboard" : "View presentation"}
                     <svg
                       className="w-4 h-4 transition-transform duration-500 group-hover:translate-x-1"
                       fill="none"
