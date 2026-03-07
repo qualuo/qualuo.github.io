@@ -112,12 +112,14 @@ function TimeLapseControl() {
 interface NavbarProps {
   isSubpage?: boolean;
   hasStars?: boolean;
+  glass?: boolean;
 }
 
 let hasAnimatedNavbar = false;
 
-export function Navbar({ isSubpage = false, hasStars = true }: NavbarProps) {
+export function Navbar({ isSubpage = false, hasStars = true, glass = false }: NavbarProps) {
   const [isScrolled, setIsScrolled] = useState(false);
+  const scrolledOrGlass = isScrolled || glass;
   const [showLogo, setShowLogo] = useState(isSubpage);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { scrollY } = useScroll();
@@ -196,7 +198,7 @@ export function Navbar({ isSubpage = false, hasStars = true }: NavbarProps) {
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 border-b ${
-        isScrolled
+        scrolledOrGlass
           ? "h-14 bg-white/2 backdrop-blur-2xl border-white/4 shadow-lg shadow-black/10"
           : "h-16 md:h-20 bg-transparent border-transparent"
       }`}
