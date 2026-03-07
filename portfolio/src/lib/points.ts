@@ -27,13 +27,13 @@ export const points: Point[] = [
   },
   {
     slug: "system-landscape-map",
-    title: "System Landscape Map",
-    subtitle: "An Interactive Municipal IT Whiteboard",
+    title: "Public Sector IT Landscape",
+    subtitle: "Interactive Architecture Whiteboard",
     description:
-      "An interactive whiteboard mapping the current system landscape against a rationalized target architecture — making the gap visceral and the path obvious.",
+      "Walk a municipality from fragmented legacy systems to a federated integration platform — five maturity levels, sixty systems, one interactive map.",
     icon: "map",
     gradient: "from-indigo-500 via-blue-500 to-cyan-500",
-    tags: ["IT Strategy", "System Rationalization", "Interactive"],
+    tags: ["Public Sector", "IT Strategy", "System Rationalization", "Interactive"],
     status: "live",
     sectionCount: 5,
     format: "whiteboard",

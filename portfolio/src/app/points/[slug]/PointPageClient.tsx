@@ -23,10 +23,17 @@ const AIArchitecturePaper = lazy(() =>
   }))
 );
 
+const SystemLandscapeMap = lazy(() =>
+  import("@/components/points/SystemLandscapeMap").then((m) => ({
+    default: m.SystemLandscapeMap,
+  }))
+);
+
 const POINT_COMPONENTS: Record<string, React.ComponentType> = {
   togaf: TogafPresentation,
   "system-landscape": SystemLandscapePresentation,
   "ai-architecture": AIArchitecturePaper,
+  "system-landscape-map": SystemLandscapeMap,
 };
 
 interface PointPageClientProps {
@@ -56,13 +63,14 @@ export function PointPageClient({ point }: PointPageClientProps) {
   const PresentationComponent = POINT_COMPONENTS[point.slug];
 
   const isPaper = point.format === "paper";
+  const isFullCanvas = point.format === "whiteboard";
 
   return (
     <main
       className={`relative ${isPaper ? "min-h-dvh" : "h-dvh overflow-hidden"}`}
     >
 
-      <Navbar isSubpage hasStars={false} />
+      <Navbar isSubpage glass={isFullCanvas} hasStars={!isFullCanvas} />
 
       <Suspense
         fallback={
