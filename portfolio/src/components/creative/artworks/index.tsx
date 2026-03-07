@@ -9,6 +9,7 @@ import { PulseVisualizerArt } from "./PulseVisualizerArt";
 import { DigitalGardensArt } from "./DigitalGardensArt";
 import { ThreeWorldsArt } from "./ThreeWorldsArt";
 import { SakuraArt } from "./SakuraArt";
+import { CelestialGliderArt } from "./CelestialGliderArt";
 
 const emptySubscribe = () => () => {};
 
@@ -25,7 +26,12 @@ const ARTWORK_MAP: Record<string, React.ComponentType<ArtworkProps>> = {
   "digital-gardens": DigitalGardensArt,
   "three-worlds": ThreeWorldsArt,
   "sakura-dreams": SakuraArt,
+  "celestial-glider": CelestialGliderArt,
 };
+
+export function hasArtwork(workId: string): boolean {
+  return workId in ARTWORK_MAP;
+}
 
 export function SectionArtwork({
   workId,

@@ -46,19 +46,13 @@ export function CreativeNav({
               aria-label={`Go to ${work.title}`}
               aria-current={isActive ? "true" : undefined}
             >
-              {/* Label (appears on hover/active) */}
-              <motion.span
-                className="text-xs tracking-wide whitespace-nowrap"
-                initial={false}
-                animate={{
-                  opacity: isActive ? 0.7 : 0,
-                  x: isActive ? 0 : 8,
-                }}
-                transition={{ duration: 0.2 }}
+              {/* Label */}
+              <span
+                className={`text-xs tracking-wide whitespace-nowrap transition-all duration-200 group-hover:opacity-50 group-hover:translate-x-0 ${isActive ? "opacity-70 translate-x-0" : "opacity-0 translate-x-2"}`}
                 style={{ color: work.color }}
               >
                 {work.title}
-              </motion.span>
+              </span>
 
               {/* Dot */}
               <div className="relative flex items-center justify-center">
