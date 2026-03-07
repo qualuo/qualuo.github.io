@@ -98,6 +98,11 @@ function buildPageList(): OGPageDef[] {
       title: "Embers",
       subtitle: "Warmth in the Dark",
     },
+    {
+      path: "public/og/creative/fly.png",
+      title: "Celestial Glider",
+      subtitle: "A Chill Ambient Flying Experience",
+    },
   ];
 
   for (const demo of demos.filter((d) => d.status === "live")) {
