@@ -66,6 +66,11 @@
 <priority>0.2</priority>
 </url>
 <url>
+<loc>https://qualuo.github.io/creative/fly/</loc>
+<changefreq>monthly</changefreq>
+<priority>0.5</priority>
+</url>
+<url>
 <loc>https://qualuo.github.io/demos/local-llm-chat/</loc>
 <changefreq>monthly</changefreq>
 <priority>0.7</priority>
