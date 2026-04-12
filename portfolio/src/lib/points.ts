@@ -65,6 +65,19 @@ export const points: Point[] = [
     format: "slides",
   },
   {
+    slug: "hierarchical-governance",
+    title: "Hierarchical Governance",
+    subtitle: "The Architecture of Organizational Control",
+    description:
+      "Why most organizations over-index on rules and under-invest in principles and freedom — the four-layer framework that separates bureaucracies from high-performing systems.",
+    icon: "layers",
+    gradient: "from-amber-500 via-orange-500 to-red-500",
+    tags: ["Governance", "Systems Thinking", "Organization Design", "Decision Architecture"],
+    status: "live",
+    sectionCount: 10,
+    format: "paper",
+  },
+  {
     slug: "api-strategy",
     title: "API Strategy",
     subtitle: "Designing APIs as Products",

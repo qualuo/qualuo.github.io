@@ -29,11 +29,18 @@ const SystemLandscapeMap = lazy(() =>
   }))
 );
 
+const HierarchicalGovernancePaper = lazy(() =>
+  import("@/components/points/HierarchicalGovernancePaper").then((m) => ({
+    default: m.HierarchicalGovernancePaper,
+  }))
+);
+
 const POINT_COMPONENTS: Record<string, React.ComponentType> = {
   togaf: TogafPresentation,
   "system-landscape": SystemLandscapePresentation,
   "ai-architecture": AIArchitecturePaper,
   "system-landscape-map": SystemLandscapeMap,
+  "hierarchical-governance": HierarchicalGovernancePaper,
 };
 
 interface PointPageClientProps {

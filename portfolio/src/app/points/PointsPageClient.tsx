@@ -73,6 +73,13 @@ const POINT_ICONS: Record<string, React.ReactNode> = {
       <path d="M17.5 19H9a7 7 0 116.71-9h1.79a4.5 4.5 0 010 9z" />
     </svg>
   ),
+  layers: (
+    <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 2L2 7l10 5 10-5-10-5z" />
+      <path d="M2 17l10 5 10-5" />
+      <path d="M2 12l10 5 10-5" />
+    </svg>
+  ),
   map: (
     <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <rect x="3" y="3" width="7" height="7" rx="1" />
@@ -96,6 +103,7 @@ const GLOW_COLORS: Record<string, string> = {
   "system-landscape": "20,184,166",
   "system-landscape-map": "99,102,241",
   togaf: "245,158,11",
+  "hierarchical-governance": "249,115,22",
 };
 
 // ──────────────────────────────────────────────
@@ -107,6 +115,7 @@ const POINT_META: Record<string, { time: string; audience: string }> = {
   "system-landscape": { time: "10 min", audience: "CxOs & Architects" },
   "system-landscape-map": { time: "Interactive", audience: "IT Directors & Architects" },
   togaf: { time: "8 min", audience: "Enterprise Architects" },
+  "hierarchical-governance": { time: "14 min read", audience: "Leaders & Architects" },
 };
 
 // ──────────────────────────────────────────────
