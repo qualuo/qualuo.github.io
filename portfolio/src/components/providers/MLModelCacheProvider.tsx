@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useRef, useCallback, ReactNode } from "react";
+import { createContext, useContext, useRef, useCallback, useMemo, ReactNode } from "react";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type MLCEngine = any;
@@ -85,17 +85,30 @@ export function MLModelCacheProvider({ children }: MLModelCacheProviderProps) {
     embeddingPipelinesRef.current.clear();
   }, []);
 
-  const value: MLModelCacheContextType = {
-    getLLMEngine,
-    setLLMEngine,
-    getTransformersPipeline,
-    setTransformersPipeline,
-    getWhisperPipeline,
-    setWhisperPipeline,
-    getEmbeddingPipeline,
-    setEmbeddingPipeline,
-    clearAll,
-  };
+  const value = useMemo<MLModelCacheContextType>(
+    () => ({
+      getLLMEngine,
+      setLLMEngine,
+      getTransformersPipeline,
+      setTransformersPipeline,
+      getWhisperPipeline,
+      setWhisperPipeline,
+      getEmbeddingPipeline,
+      setEmbeddingPipeline,
+      clearAll,
+    }),
+    [
+      getLLMEngine,
+      setLLMEngine,
+      getTransformersPipeline,
+      setTransformersPipeline,
+      getWhisperPipeline,
+      setWhisperPipeline,
+      getEmbeddingPipeline,
+      setEmbeddingPipeline,
+      clearAll,
+    ]
+  );
 
   return (
     <MLModelCacheContext.Provider value={value}>

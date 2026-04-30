@@ -417,11 +417,13 @@ class WebGPUPointRenderer {
   }
 
   destroy() {
-    this.dataBuffer?.destroy();
-    this.posBuffer?.destroy();
-    this.colBuffer?.destroy();
-    this.paramsBuffer?.destroy();
-    this.cameraBuffer?.destroy();
+    // NOTE: don't destroy `this.device` here — it's owned by the host component
+    // and reused across renderer re-inits (e.g., when pointCount changes).
+    try { this.dataBuffer?.destroy(); } catch {}
+    try { this.posBuffer?.destroy(); } catch {}
+    try { this.colBuffer?.destroy(); } catch {}
+    try { this.paramsBuffer?.destroy(); } catch {}
+    try { this.cameraBuffer?.destroy(); } catch {}
   }
 }
 
@@ -600,7 +602,7 @@ export function MillionPointScatter() {
   }, [pointCount]);
   const gpuDeviceRef = useRef<GPUDevice | null>(null);
 
-  // Phase 1: Detect WebGPU (no canvas needed)
+  // Phase 1: Detect WebGPU (no canvas needed). Device is destroyed on full unmount.
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -617,7 +619,11 @@ export function MillionPointScatter() {
         setReady(true);
       }
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+      try { gpuDeviceRef.current?.destroy(); } catch {}
+      gpuDeviceRef.current = null;
+    };
   }, []);
 
   // Phase 2: Initialize renderer once WebGPU is confirmed and canvas is in DOM
@@ -629,19 +635,28 @@ export function MillionPointScatter() {
 
     let cancelled = false;
 
+    let deviceLost = false;
+    device.lost.then((info) => {
+      console.warn("[WebGPU] device lost:", info);
+      deviceLost = true;
+      cancelAnimationFrame(animRef.current);
+      if (!cancelled) {
+        setGpuDiag(`GPU device lost: ${info.message || info.reason}`);
+        setUseWebGPU(false);
+      }
+    });
+
     (async () => {
       try {
-        const data = generatePointCatalog(pointCount, 42);
-
         const renderer = new WebGPUPointRenderer(device, canvas, pointCount);
-        await renderer.init(data);
+        await renderer.init(pointData);
         if (cancelled) { renderer.destroy(); return; }
 
         rendererRef.current = renderer;
         setReady(true);
 
         const loop = (time: number) => {
-          if (cancelled) return;
+          if (cancelled || deviceLost) return;
           fpsTickRef.current?.();
           renderer.params.minMag = minMag;
           renderer.params.maxMag = maxMag;
@@ -679,15 +694,16 @@ export function MillionPointScatter() {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || !useWebGPU) return;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const observer = new ResizeObserver(() => {
       const rect = canvas.getBoundingClientRect();
-      canvas.width = rect.width * devicePixelRatio;
-      canvas.height = rect.height * devicePixelRatio;
+      canvas.width = Math.max(1, Math.floor(rect.width * dpr));
+      canvas.height = Math.max(1, Math.floor(rect.height * dpr));
     });
     observer.observe(canvas);
     const rect = canvas.getBoundingClientRect();
-    canvas.width = rect.width * devicePixelRatio;
-    canvas.height = rect.height * devicePixelRatio;
+    canvas.width = Math.max(1, Math.floor(rect.width * dpr));
+    canvas.height = Math.max(1, Math.floor(rect.height * dpr));
     return () => observer.disconnect();
   }, [useWebGPU]);
 
@@ -810,7 +826,7 @@ export function MillionPointScatter() {
           <input
             type="range"
             min={4}
-            max={Math.log10(useWebGPU ? 10_000_000 : 2_000_000)}
+            max={Math.log10(useWebGPU ? 10_000_000 : 500_000)}
             step={0.05}
             value={Math.log10(pointCount)}
             onChange={(e) => setPointCount(Math.round(Math.pow(10, parseFloat(e.target.value))))}
@@ -820,7 +836,7 @@ export function MillionPointScatter() {
             <span>10K</span>
             <span>100K</span>
             <span>1M</span>
-            <span>{useWebGPU ? "10M" : "2M"}</span>
+            <span>{useWebGPU ? "10M" : "500K"}</span>
           </div>
         </div>
 

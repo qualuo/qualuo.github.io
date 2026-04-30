@@ -59,6 +59,7 @@ export function ParticlePlayground() {
   const [isPaused, setIsPaused] = useState(false);
   const lastTimeRef = useRef(0);
   const frameCountRef = useRef(0);
+  const sizeRef = useRef({ w: 0, h: 0 });
 
   const getRandomColor = useCallback(() => {
     const colors = COLOR_SCHEMES[config.colorScheme];
@@ -83,16 +84,13 @@ export function ParticlePlayground() {
   );
 
   const initParticles = useCallback(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+    const { w, h } = sizeRef.current;
+    if (!w || !h) return;
 
     particlesRef.current = [];
     for (let i = 0; i < config.particleCount; i++) {
       particlesRef.current.push(
-        createParticle(
-          Math.random() * canvas.width,
-          Math.random() * canvas.height
-        )
+        createParticle(Math.random() * w, Math.random() * h)
       );
     }
   }, [config.particleCount, createParticle]);
@@ -145,20 +143,22 @@ export function ParticlePlayground() {
       p.x += p.vx;
       p.y += p.vy;
 
-      // Boundary collision with bounce
+      // Boundary collision with bounce (CSS-pixel space)
+      const W = sizeRef.current.w;
+      const H = sizeRef.current.h;
       if (p.x < p.radius) {
         p.x = p.radius;
         p.vx *= -0.8;
-      } else if (p.x > canvas.width - p.radius) {
-        p.x = canvas.width - p.radius;
+      } else if (p.x > W - p.radius) {
+        p.x = W - p.radius;
         p.vx *= -0.8;
       }
 
       if (p.y < p.radius) {
         p.y = p.radius;
         p.vy *= -0.8;
-      } else if (p.y > canvas.height - p.radius) {
-        p.y = canvas.height - p.radius;
+      } else if (p.y > H - p.radius) {
+        p.y = H - p.radius;
         p.vy *= -0.8;
       }
 
@@ -202,14 +202,17 @@ export function ParticlePlayground() {
     const ctx = canvas?.getContext("2d");
     if (!canvas || !ctx) return;
 
+    const W = sizeRef.current.w;
+    const H = sizeRef.current.h;
+
     // Trail effect or clear
     if (config.trailEffect) {
       ctx.fillStyle = "rgba(0, 0, 0, 0.1)";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillRect(0, 0, W, H);
     } else {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.clearRect(0, 0, W, H);
       ctx.fillStyle = "#000000";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillRect(0, 0, W, H);
     }
 
     // Draw particles - single fill pass (shadowBlur removed for performance)
@@ -239,30 +242,39 @@ export function ParticlePlayground() {
     }
   }, [config.trailEffect, config.mouseRadius, config.mouseMode]);
 
-  // Initialize and resize
+  // Resize canvas (DPR-aware). Split from initialization so config tweaks
+  // (color scheme, particle size) don't reset particle positions.
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
     const resizeCanvas = () => {
       const container = canvas.parentElement;
-      if (container) {
-        canvas.width = container.clientWidth;
-        canvas.height = container.clientHeight;
-        initParticles();
-      }
+      if (!container) return;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const w = container.clientWidth;
+      const h = container.clientHeight;
+      sizeRef.current = { w, h };
+      canvas.width = Math.max(1, Math.floor(w * dpr));
+      canvas.height = Math.max(1, Math.floor(h * dpr));
+      canvas.style.width = `${w}px`;
+      canvas.style.height = `${h}px`;
+      const ctx = canvas.getContext("2d");
+      if (ctx) ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
 
     resizeCanvas();
+    // Seed initial particles after first sizing
+    initParticles();
     window.addEventListener("resize", resizeCanvas);
-
-    return () => {
-      window.removeEventListener("resize", resizeCanvas);
-    };
-  }, [initParticles]);
+    return () => window.removeEventListener("resize", resizeCanvas);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Animation loop
   useEffect(() => {
+    lastTimeRef.current = performance.now();
+    frameCountRef.current = 0;
     const animate = () => {
       if (!isPaused) {
         updateParticles();
@@ -327,10 +339,9 @@ export function ParticlePlayground() {
   };
 
   const handleExplode = useCallback(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
+    // Use CSS-pixel size, not DPR-scaled canvas backing store
+    const centerX = sizeRef.current.w / 2;
+    const centerY = sizeRef.current.h / 2;
     const particles = particlesRef.current;
 
     for (let i = 0; i < particles.length; i++) {
@@ -344,10 +355,8 @@ export function ParticlePlayground() {
   }, []);
 
   const handleImplode = useCallback(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
+    const centerX = sizeRef.current.w / 2;
+    const centerY = sizeRef.current.h / 2;
     const particles = particlesRef.current;
 
     for (let i = 0; i < particles.length; i++) {
@@ -366,7 +375,7 @@ export function ParticlePlayground() {
       <div className="relative bg-black rounded-2xl overflow-hidden" style={{ height: "60vh", minHeight: "400px" }}>
         <canvas
           ref={canvasRef}
-          className="absolute inset-0 w-full h-full cursor-crosshair"
+          className="absolute inset-0 w-full h-full cursor-crosshair touch-none"
           onMouseMove={handleMouseMove}
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}

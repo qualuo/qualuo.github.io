@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMLModelCache } from "@/components/providers/MLModelCacheProvider";
+
+const MAX_FILE_SIZE_MB = 25;
 
 // Types
 interface DocumentChunk {
@@ -57,6 +59,7 @@ export function DocumentRAG() {
   const [input, setInput] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [webGPUSupported, setWebGPUSupported] = useState<boolean | null>(null);
 
   const { getLLMEngine, setLLMEngine, getEmbeddingPipeline, setEmbeddingPipeline } = useMLModelCache();
 
@@ -66,6 +69,38 @@ export function DocumentRAG() {
   const engineRef = useRef<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const isMountedRef = useRef(true);
+  const isGeneratingRef = useRef(false);
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+      // Only interrupt if THIS component is mid-generation. Engine is shared
+      // via the cache; interrupting unconditionally would cancel generations
+      // from other components using the same model.
+      if (isGeneratingRef.current) {
+        try { engineRef.current?.interruptGenerate?.(); } catch {}
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    const checkWebGPU = async () => {
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const gpu = (navigator as any).gpu;
+        if (!gpu) {
+          setWebGPUSupported(false);
+          return;
+        }
+        const adapter = await gpu.requestAdapter();
+        setWebGPUSupported(!!adapter);
+      } catch {
+        setWebGPUSupported(false);
+      }
+    };
+    checkWebGPU();
+  }, []);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -75,8 +110,12 @@ export function DocumentRAG() {
   const parsePDF = async (file: File): Promise<string> => {
     const pdfjsLib = await import("pdfjs-dist");
 
-    // Set worker source
-    pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+    // pdfjs-dist v4+ ships only `.mjs` workers (no `.min.js`). Pin to the
+    // installed version via cdnjs to avoid version drift and CSP issues
+    // from protocol-relative URLs.
+    if (!pdfjsLib.GlobalWorkerOptions.workerSrc) {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
+    }
 
     const arrayBuffer = await file.arrayBuffer();
     const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
@@ -120,7 +159,7 @@ export function DocumentRAG() {
       if (cachedEmbedder) {
         embedderRef.current = cachedEmbedder;
       } else {
-        setStatusMessage("Loading embedding model...");
+        if (isMountedRef.current) setStatusMessage("Loading embedding model...");
         const { pipeline } = await import("@huggingface/transformers");
         const embedder = await pipeline(
           "feature-extraction",
@@ -135,13 +174,15 @@ export function DocumentRAG() {
       if (cachedLLM) {
         engineRef.current = cachedLLM;
       } else {
-        setStatus("loading-llm");
-        setStatusMessage("Loading language model...");
+        if (isMountedRef.current) {
+          setStatus("loading-llm");
+          setStatusMessage("Loading language model...");
+        }
 
         const webllm = await import("@mlc-ai/web-llm");
         const engine = new webllm.MLCEngine();
         engine.setInitProgressCallback((progress) => {
-          setStatusMessage(progress.text);
+          if (isMountedRef.current) setStatusMessage(progress.text);
         });
 
         await engine.reload(llmModelId);
@@ -149,14 +190,17 @@ export function DocumentRAG() {
         setLLMEngine(llmModelId, engine);
       }
 
+      if (!isMountedRef.current) return;
       setStatus("ready");
       setStatusMessage("");
     } catch (error) {
       console.error("Initialization error:", error);
-      setStatus("error");
-      setErrorMessage(
-        error instanceof Error ? error.message : "Failed to initialize"
-      );
+      if (isMountedRef.current) {
+        setStatus("error");
+        setErrorMessage(
+          error instanceof Error ? error.message : "Failed to initialize"
+        );
+      }
     }
   };
 
@@ -168,9 +212,14 @@ export function DocumentRAG() {
     if (!files || !embedderRef.current) return;
 
     setStatusMessage("Processing documents...");
+    setErrorMessage("");
 
     try {
       for (const file of Array.from(files)) {
+        if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+          throw new Error(`File "${file.name}" exceeds ${MAX_FILE_SIZE_MB}MB limit.`);
+        }
+
         let text = "";
 
         if (file.type === "application/pdf") {
@@ -181,11 +230,15 @@ export function DocumentRAG() {
 
         // Chunk the text
         const chunks = chunkText(text);
+        if (chunks.length === 0) {
+          throw new Error(`No extractable text found in "${file.name}".`);
+        }
         setStatusMessage(`Embedding ${chunks.length} chunks from ${file.name}...`);
 
         // Generate embeddings for each chunk
         const newChunks: DocumentChunk[] = [];
         for (let i = 0; i < chunks.length; i++) {
+          if (!isMountedRef.current) return;
           const output = await embedderRef.current(chunks[i], {
             pooling: "mean",
             normalize: true,
@@ -198,18 +251,23 @@ export function DocumentRAG() {
             embedding: Array.from(output.data),
           });
 
-          setStatusMessage(
-            `Embedding chunk ${i + 1}/${chunks.length} from ${file.name}...`
-          );
+          if (isMountedRef.current) {
+            setStatusMessage(
+              `Embedding chunk ${i + 1}/${chunks.length} from ${file.name}...`
+            );
+          }
         }
 
+        if (!isMountedRef.current) return;
         setDocuments((prev) => [...prev, ...newChunks]);
       }
 
-      setStatusMessage("");
+      if (isMountedRef.current) setStatusMessage("");
     } catch (error) {
       console.error("File processing error:", error);
-      setStatusMessage("Error processing file");
+      const msg = error instanceof Error ? error.message : "Error processing file";
+      setStatusMessage("");
+      setErrorMessage(msg);
     }
 
     // Reset file input
@@ -250,6 +308,7 @@ export function DocumentRAG() {
     setInput("");
     setMessages((prev) => [...prev, { role: "user", content: userQuery }]);
     setIsGenerating(true);
+    isGeneratingRef.current = true;
 
     try {
       // Retrieve relevant context
@@ -284,6 +343,7 @@ ${context}`
 
       let fullResponse = "";
       for await (const chunk of response) {
+        if (!isMountedRef.current) break;
         const delta = chunk.choices[0]?.delta?.content || "";
         fullResponse += delta;
         setMessages((prev) => {
@@ -299,15 +359,18 @@ ${context}`
       }
     } catch (error) {
       console.error("Generation error:", error);
-      setMessages((prev) => [
-        ...prev.slice(0, -1),
-        {
-          role: "assistant",
-          content: "Sorry, an error occurred while generating the response.",
-        },
-      ]);
+      if (isMountedRef.current) {
+        setMessages((prev) => [
+          ...prev.slice(0, -1),
+          {
+            role: "assistant",
+            content: "Sorry, an error occurred while generating the response.",
+          },
+        ]);
+      }
     } finally {
-      setIsGenerating(false);
+      isGeneratingRef.current = false;
+      if (isMountedRef.current) setIsGenerating(false);
     }
   };
 
@@ -322,6 +385,31 @@ ${context}`
     setDocuments([]);
     setMessages([]);
   };
+
+  // WebGPU unsupported
+  if (webGPUSupported === false) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
+        <div className="w-16 h-16 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-6">
+          <svg className="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+        </div>
+        <h3 className="text-xl font-semibold text-white mb-2">WebGPU Not Available</h3>
+        <p className="text-slate-400 max-w-md mb-4">
+          This demo requires WebGPU to run AI models on your GPU. Please use Chrome 113+ or Edge 113+ with hardware acceleration enabled.
+        </p>
+      </div>
+    );
+  }
+
+  if (webGPUSupported === null) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <div className="animate-pulse text-slate-400">Checking GPU capabilities...</div>
+      </div>
+    );
+  }
 
   // Idle state - show start screen
   if (status === "idle" || status === "error") {
@@ -499,6 +587,18 @@ ${context}`
       {statusMessage && (
         <div className="px-4 py-2 bg-orange-500/10 border-b border-orange-500/20">
           <p className="text-xs text-orange-400">{statusMessage}</p>
+        </div>
+      )}
+
+      {errorMessage && (
+        <div className="px-4 py-2 bg-red-500/10 border-b border-red-500/20 flex items-center justify-between gap-3">
+          <p className="text-xs text-red-400">{errorMessage}</p>
+          <button
+            onClick={() => setErrorMessage("")}
+            className="text-xs text-red-300 hover:text-white"
+          >
+            Dismiss
+          </button>
         </div>
       )}
 

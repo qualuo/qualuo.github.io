@@ -56,6 +56,20 @@ export function LocalLLMChat() {
   const engineRef = useRef<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const isMountedRef = useRef(true);
+  const isGeneratingRef = useRef(false);
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+      // Only interrupt if THIS component is mid-generation; the engine is
+      // shared via the cache, so interrupting unconditionally would kill
+      // generations from other components using the same model.
+      if (isGeneratingRef.current) {
+        try { engineRef.current?.interruptGenerate?.(); } catch {}
+      }
+    };
+  }, []);
 
   const currentModel = AVAILABLE_MODELS.find((m) => m.id === selectedModel);
   const tokenEstimate = useMemo(() => {
@@ -114,7 +128,7 @@ export function LocalLLMChat() {
       const engine = new webllm.MLCEngine();
 
       engine.setInitProgressCallback((progress) => {
-        setLoadProgress(progress.text);
+        if (isMountedRef.current) setLoadProgress(progress.text);
       });
 
       await engine.reload(selectedModel);
@@ -123,15 +137,18 @@ export function LocalLLMChat() {
       // Store in cache for persistence across navigation
       setLLMEngine(selectedModel, engine);
 
+      if (!isMountedRef.current) return;
       setStatus("ready");
       setLoadProgress("");
       inputRef.current?.focus();
     } catch (error) {
       console.error("Failed to load model:", error);
-      setStatus("error");
-      setErrorMessage(
-        error instanceof Error ? error.message : "Failed to load model"
-      );
+      if (isMountedRef.current) {
+        setStatus("error");
+        setErrorMessage(
+          error instanceof Error ? error.message : "Failed to load model"
+        );
+      }
     }
   };
 
@@ -143,11 +160,23 @@ export function LocalLLMChat() {
     if (!input.trim() || !engineRef.current || isGenerating) return;
 
     const userMessage = input.trim();
+    const projectedTokens = estimateTokens(
+      SYSTEM_PROMPT + messages.map((m) => m.content).join("") + userMessage
+    );
+    if (projectedTokens > contextSize * 0.95) {
+      setErrorMessage(
+        "Conversation is near the model's context limit. Please clear the chat to continue."
+      );
+      return;
+    }
+
     const now = new Date();
     setInput("");
+    setErrorMessage("");
     setMessages((prev) => [...prev, { role: "user", content: userMessage, timestamp: now }]);
 
     setIsGenerating(true);
+    isGeneratingRef.current = true;
 
     try {
       const allMessages = [
@@ -167,6 +196,7 @@ export function LocalLLMChat() {
 
       let fullResponse = "";
       for await (const chunk of response) {
+        if (!isMountedRef.current) break;
         const delta = chunk.choices[0]?.delta?.content || "";
         fullResponse += delta;
         setMessages((prev) => {
@@ -181,21 +211,24 @@ export function LocalLLMChat() {
       }
 
       // Remove empty assistant message if no content was generated
-      if (!fullResponse) {
+      if (!fullResponse && isMountedRef.current) {
         setMessages((prev) => prev.slice(0, -1));
       }
     } catch (error) {
       console.error("Generation error:", error);
-      setMessages((prev) => [
-        ...prev.slice(0, -1),
-        {
-          role: "assistant",
-          content: "Sorry, an error occurred while generating the response.",
-          timestamp: new Date(),
-        },
-      ]);
+      if (isMountedRef.current) {
+        setMessages((prev) => [
+          ...prev.slice(0, -1),
+          {
+            role: "assistant",
+            content: "Sorry, an error occurred while generating the response.",
+            timestamp: new Date(),
+          },
+        ]);
+      }
     } finally {
-      setIsGenerating(false);
+      isGeneratingRef.current = false;
+      if (isMountedRef.current) setIsGenerating(false);
     }
   };
 
@@ -408,6 +441,18 @@ export function LocalLLMChat() {
           Clear chat
         </button>
       </div>
+
+      {errorMessage && (
+        <div className="px-4 py-2 bg-amber-500/10 border-b border-amber-500/20 flex items-center justify-between gap-3">
+          <p className="text-xs text-amber-400">{errorMessage}</p>
+          <button
+            onClick={() => setErrorMessage("")}
+            className="text-xs text-amber-300 hover:text-white"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
 
       {/* Messages area */}
       <div data-lenis-prevent className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4">

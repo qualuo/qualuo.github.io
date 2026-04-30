@@ -4,7 +4,56 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { Demo } from "@/lib/demos";
-import { lazy, Suspense } from "react";
+import { Component, lazy, Suspense, type ReactNode } from "react";
+
+// Catches dynamic-import failures (e.g., a deploy invalidates a chunk while
+// a long-lived tab tries to load it) and demo runtime errors so the spinner
+// doesn't hang forever.
+class DemoErrorBoundary extends Component<
+  { children: ReactNode },
+  { error: Error | null }
+> {
+  state = { error: null as Error | null };
+  static getDerivedStateFromError(error: Error) {
+    return { error };
+  }
+  componentDidCatch(error: Error) {
+    console.error("Demo failed to load:", error);
+  }
+  reset = () => this.setState({ error: null });
+  render() {
+    if (this.state.error) {
+      return (
+        <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
+          <div className="w-16 h-16 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-6">
+            <svg className="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <h3 className="text-xl font-semibold text-white mb-2">Demo failed to load</h3>
+          <p className="text-slate-400 max-w-md mb-6 text-sm">
+            {this.state.error.message || "Something went wrong while loading this demo."}
+          </p>
+          <div className="flex gap-3">
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 text-sm rounded-lg bg-white text-black font-medium hover:bg-gray-100 transition-colors"
+            >
+              Reload
+            </button>
+            <Link
+              href="/demos"
+              className="px-4 py-2 text-sm rounded-lg bg-white/5 text-white border border-white/10 hover:bg-white/10 transition-colors"
+            >
+              Back to demos
+            </Link>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 const StarsBackground = dynamic(
   () => import("@/components/animations/StarsBackground").then(m => ({ default: m.StarsBackground })),
@@ -220,13 +269,15 @@ export function DemoPageClient({ demo }: DemoPageClientProps) {
             className="flex-1 flex flex-col min-h-0"
           >
             {hasLiveDemo ? (
-              <Suspense fallback={
-                <div className="flex-1 flex items-center justify-center">
-                  <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                </div>
-              }>
-                <DemoComponent />
-              </Suspense>
+              <DemoErrorBoundary>
+                <Suspense fallback={
+                  <div className="flex-1 flex items-center justify-center">
+                    <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                  </div>
+                }>
+                  <DemoComponent />
+                </Suspense>
+              </DemoErrorBoundary>
             ) : (
               <div className="flex-1 rounded-3xl overflow-hidden bg-white/2 border border-white/8 backdrop-blur-sm flex items-center justify-center">
                 <DemoPlaceholder demo={demo} />

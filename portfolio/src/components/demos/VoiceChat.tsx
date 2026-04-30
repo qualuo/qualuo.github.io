@@ -49,17 +49,44 @@ export function VoiceChat() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const whisperPipelineRef = useRef<any>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const speechSynthRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const isMountedRef = useRef(true);
+  const messagesRef = useRef<Message[]>([]);
+  const isGeneratingRef = useRef(false);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, []);
 
   useEffect(() => {
+    messagesRef.current = messages;
     scrollToBottom();
   }, [messages, scrollToBottom]);
+
+  // Cleanup on unmount: stop mic, cancel speech, abort streaming
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+      if (
+        mediaRecorderRef.current &&
+        mediaRecorderRef.current.state === "recording"
+      ) {
+        try { mediaRecorderRef.current.stop(); } catch {}
+      }
+      if (mediaStreamRef.current) {
+        mediaStreamRef.current.getTracks().forEach((t) => t.stop());
+        mediaStreamRef.current = null;
+      }
+      try { window.speechSynthesis?.cancel(); } catch {}
+      // Engine is shared via cache — only interrupt if this component is generating
+      if (isGeneratingRef.current) {
+        try { llmEngineRef.current?.interruptGenerate?.(); } catch {}
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const checkWebGPU = async () => {
@@ -102,7 +129,7 @@ export function VoiceChat() {
       if (cachedWhisper) {
         whisperPipelineRef.current = cachedWhisper;
       } else {
-        setLoadProgress("Loading Whisper speech recognition...");
+        if (isMountedRef.current) setLoadProgress("Loading Whisper speech recognition...");
         const { pipeline } = await import("@huggingface/transformers");
 
         const whisperPipeline = await pipeline(
@@ -112,6 +139,7 @@ export function VoiceChat() {
             dtype: "fp32",
             device: "webgpu",
             progress_callback: (progress: { status: string; progress?: number; file?: string }) => {
+              if (!isMountedRef.current) return;
               if (progress.status === "downloading" || progress.status === "progress") {
                 const pct = progress.progress ? Math.round(progress.progress) : 0;
                 const filename = progress.file ? progress.file.split("/").pop() || "" : "";
@@ -131,12 +159,12 @@ export function VoiceChat() {
       if (cachedLLM) {
         llmEngineRef.current = cachedLLM;
       } else {
-        setLoadProgress("Loading language model...");
+        if (isMountedRef.current) setLoadProgress("Loading language model...");
         const webllm = await import("@mlc-ai/web-llm");
         const engine = new webllm.MLCEngine();
 
         engine.setInitProgressCallback((progress) => {
-          setLoadProgress(progress.text);
+          if (isMountedRef.current) setLoadProgress(progress.text);
         });
 
         await engine.reload(selectedLLM);
@@ -144,19 +172,29 @@ export function VoiceChat() {
         setLLMEngine(selectedLLM, engine);
       }
 
+      if (!isMountedRef.current) return;
       setStatus("ready");
       setLoadProgress("");
     } catch (error) {
       console.error("Failed to load models:", error);
-      setStatus("error");
-      setErrorMessage(error instanceof Error ? error.message : "Failed to load models");
+      if (isMountedRef.current) {
+        setStatus("error");
+        setErrorMessage(error instanceof Error ? error.message : "Failed to load models");
+      }
     }
   };
 
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
+      mediaStreamRef.current = stream;
+
+      // Pick a supported mime type — Safari doesn't do webm
+      const mimeCandidates = ["audio/webm", "audio/mp4", "audio/ogg"];
+      const supportedMime =
+        mimeCandidates.find((m) => MediaRecorder.isTypeSupported?.(m)) || "";
+      const recorderOptions = supportedMime ? { mimeType: supportedMime } : undefined;
+      const mediaRecorder = new MediaRecorder(stream, recorderOptions);
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
 
@@ -168,7 +206,15 @@ export function VoiceChat() {
 
       mediaRecorder.onstop = async () => {
         stream.getTracks().forEach((track) => track.stop());
-        const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+        mediaStreamRef.current = null;
+        if (!isMountedRef.current) return;
+        const audioBlob = new Blob(audioChunksRef.current, {
+          type: supportedMime || "audio/webm",
+        });
+        if (audioBlob.size === 0) {
+          setVoiceState("idle");
+          return;
+        }
         await processAudio(audioBlob);
       };
 
@@ -191,12 +237,13 @@ export function VoiceChat() {
 
     setVoiceState("transcribing");
 
+    let audioContext: AudioContext | null = null;
     try {
       // Convert blob to array buffer
       const arrayBuffer = await audioBlob.arrayBuffer();
 
       // Decode audio
-      const audioContext = new AudioContext({ sampleRate: 16000 });
+      audioContext = new AudioContext({ sampleRate: 16000 });
       const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
       const audioData = audioBuffer.getChannelData(0);
 
@@ -214,15 +261,16 @@ export function VoiceChat() {
         return;
       }
 
-      // Add user message
+      // Read latest messages via ref to avoid stale closure
+      const priorMessages = messagesRef.current;
       setMessages((prev) => [...prev, { role: "user", content: transcription }]);
 
-      // Generate LLM response
       setVoiceState("thinking");
+      isGeneratingRef.current = true;
 
       const allMessages = [
         { role: "system" as const, content: "You are a helpful voice assistant. Keep your responses concise and conversational, suitable for being spoken aloud. Avoid using markdown, bullet points, or special formatting." },
-        ...messages.map(m => ({ role: m.role as "user" | "assistant", content: m.content })),
+        ...priorMessages.map(m => ({ role: m.role as "user" | "assistant", content: m.content })),
         { role: "user" as const, content: transcription },
       ];
 
@@ -235,6 +283,7 @@ export function VoiceChat() {
 
       let fullResponse = "";
       for await (const chunk of response) {
+        if (!isMountedRef.current) break;
         const delta = chunk.choices[0]?.delta?.content || "";
         fullResponse += delta;
         setMessages((prev) => {
@@ -246,6 +295,7 @@ export function VoiceChat() {
           return newMessages;
         });
       }
+      if (!isMountedRef.current) return;
 
       // Speak the response
       if (ttsEnabled && fullResponse) {
@@ -256,11 +306,18 @@ export function VoiceChat() {
       setVoiceState("idle");
     } catch (error) {
       console.error("Processing error:", error);
-      setMessages((prev) => [
-        ...prev.slice(0, -1),
-        { role: "assistant", content: "Sorry, an error occurred while processing." },
-      ]);
-      setVoiceState("idle");
+      if (isMountedRef.current) {
+        setMessages((prev) => [
+          ...prev.slice(0, -1),
+          { role: "assistant", content: "Sorry, an error occurred while processing." },
+        ]);
+        setVoiceState("idle");
+      }
+    } finally {
+      isGeneratingRef.current = false;
+      if (audioContext && audioContext.state !== "closed") {
+        try { await audioContext.close(); } catch {}
+      }
     }
   };
 

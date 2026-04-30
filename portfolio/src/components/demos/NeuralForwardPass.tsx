@@ -339,6 +339,12 @@ function ConnectionLines({
     return geo;
   }, [fromIdx, toIdx, arch, connectionIndices]);
 
+  useEffect(() => {
+    return () => {
+      geometry.dispose();
+    };
+  }, [geometry]);
+
   useFrame(() => {
     if (!lineRef.current || !weights) return;
     const colorAttr = lineRef.current.geometry.getAttribute("color");
@@ -886,6 +892,8 @@ export function NeuralForwardPass() {
 
   // Web Worker for training (off main thread)
   const workerRef = useRef<Worker | null>(null);
+  const workerInitializedRef = useRef(false);
+  const stopRequestedRef = useRef(false);
 
   const getWorker = useCallback(() => {
     if (!workerRef.current) {
@@ -896,11 +904,14 @@ export function NeuralForwardPass() {
         const { type, payload } = e.data;
         switch (type) {
           case "epoch-complete": {
+            if (stopRequestedRef.current) return;
             const { epoch, loss, accuracy, activations: acts, weights, archLength } = payload;
-            // Update local network weights for visualization
             for (let i = 0; i < weights.length; i++) {
               if (networkRef.current[i]) {
                 networkRef.current[i].weights = weights[i].weights;
+                if (weights[i].biases) {
+                  networkRef.current[i].biases = weights[i].biases;
+                }
               }
             }
             setNetworkVersion((v) => v + 1);
@@ -922,6 +933,9 @@ export function NeuralForwardPass() {
             for (let i = 0; i < weights.length; i++) {
               if (networkRef.current[i]) {
                 networkRef.current[i].weights = weights[i].weights;
+                if (weights[i].biases) {
+                  networkRef.current[i].biases = weights[i].biases;
+                }
               }
             }
             setNetworkVersion((v) => v + 1);
@@ -935,7 +949,6 @@ export function NeuralForwardPass() {
             break;
           }
           case "forward-result": {
-            // Used if we ever move explore forward pass to worker
             break;
           }
           case "training-stopped": {
@@ -948,6 +961,19 @@ export function NeuralForwardPass() {
     return workerRef.current;
   }, [arch]);
 
+  const ensureWorkerInitialized = useCallback(
+    (worker: Worker) => {
+      if (!workerInitializedRef.current) {
+        worker.postMessage({
+          type: "init",
+          payload: { seed: Date.now(), arch },
+        });
+        workerInitializedRef.current = true;
+      }
+    },
+    [arch]
+  );
+
   // Reset network when architecture or activation changes
   const resetNetwork = useCallback(() => {
     // Stop worker training
@@ -955,6 +981,8 @@ export function NeuralForwardPass() {
       workerRef.current.terminate();
       workerRef.current = null;
     }
+    workerInitializedRef.current = false;
+    stopRequestedRef.current = false;
     timersRef.current.forEach(clearTimeout);
     timersRef.current = [];
 
@@ -1015,11 +1043,8 @@ export function NeuralForwardPass() {
   // Training (delegated to Web Worker — off main thread)
   const startTraining = useCallback(() => {
     const worker = getWorker();
-    worker.postMessage({
-      type: "init",
-      payload: { seed: Date.now(), arch },
-    });
-    // Copy current weights to worker by re-initializing, then start
+    stopRequestedRef.current = false;
+    ensureWorkerInitialized(worker);
     worker.postMessage({
       type: "start-training",
       payload: {
@@ -1031,25 +1056,22 @@ export function NeuralForwardPass() {
       },
     });
     setTraining((s) => ({ ...s, isTraining: true }));
-  }, [activation, learningRate, batchSize, arch, training.epoch, getWorker]);
+  }, [activation, learningRate, batchSize, arch, training.epoch, getWorker, ensureWorkerInitialized]);
 
   const stopTraining = useCallback(() => {
+    stopRequestedRef.current = true;
     workerRef.current?.postMessage({ type: "stop-training" });
     setTraining((s) => ({ ...s, isTraining: false }));
   }, []);
 
   const stepTraining = useCallback(() => {
     const worker = getWorker();
-    // Ensure worker has a network initialized
-    worker.postMessage({
-      type: "init",
-      payload: { seed: 42, arch },
-    });
+    ensureWorkerInitialized(worker);
     worker.postMessage({
       type: "step",
       payload: { activation, learningRate, batchSize },
     });
-  }, [activation, learningRate, batchSize, arch, getWorker]);
+  }, [activation, learningRate, batchSize, getWorker, ensureWorkerInitialized]);
 
   // Cleanup
   useEffect(() => {
@@ -1072,7 +1094,6 @@ export function NeuralForwardPass() {
         style={{ height: "55vh", minHeight: "400px" }}
       >
         <Canvas
-          key={`canvas-${arch.join("-")}`}
           camera={{ position: [8, 3, cameraZ], fov: 50 }}
         >
           <NetworkScene

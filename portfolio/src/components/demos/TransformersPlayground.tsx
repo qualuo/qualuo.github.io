@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMLModelCache } from "@/components/providers/MLModelCacheProvider";
 
@@ -141,6 +141,10 @@ export function TransformersPlayground() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
+  const isMountedRef = useRef(true);
+  useEffect(() => {
+    return () => { isMountedRef.current = false; };
+  }, []);
 
   const loadModel = async (task: TaskConfig) => {
     // Check cache first
@@ -172,6 +176,7 @@ export function TransformersPlayground() {
 
       const pipe = await pipeline(pipelineTask, task.model, {
         progress_callback: (progress: { status: string; progress?: number; file?: string }) => {
+          if (!isMountedRef.current) return;
           if (progress.status === "downloading" || progress.status === "progress") {
             const pct = progress.progress ? Math.round(progress.progress) : 0;
             const filename = progress.file ? progress.file.split("/").pop() || "" : "";
@@ -189,20 +194,27 @@ export function TransformersPlayground() {
       // Store in cache for persistence across navigation
       setTransformersPipeline(task.id, pipe);
 
+      if (!isMountedRef.current) return;
       setStatus("ready");
       setLoadProgress("");
     } catch (error) {
       console.error("Failed to load model:", error);
-      setStatus("error");
-      setErrorMessage(error instanceof Error ? error.message : "Failed to load model");
+      if (isMountedRef.current) {
+        setStatus("error");
+        setErrorMessage(error instanceof Error ? error.message : "Failed to load model");
+      }
     }
   };
 
   const handleTaskSelect = (task: TaskConfig) => {
     setSelectedTask(task);
     setInput("");
-    setImageUrl(null);
+    setImageUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return null;
+    });
     setResults(null);
+    setErrorMessage("");
     // Reset if different task
     if (currentTaskRef.current !== task.id) {
       // Check if this task's pipeline is cached
@@ -218,23 +230,46 @@ export function TransformersPlayground() {
     }
   };
 
+  const acceptImage = useCallback((file: File) => {
+    const allowed = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+    if (!allowed.includes(file.type)) {
+      setErrorMessage(`Unsupported file type: ${file.type || "unknown"}. Use JPG, PNG, WebP, or GIF.`);
+      return;
+    }
+    const MAX_IMAGE_MB = 10;
+    if (file.size > MAX_IMAGE_MB * 1024 * 1024) {
+      setErrorMessage(`Image is too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Max is ${MAX_IMAGE_MB}MB.`);
+      return;
+    }
+    const url = URL.createObjectURL(file);
+    setImageUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return url;
+    });
+    setResults(null);
+    setErrorMessage("");
+  }, []);
+
   const handleImageUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const url = URL.createObjectURL(file);
-      setImageUrl(url);
-      setResults(null);
-    }
-  }, []);
+    if (file) acceptImage(file);
+  }, [acceptImage]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     const file = e.dataTransfer.files?.[0];
-    if (file && file.type.startsWith("image/")) {
-      const url = URL.createObjectURL(file);
-      setImageUrl(url);
-      setResults(null);
-    }
+    if (file) acceptImage(file);
+  }, [acceptImage]);
+
+  // Revoke object URL on unmount (use ref to avoid stale closure)
+  const imageUrlRef = useRef(imageUrl);
+  useEffect(() => {
+    imageUrlRef.current = imageUrl;
+  }, [imageUrl]);
+  useEffect(() => {
+    return () => {
+      if (imageUrlRef.current) URL.revokeObjectURL(imageUrlRef.current);
+    };
   }, []);
 
   const runInference = async () => {
@@ -244,6 +279,7 @@ export function TransformersPlayground() {
 
     setIsProcessing(true);
     setResults(null);
+    setErrorMessage("");
 
     try {
       let result;
@@ -278,6 +314,7 @@ export function TransformersPlayground() {
     canvas.height = image.naturalHeight;
 
     ctx.drawImage(image, 0, 0);
+    ctx.font = "16px sans-serif";
 
     const colors = ["#ef4444", "#f97316", "#eab308", "#22c55e", "#06b6d4", "#8b5cf6", "#ec4899"];
 
@@ -289,13 +326,13 @@ export function TransformersPlayground() {
       ctx.lineWidth = 3;
       ctx.strokeRect(xmin, ymin, xmax - xmin, ymax - ymin);
 
-      ctx.fillStyle = color;
       const label = `${det.label} ${Math.round(det.score * 100)}%`;
       const textWidth = ctx.measureText(label).width;
+
+      ctx.fillStyle = color;
       ctx.fillRect(xmin, ymin - 25, textWidth + 10, 25);
 
       ctx.fillStyle = "white";
-      ctx.font = "16px sans-serif";
       ctx.fillText(label, xmin + 5, ymin - 7);
     });
   };
@@ -422,7 +459,11 @@ export function TransformersPlayground() {
             currentTaskRef.current = null;
             setResults(null);
             setInput("");
-            setImageUrl(null);
+            setImageUrl((prev) => {
+              if (prev) URL.revokeObjectURL(prev);
+              return null;
+            });
+            setErrorMessage("");
           }}
           className="px-3 py-1.5 text-xs rounded-lg bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white transition-colors"
         >
@@ -432,6 +473,11 @@ export function TransformersPlayground() {
 
       {/* Main content area */}
       <div className="flex-1 overflow-y-auto p-4">
+        {errorMessage && (
+          <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20">
+            <p className="text-red-400 text-sm">{errorMessage}</p>
+          </div>
+        )}
         {/* Text input tasks */}
         {selectedTask.inputType === "text" && (
           <div className="space-y-4">
@@ -544,26 +590,50 @@ export function TransformersPlayground() {
             {/* Image upload area */}
             {!imageUrl ? (
               <div
+                role="button"
+                tabIndex={0}
+                aria-label="Upload image: drop here or activate to browse"
                 onDrop={handleDrop}
                 onDragOver={(e) => e.preventDefault()}
                 onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed border-white/20 rounded-xl p-8 text-center cursor-pointer hover:border-white/30 transition-colors"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    fileInputRef.current?.click();
+                  }
+                }}
+                className="border-2 border-dashed border-white/20 rounded-xl p-8 text-center cursor-pointer hover:border-white/30 focus:outline-none focus:border-white/40 focus:ring-2 focus:ring-white/20 transition-colors"
               >
                 <div className="w-12 h-12 mx-auto mb-4 rounded-xl bg-white/5 flex items-center justify-center text-2xl">
                   📷
                 </div>
                 <p className="text-white font-medium mb-1">Drop an image here</p>
-                <p className="text-slate-500 text-sm">or click to browse</p>
+                <p className="text-slate-500 text-sm">or click to browse · max 10MB · JPG, PNG, WebP, GIF</p>
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept="image/*"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
                   onChange={handleImageUpload}
                   className="hidden"
                 />
               </div>
             ) : (
               <div className="space-y-4">
+                {/* Stable hidden image used as drawDetections source */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  ref={imageRef}
+                  src={imageUrl}
+                  alt=""
+                  className="hidden"
+                  onLoad={() => {
+                    if (canvasRef.current) {
+                      const ctx = canvasRef.current.getContext("2d");
+                      if (ctx) ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+                    }
+                  }}
+                />
+
                 {/* Image preview */}
                 <div className="relative rounded-xl overflow-hidden bg-black/20">
                   {selectedTask.id === "object-detection" && results ? (
@@ -571,22 +641,17 @@ export function TransformersPlayground() {
                   ) : (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
-                      ref={imageRef}
                       src={imageUrl}
                       alt="Upload"
                       className="w-full h-auto"
-                      onLoad={() => {
-                        // Reset canvas when new image loads
-                        if (canvasRef.current) {
-                          const ctx = canvasRef.current.getContext("2d");
-                          if (ctx) ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-                        }
-                      }}
                     />
                   )}
                   <button
                     onClick={() => {
-                      setImageUrl(null);
+                      setImageUrl((prev) => {
+                        if (prev) URL.revokeObjectURL(prev);
+                        return null;
+                      });
                       setResults(null);
                     }}
                     className="absolute top-2 right-2 p-2 rounded-lg bg-black/50 text-white hover:bg-black/70 transition-colors"
@@ -596,12 +661,6 @@ export function TransformersPlayground() {
                     </svg>
                   </button>
                 </div>
-
-                {/* Hidden image for object detection reference */}
-                {selectedTask.id === "object-detection" && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img ref={imageRef} src={imageUrl} alt="" className="hidden" />
-                )}
 
                 {/* Image Classification Results */}
                 {selectedTask.id === "image-classification" && results && (

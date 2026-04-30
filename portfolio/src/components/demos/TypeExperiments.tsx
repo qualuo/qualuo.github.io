@@ -167,14 +167,18 @@ function GlitchText({ text }: { text: string }) {
   }, []);
 
   useEffect(() => {
+    const timeouts: ReturnType<typeof setTimeout>[] = [];
     const interval = setInterval(() => {
       if (Math.random() > 0.7) {
         startGlitch(Math.random());
-        setTimeout(stopGlitch, 100 + Math.random() * 200);
+        timeouts.push(setTimeout(stopGlitch, 100 + Math.random() * 200));
       }
     }, 200);
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      timeouts.forEach(clearTimeout);
+    };
   }, [startGlitch, stopGlitch]);
 
   return (
@@ -320,17 +324,18 @@ function ExplodeText({ text }: { text: string }) {
 // Scramble Text Effect
 function ScrambleText({ text }: { text: string }) {
   const [displayText, setDisplayText] = useState(text);
-  const [isScrambling, setIsScrambling] = useState(false);
+  const isScramblingRef = useRef(false);
+  const scrambleIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
 
   const scramble = useCallback(() => {
-    if (isScrambling) return;
-    setIsScrambling(true);
+    if (isScramblingRef.current) return;
+    isScramblingRef.current = true;
 
     let iteration = 0;
     const maxIterations = text.length;
 
-    const interval = setInterval(() => {
+    scrambleIntervalRef.current = setInterval(() => {
       setDisplayText(
         text
           .split("")
@@ -344,17 +349,34 @@ function ScrambleText({ text }: { text: string }) {
       iteration += 1 / 3;
 
       if (iteration >= maxIterations) {
-        clearInterval(interval);
+        if (scrambleIntervalRef.current) {
+          clearInterval(scrambleIntervalRef.current);
+          scrambleIntervalRef.current = null;
+        }
         setDisplayText(text);
-        setIsScrambling(false);
+        isScramblingRef.current = false;
       }
     }, 30);
-  }, [text, isScrambling, chars]);
+  }, [text, chars]);
+
+  // Reset visible text whenever the underlying text changes so the previous
+  // scrambled state doesn't linger on screen.
+  useEffect(() => {
+    setDisplayText(text);
+  }, [text]);
 
   useEffect(() => {
     const timeout = setTimeout(scramble, 0);
     const interval = setInterval(scramble, 3000);
-    return () => { clearTimeout(timeout); clearInterval(interval); };
+    return () => {
+      clearTimeout(timeout);
+      clearInterval(interval);
+      if (scrambleIntervalRef.current) {
+        clearInterval(scrambleIntervalRef.current);
+        scrambleIntervalRef.current = null;
+      }
+      isScramblingRef.current = false;
+    };
   }, [scramble]);
 
   return (
@@ -400,7 +422,8 @@ export function TypeExperiments() {
       case "wave":
         return <WaveText text={displayText} />;
       case "explode":
-        return <ExplodeText text={displayText} />;
+        // Remount on text change so per-letter offsets are regenerated to match length
+        return <ExplodeText key={displayText} text={displayText} />;
       case "scramble":
         return <ScrambleText text={displayText} />;
     }

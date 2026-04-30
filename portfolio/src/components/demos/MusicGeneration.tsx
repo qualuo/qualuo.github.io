@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 type PipelineStatus = "idle" | "loading" | "ready" | "error";
@@ -33,6 +33,10 @@ export function MusicGeneration() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const pipelineRef = useRef<any>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const isMountedRef = useRef(true);
+  useEffect(() => {
+    return () => { isMountedRef.current = false; };
+  }, []);
 
   const loadModel = async () => {
 
@@ -40,7 +44,7 @@ export function MusicGeneration() {
     setErrorMessage("");
 
     try {
-      setLoadProgress("Loading MusicGen model...");
+      if (isMountedRef.current) setLoadProgress("Loading MusicGen model...");
       const { MusicgenForConditionalGeneration, AutoTokenizer, BaseStreamer, env } = await import(
         "@huggingface/transformers"
       );
@@ -52,11 +56,11 @@ export function MusicGeneration() {
       const modelId = "Xenova/musicgen-small";
 
       // Load tokenizer
-      setLoadProgress("Loading tokenizer...");
+      if (isMountedRef.current) setLoadProgress("Loading tokenizer...");
       const tokenizer = await AutoTokenizer.from_pretrained(modelId);
 
       // Load model with progress
-      setLoadProgress("Loading model weights (this may take a while)...");
+      if (isMountedRef.current) setLoadProgress("Loading model weights (this may take a while)...");
       // Note: WebGPU may have precision issues - see https://github.com/huggingface/transformers.js/issues/1308
       const model = await MusicgenForConditionalGeneration.from_pretrained(modelId, {
         dtype: {
@@ -66,6 +70,7 @@ export function MusicGeneration() {
         },
         device: "webgpu",
         progress_callback: (progress: { status: string; progress?: number; file?: string }) => {
+          if (!isMountedRef.current) return;
           if (progress.status === "downloading" || progress.status === "progress") {
             const pct = progress.progress ? Math.round(progress.progress) : 0;
             // Truncate long filenames to prevent layout jumping
@@ -79,10 +84,12 @@ export function MusicGeneration() {
       });
 
       pipelineRef.current = { model, tokenizer, BaseStreamer };
+      if (!isMountedRef.current) return;
       setStatus("ready");
       setLoadProgress("");
     } catch (error) {
       console.error("Failed to load model:", error);
+      if (!isMountedRef.current) return;
       setStatus("error");
       const errorMsg = error instanceof Error ? error.message : "Failed to load model";
       // Provide more helpful error messages for common issues
@@ -104,6 +111,7 @@ export function MusicGeneration() {
     if (!pipelineRef.current || !prompt.trim() || generationStatus === "generating") return;
 
     setGenerationStatus("generating");
+    setErrorMessage("");
 
     try {
       const { model, tokenizer } = pipelineRef.current;
@@ -119,33 +127,30 @@ export function MusicGeneration() {
         guidance_scale: 3,
       });
 
-      // Debug: inspect the output structure
       const sampleRate = model.config.audio_encoder.sampling_rate;
-      console.log("Audio output:", audioValues);
-      console.log("Audio output type:", typeof audioValues);
-      console.log("Audio output keys:", audioValues ? Object.keys(audioValues) : "null");
-      console.log("Sample rate:", sampleRate);
 
       // Try different ways to access the audio data
       let audioData: number[] = [];
       if (audioValues?.data) {
-        console.log("Using audioValues.data");
         audioData = Array.from(audioValues.data as Float32Array);
       } else if (Array.isArray(audioValues) && audioValues[0]?.data) {
-        console.log("Using audioValues[0].data");
         audioData = Array.from(audioValues[0].data as Float32Array);
       } else if (Array.isArray(audioValues) && audioValues[0]?.tolist) {
-        console.log("Using audioValues[0].tolist()");
         audioData = audioValues[0].tolist();
-      } else {
-        console.log("Unknown audio format, dumping structure:", JSON.stringify(audioValues, null, 2));
       }
-      console.log("Audio data length:", audioData.length);
-      console.log("Audio data sample:", audioData.slice(0, 10));
+
+      if (audioData.length === 0) {
+        throw new Error("Model returned empty audio data");
+      }
 
       // Convert to WAV
       const wavBlob = audioDataToWav(audioData, sampleRate);
       const audioUrl = URL.createObjectURL(wavBlob);
+
+      if (!isMountedRef.current) {
+        URL.revokeObjectURL(audioUrl);
+        return;
+      }
 
       const newTrack: GeneratedTrack = {
         id: Date.now().toString(),
@@ -161,9 +166,11 @@ export function MusicGeneration() {
       playTrack(newTrack.id, audioUrl);
     } catch (error) {
       console.error("Generation error:", error);
-      setErrorMessage(error instanceof Error ? error.message : "Generation failed");
+      if (isMountedRef.current) {
+        setErrorMessage(error instanceof Error ? error.message : "Generation failed");
+      }
     } finally {
-      setGenerationStatus("idle");
+      if (isMountedRef.current) setGenerationStatus("idle");
     }
   };
 
@@ -210,12 +217,23 @@ export function MusicGeneration() {
 
   const playTrack = (id: string, url: string) => {
     if (audioRef.current) {
+      audioRef.current.onended = null;
       audioRef.current.pause();
+      audioRef.current.src = "";
+      audioRef.current = null;
     }
 
     const audio = new Audio(url);
-    audio.onended = () => setCurrentlyPlaying(null);
-    audio.play();
+    audio.onended = () => {
+      // Guard: ignore stale callbacks from a previous track
+      if (audioRef.current !== audio) return;
+      setCurrentlyPlaying(null);
+      audioRef.current = null;
+    };
+    audio.play().catch((err) => {
+      console.error("Audio play failed:", err);
+      if (audioRef.current === audio) setCurrentlyPlaying(null);
+    });
     audioRef.current = audio;
     setCurrentlyPlaying(id);
   };
@@ -223,10 +241,27 @@ export function MusicGeneration() {
   const stopPlayback = () => {
     if (audioRef.current) {
       audioRef.current.pause();
+      audioRef.current.src = "";
       audioRef.current = null;
     }
     setCurrentlyPlaying(null);
   };
+
+  // Cleanup on unmount: stop playback, revoke all object URLs
+  const tracksRef = useRef<GeneratedTrack[]>([]);
+  useEffect(() => {
+    tracksRef.current = tracks;
+  }, [tracks]);
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.src = "";
+        audioRef.current = null;
+      }
+      tracksRef.current.forEach((t) => URL.revokeObjectURL(t.audioUrl));
+    };
+  }, []);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -347,6 +382,11 @@ export function MusicGeneration() {
 
       {/* Generated tracks */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {errorMessage && (
+          <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20">
+            <p className="text-red-400 text-sm">{errorMessage}</p>
+          </div>
+        )}
         {tracks.length === 0 && generationStatus === "idle" && (
           <div className="flex-1 flex flex-col items-center justify-center h-full min-h-50">
             <div className="text-center text-slate-500 mb-6">

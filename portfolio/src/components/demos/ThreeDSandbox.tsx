@@ -116,6 +116,12 @@ function NeuralNetworkMesh({
     return geometry;
   }, [nodes, connections]);
 
+  useEffect(() => {
+    return () => {
+      lineGeometry.dispose();
+    };
+  }, [lineGeometry]);
+
   useFrame((_, delta) => {
     time.current += delta;
     if (groupRef.current) {
@@ -502,8 +508,12 @@ export function ThreeDSandbox() {
 
   const addObject = useCallback((type: ObjectType) => {
     const isSpecial = isSpecialType(type);
+    const id =
+      typeof crypto !== "undefined" && "randomUUID" in crypto
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
     const newObject: SceneObject = {
-      id: Date.now().toString(),
+      id,
       type,
       position: [
         (Math.random() - 0.5) * 4,
@@ -520,14 +530,14 @@ export function ThreeDSandbox() {
   }, []);
 
   const updateObject = (id: string, updates: Partial<SceneObject>) => {
-    setObjects(
-      objects.map((obj) => (obj.id === id ? { ...obj, ...updates } : obj))
+    setObjects((prev) =>
+      prev.map((obj) => (obj.id === id ? { ...obj, ...updates } : obj))
     );
   };
 
   const deleteSelected = () => {
     if (selectedId) {
-      setObjects(objects.filter((o) => o.id !== selectedId));
+      setObjects((prev) => prev.filter((o) => o.id !== selectedId));
       setSelectedId(null);
     }
   };

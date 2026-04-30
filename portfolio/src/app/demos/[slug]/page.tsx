@@ -20,7 +20,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const demo = getDemoBySlug(slug);
 
   if (!demo) {
-    return { title: "Demo Not Found" };
+    return {
+      title: "Demo Not Found",
+      robots: { index: false, follow: false },
+    };
   }
 
   const title = `${demo.title} — ${demo.subtitle}`;

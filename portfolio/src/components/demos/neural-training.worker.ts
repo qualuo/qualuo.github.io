@@ -244,6 +244,7 @@ self.onmessage = (e: MessageEvent) => {
         payload: {
           weights: network.map(l => ({
             weights: l.weights,
+            biases: l.biases,
             fanIn: l.fanIn,
             fanOut: l.fanOut,
           })),
@@ -330,6 +331,7 @@ self.onmessage = (e: MessageEvent) => {
                 activations: vizActs,
                 weights: network!.map(l => ({
                   weights: l.weights,
+                  biases: l.biases,
                   fanIn: l.fanIn,
                   fanOut: l.fanOut,
                 })),
@@ -396,6 +398,7 @@ self.onmessage = (e: MessageEvent) => {
           activations: vizActs,
           weights: network.map(l => ({
             weights: l.weights,
+            biases: l.biases,
             fanIn: l.fanIn,
             fanOut: l.fanOut,
           })),
