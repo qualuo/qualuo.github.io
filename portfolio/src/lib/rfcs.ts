@@ -64,6 +64,17 @@ export const rfcs: Rfc[] = [
     status: "live",
     date: "2026-02-14",
   },
+  {
+    slug: "choosing-the-model",
+    number: 5,
+    title: "Choosing the Model",
+    subtitle: "A Decision Procedure for Picking the Right AI Approach",
+    icon: "route",
+    gradient: "from-rose-500 via-fuchsia-500 to-indigo-500",
+    tags: ["Model Selection", "Decision Framework", "Cost Optimization", "Document Processing"],
+    status: "live",
+    date: "2026-09-06",
+  },
 ];
 
 export function getRfcBySlug(slug: string): Rfc | undefined {

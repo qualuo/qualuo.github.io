@@ -1,0 +1,372 @@
+A decision procedure for choosing between an upstream fix, deterministic rules, a bought API, a classical model, retrieval, and a general-purpose LLM — with the vocabulary that keeps those options apart, the arithmetic that decides between them, and the evidence required before anyone builds.
+
+---
+
+## Motivation
+
+Someone says: *"We should use AI to read our invoices."* Ten minutes later there are four proposals on the table.
+
+1. Buy a document-processing API.
+2. Train a model on five years of historical invoices.
+3. Prompt a large language model with the PDF.
+4. Write rules against the ERP's supplier master.
+
+The room debates them as competing answers to one question. They are not. Two of them address different layers of the same pipeline and belong together. One is a runtime choice. One is a training choice that nobody in the room has costed. The discussion ends in a pilot that proves nothing, because no one wrote down what "works" would mean.
+
+This is not a lack of intelligence in the room. It is a missing vocabulary and a missing procedure. "AI" is not one technology with one adoption decision. It is at least seven distinct approaches with different cost shapes, different failure modes, different data requirements, and different reasons to be wrong.
+
+| What goes wrong | How it shows up | What it costs |
+|---|---|---|
+| Layers conflated | "Should we use AI or an OCR tool?" — different stages, not alternatives | Months of debate over a false choice |
+| Approaches conflated | "Train a model" means six different things to six people | A budget approved for work nobody has scoped |
+| Constraint discovered late | Latency, residency, or auditability rules out the choice after the build | Rework, or a system that quietly violates a requirement |
+| No evaluation set | "It seems pretty accurate" | No basis to choose, no basis to improve, no basis to renew |
+| Over-engineering | A trained model where a bought API or a rule was exact | Fixed costs and a maintenance burden with no offsetting saving |
+| Under-engineering | A language model asked to do arithmetic the ERP already does correctly | Non-deterministic answers to deterministic questions |
+
+This RFC proposes a selection procedure, built on seven principles.
+
+| # | Principle | Rationale |
+|---|---|---|
+| P1 | Decompose into layers before choosing anything | Nearly every "AI project" is a pipeline; each stage has its own right answer |
+| P2 | The simplest approach that clears the bar wins | Simplicity is measured in moving parts you must keep alive, not in technique |
+| P3 | Prompting sets the task, retrieval supplies the facts, training fixes the form | Most "train it on our data" requests are retrieval requests |
+| P4 | No selection without a scored evaluation set | Without a score, selection is a preference argument between senior people |
+| P5 | Compare cost per correct decision, not accuracy or unit price | Marginal cost alone ranks the options backwards |
+| P6 | Hard constraints disqualify before economics decides | Latency, residency, and reproducibility are gates, not trade-offs |
+| P7 | Every selection has an expiry date | Capability and price move faster than most systems are rewritten |
+
+---
+
+## The Vocabulary Problem
+
+Before any procedure can work, the words have to mean one thing each. The table below is the highest-leverage artifact in this document: circulate it before the meeting, not after.
+
+| Phrase heard in the room | What the speaker usually means | What it actually requires |
+|---|---|---|
+| "Train a model on our data" | "The system should follow our conventions" | Usually retrieval or a better prompt; occasionally supervised fine-tuning |
+| "We need our own model" | "Our data must not leave our control" | A hosting and contract decision, not a modeling decision |
+| "It will learn from corrections" | "It gets better as we use it" | Nothing automatic. Learning requires a labeled feedback loop somebody owns and funds |
+| "Custom model" | Anything from a system prompt to a from-scratch training run | Must be resolved to one of the six definitions below |
+| "AI agent" | Anything from a chatbot to a process with write access to production | An authorization decision, separate from the model decision |
+| "RAG" | "It can use our documents" | A retrieval system: chunking, indexing, ranking, and a citation contract |
+| "It needs to be 100% accurate" | "I have not defined an acceptable error rate" | An error budget and an escalation path, per decision type |
+
+### Six things called "training"
+
+| Name | What it changes | Data needed | Order of cost | Who should ever do it |
+|---|---|---|---|---|
+| Pre-training | Creates a base model from scratch | Trillions of tokens | Tens of millions | Frontier labs only |
+| Continued pre-training | Adapts a base model to a domain's language | Billions of tokens | Hundreds of thousands | A domain with genuinely alien vocabulary |
+| Supervised fine-tuning (incl. LoRA) | Output form, schema adherence, tone | 1,000–50,000 curated examples | Thousands to tens of thousands, plus upkeep | Teams with a proven, stable, high-volume task |
+| Task model training | A small dedicated classifier or extractor | 2,000–50,000 labeled examples | Tens of thousands including engineering | High-volume, fixed-label, latency-bound work |
+| Preference tuning | Ranking between acceptable outputs | Thousands of comparisons | Tens of thousands | Product teams with a graded quality signal |
+| In-context learning | Behavior for the duration of one call | 0–50 examples in the prompt | Effectively free | Everyone, first |
+
+> **Fine-tuning changes how a model answers, not what it knows.** A model fine-tuned on last year's contracts will produce contract-shaped text confidently — including about clauses that changed in January. Facts belong in retrieval, where they can be updated, cited, and revoked.
+
+---
+
+## Separate the Layers First
+
+"Read our invoices" is not a task. It is a pipeline, and the correct approach differs at every stage. Assigning one technology to a whole pipeline is the most common and most expensive error in the field.
+
+| Layer | The question it answers | Nature of the problem | Right class of solution |
+|---|---|---|---|
+| Source | Does this have to be a document at all? | Process design | Upstream structured exchange |
+| Capture | What characters are on this page? | Solved perception | Bought API |
+| Normalize | Are dates, currencies, identifiers in canonical form? | Deterministic transformation | Code |
+| Extract | Which characters are the invoice total? | Structured reading under variation | LLM with a schema; trained extractor at volume |
+| Classify | Which cost center does this line belong to? | Fixed label space | LLM first; trained classifier at volume |
+| Validate | Do the lines sum to the total? Is the VAT rate legal? | Arithmetic and rules | Code. Never a model |
+| Match | Which purchase order is this? | Retrieval and scoring | Search plus deterministic tie-breaks |
+| Decide | Approve, hold, or escalate? | Policy under uncertainty | Rules over model outputs, with thresholds |
+| Act | Post to the ledger | Transaction | Integration code with idempotency |
+
+Two observations follow immediately.
+
+The first: most of this pipeline is not a model problem. Capture is a commodity. Normalization, validation, and posting are code. The genuinely model-shaped work is extraction, classification, and the judgment part of the decision — three layers out of nine. A team that assigns "an AI" to all nine has bought non-determinism for six layers that had exact answers.
+
+The second: pipelines have a cheat code at the top. If suppliers can send structured electronic invoices, capture and extraction disappear entirely — no model, no error rate, no maintenance. In the EU this is not hypothetical; structured e-invoicing over the Peppol network is already standard for public-sector suppliers in several member states, and mandates are expanding. A project that spends a year perfecting document extraction for a supplier base that could be migrated to structured exchange has optimized the wrong layer.
+
+> **The best model decision is often the one you avoid.** Ask what fraction of volume could arrive already structured. If it is most of it, this is a migration project with a fallback path for the remainder.
+
+---
+
+## The Approach Ladder
+
+Every approach below is legitimate. They are ordered by increasing capability and decreasing determinism. The discipline is to start at the top and stop at the first rung that clears the bar — not to start where the interesting engineering is.
+
+| Rung | Approach | Wins when | Cost shape | Characteristic failure |
+|---|---|---|---|---|
+| 0 | Change the source | The input format is negotiable | One-time process work | Blocked by third parties you don't control |
+| 1 | Deterministic rules and code | The rule is stable, exact, and writable | Engineering only, near-zero marginal | Brittle against variation the author never saw |
+| 2 | Bought commodity API | The capability is solved — OCR, speech, translation, embeddings | Low marginal, no fixed | Vendor ceiling you cannot raise |
+| 3 | Classical ML on features | Signal is numeric or tabular, volume is high — scoring, ranking, anomaly detection | High fixed, near-zero marginal | Needs feature engineering and labeled history |
+| 4 | Small trained or distilled task model | Fixed label space, high volume, hard latency or cost ceiling | High fixed, lowest marginal | Silent decay; retraining is a standing cost |
+| 5 | General LLM, prompted with a schema | The work needs reading, judgment, or open-ended output | Zero fixed, highest marginal | Non-determinism; cost scales linearly forever |
+| 6 | LLM plus retrieval | The answer depends on facts the model cannot know | Adds index build and upkeep | Retrieval quality becomes the accuracy ceiling |
+| 7 | LLM plus tools in a loop | The task requires taking actions or multi-step investigation | Adds orchestration, authorization, audit | Compounding error across steps; hardest to govern |
+
+Two rungs are routinely skipped for bad reasons. Rung 1 is skipped because rules feel unfashionable — yet most validation logic in a document pipeline is a rule, and belongs in code where it can be unit-tested. Rung 3 is skipped because attention moved to language models — yet tabular scoring problems (fraud, credit, churn, prioritization) are still won decisively by gradient-boosted trees on features, at a fraction of the cost and with far better latency.
+
+### "Simpler is cheaper" — true, if you define simple correctly
+
+The instinct that the simpler approach wins is right, and it is the single most reliable heuristic in this document. It goes wrong when *simple* is read as *technically unsophisticated*.
+
+| Approach | Technically simple? | Operationally simple? | Parts that must be kept alive |
+|---|---|---|---|
+| Rules engine | Yes | Only while the rules are few | Rule set, owner, regression tests, exception backlog |
+| Classical ML | No | No | Labels, features, training pipeline, hosting, drift monitoring, retraining |
+| Trained task model | No | No | Everything above, plus a model registry and a rollback path |
+| General LLM with a schema | No | **Yes** | A prompt, a schema, an eval set |
+
+An LLM call is the sophisticated technique and the operationally simple choice: no labels, no training run, no drift, no GPU fleet, no specialist on call. A hand-written rules pipeline is the unsophisticated technique that quietly becomes 4,000 rules and a full-time maintainer. Counting complexity in moving parts rather than in cleverness reverses the ranking that most teams start with — and it is the correct ranking.
+
+> **Pick the simplest thing that clears the bar, where simple means the fewest components you must keep alive for the next five years.** Every rung you skip downward buys capability and pays for it in permanent operational surface.
+
+### Is a frontier LLM expensive compared to classical ML?
+
+Per item, yes — by two to four orders of magnitude. In total cost of ownership at ordinary enterprise volume, no: it is usually cheaper, and the gap is large.
+
+| | Classical ML / small task model | General or frontier LLM |
+|---|---|---|
+| Cost per item | ~$0.00001 (CPU milliseconds) | ~$0.001–$0.05 depending on model and prompt size |
+| Cost to reach production | $25,000–$80,000 (labels, features, training, eval, deployment) | Near zero — a prompt and a schema |
+| Annual ownership | $15,000+ (retraining, monitoring, hosting, on-call) | Zero beyond usage |
+| Time to first result | Weeks to months | Hours |
+| Breaks when | The data distribution shifts | The prompt or provider changes untested |
+
+Both columns are true at once, which is why unit price alone ranks the options backwards. The fixed cost dominates until volume is large — the crossover arithmetic is in *The Arithmetic of Specializing* below, and for realistic parameters it lands in the millions of items per year.
+
+The second reason not to compare them by price: they are frequently not substitutes. Classical ML cannot read an unstructured PDF or judge whether a clause is unusual. An LLM cannot score a transaction in five milliseconds at tens of thousands of decisions per second. Where both genuinely apply — a fixed-label, high-volume classification — the comparison is legitimate, and then it is decided by volume and latency, not by preference.
+
+---
+
+## The Decision Procedure
+
+Run the gates in order, per layer. Each gate either terminates with an answer or passes the problem down. A gate is not a discussion; it is a question with a factual answer.
+
+```
+G0  Can the input be changed at the source?              → yes: rung 0. Stop.
+G1  Is the output verifiable — can you score it?         → no: do not build. Define the score first.
+G2  Is the rule exact, stable, and writable?             → yes: rung 1. Stop.
+G3  Is this a solved commodity capability?               → yes: rung 2. Stop.
+G4  Is the input tabular/numeric with labeled history?   → yes: rung 3. Stop.
+G5  Does a hard constraint rule out a hosted LLM?        → yes: rung 3 or 4 under that constraint.
+G6  Does the task need facts the model cannot know?      → yes: add retrieval (rung 6).
+G7  Does the task need to take actions?                  → yes: add tools (rung 7).
+    Otherwise                                            → rung 5: general LLM with a schema.
+G8  Measured against the eval set, does rung 5 miss a
+    cost, latency, or consistency target?                → only then: rung 4, distilled from rung 5.
+```
+
+The order matters more than any individual gate. G1 before everything else prevents the most expensive failure in the field: a system that ships without anyone able to say whether it works. G8 last prevents the second most expensive: specializing before there is evidence that the general approach falls short.
+
+> **Specialization is an optimization, not a starting point.** You cannot distill a model from a system you have not built, and you cannot justify a fixed cost from a number you have not measured. Anyone proposing to train at the start of a project is proposing to optimize before the baseline exists.
+
+---
+
+## Constraints That Disqualify Before Economics
+
+Economics ranks the options that remain. Constraints remove options entirely, and they must be established in writing before the first evaluation — discovering one after the build invalidates the build.
+
+| Constraint | Threshold that changes the answer | What it eliminates |
+|---|---|---|
+| Latency | Under ~100 ms per decision | Hosted LLM calls; forces rungs 3–4 |
+| Throughput spikes | Bursts far above provider rate limits | Sole reliance on one hosted API; forces caching, queuing, or local capacity |
+| Data residency | Data may not leave a jurisdiction or a network | Any provider without a compliant regional deployment |
+| Reproducibility | The same input must yield the same output on audit | Generation as the final authority; forces deterministic post-processing and recorded versions |
+| Explainability | A regulator or customer can demand the reason for a decision | Opaque scoring as sole basis; forces feature- or citation-level traceability |
+| Offline operation | No network at inference time | Everything hosted |
+| Unit cost ceiling | A per-item cost the business case cannot exceed | Large-model inference on high-volume paths |
+| Vendor concentration | No single provider may be a single point of failure | Designs without a portable prompt and eval layer |
+
+The residency constraint deserves particular care, because it is frequently overstated and occasionally understated. "The data cannot leave the country" is a real constraint with real architectural consequences. "The data cannot go to a vendor" is usually a contractual question — regional processing, retention terms, training-exclusion clauses — that procurement resolves without changing a line of the design. Establish which one you actually have before it eliminates rung 5 by rumor.
+
+---
+
+## The Arithmetic of Specializing
+
+Training a task model trades a large fixed cost for a lower marginal cost. That trade has a break-even volume, and it is nearly always larger than people expect.
+
+```
+V* = (C_fixed + C_annual_upkeep) / (c_general − c_specialized)
+
+V*               break-even volume, items per year
+C_fixed          labeling, engineering, evaluation, deployment
+C_annual_upkeep  retraining, drift monitoring, hosting, on-call
+c_general        cost per item on a general model
+c_specialized    cost per item on the specialized model
+```
+
+Worked example with explicit and deliberately favorable assumptions — a fixed-label classification task routing invoice lines to cost centers.
+
+| Item | Assumption |
+|---|---|
+| Labeling 5,000 examples (model-assisted, human-reviewed) | $4,000 |
+| Engineering: build, evaluate, deploy, integrate (3–4 weeks) | $25,000 |
+| Retraining, monitoring, on-call | $15,000 / year |
+| Inference hosting for an always-on small model | $3,600 / year |
+| Cost per item, small general model with a compact prompt | $0.002 |
+| Cost per item, self-hosted specialized model | $0.0001 |
+
+Year-one fixed cost is $29,000, recurring is $18,600, and the per-item saving is $0.0019. Break-even in the first year lands near **25 million items per year**. At a realistic enterprise volume of 100,000 items per year, the general model costs roughly $200 annually and the specialized one roughly $47,000 — a 200x worse answer, reached by a team that felt it was being rigorous.
+
+The picture changes when the per-item gap is larger, which is why the first optimization is always to move *within* rung 5 rather than off it.
+
+| Per-item saving | Break-even volume, year one | Typical situation |
+|---|---|---|
+| $0.0019 | ~25,000,000 / year | Small general model → specialized model |
+| $0.02 | ~2,400,000 / year | Large general model → specialized model |
+| $0.10 | ~480,000 / year | Large model with a long context → specialized model |
+
+Re-derive these with current prices before quoting them. The structure of the answer is stable; the numbers are not.
+
+> **Before training anything, try the cheap moves.** A smaller model, a shorter prompt, a cached stable prefix, batching, and a rule that filters the easy cases routinely cut per-item cost by an order of magnitude — in days of engineering, with no fixed cost and no model to own.
+
+### The pattern that does pay
+
+When volume genuinely justifies specialization, the sequence is not "train instead of prompt." It is: run the general model in production, keep its inputs and verified outputs, and use that corpus to train the small model. The general model becomes the labeling engine and the quality reference; the small model becomes the runtime. This inverts the usual failure — labeling done up front by people guessing at a taxonomy — because the taxonomy has already been proven in production.
+
+### What owning a model costs after launch
+
+| Ongoing obligation | Why it exists |
+|---|---|
+| Retraining cadence | Suppliers, formats, product lines, and language drift |
+| Drift monitoring | A decayed model fails silently and confidently |
+| Labeled holdout maintenance | Yesterday's test set leaks into today's training data |
+| Inference hosting and scaling | Capacity is now your problem, including the quiet hours |
+| Specialist availability | Someone must be able to diagnose a model, not just a service |
+
+None of these appear in the proposal that says "we'll fine-tune it." All of them appear in the second year's budget.
+
+---
+
+## Evidence: The Evaluation Set Is the Real Asset
+
+No approach can be selected without a scored evaluation set, and the set outlives every choice made with it. Models get replaced; the set is what makes replacement a one-day decision instead of a one-quarter project.
+
+**Build it in a week.**
+
+| Step | Detail |
+|---|---|
+| Sample | 150–300 real items, stratified across the variation that matters — supplier, format, language, layout, amount band |
+| Include the tail | At least a third from the awkward cases: handwriting, credit notes, multi-page, foreign currency, poor scans |
+| Label per layer | Ground truth for extraction fields and for classification separately, not one end-to-end verdict |
+| Freeze a holdout | Roughly a third, never inspected during development, never used for prompt iteration |
+| Define abstention | "I don't know" is a correct answer at low confidence. Score it as such — it routes to a human instead of causing an error |
+| Assign an owner | A domain expert owns the labels, engineering owns the harness, the set is version-controlled |
+
+**Score what decides the business case**, not what is easy to compute.
+
+| Metric | Definition | Why it decides |
+|---|---|---|
+| Accuracy at the layer | Correct outputs per layer | Locates the weak stage instead of averaging it away |
+| Escalation rate | Share routed to a human | Human time is usually the dominant cost, not inference |
+| Error cost | Wrong answers × cost of a wrong answer | 2% error is trivial in triage and unacceptable in payments |
+| **Cost per correct decision** | (Inference + escalation + error cost) ÷ correct decisions | The only number that ranks approaches against each other |
+| p95 latency | Tail, not mean | Averages hide the failures users actually experience |
+
+> **A system that abstains on 20% of items with 99.9% accuracy on the rest is usually worth more than one that answers everything at 95%.** The first has a known cost — human review of a fifth of the volume. The second has an unknown liability distributed across every downstream system.
+
+---
+
+## Worked Examples
+
+The same procedure, five problems, five different answers.
+
+**1. Invoice capture and coding — 50,000 documents per year, mixed suppliers.**
+Capture is commodity (rung 2), normalization and VAT validation are code (rung 1), extraction and cost-center coding are judgment (rung 5), matching is search plus rules. Volume is two orders of magnitude below the training break-even. *Verdict:* buy capture, code the rules, prompt a general model with a strict schema for extraction and coding, escalate low-confidence items. The tempting answer — "train on five years of historical invoices" — buys a fixed cost and a permanent maintenance obligation to save a few hundred dollars a year.
+
+**2. Support ticket routing — 50,000 tickets per day, twelve fixed queues, 200 ms budget.**
+Fixed label space, very high volume, a real latency ceiling: this passes G8 on all three counts. *Verdict:* start on a general model to establish the taxonomy and produce labels in production, then distill to a small classifier once the label set has been stable for a quarter. Keep the general model as the fallback for the low-confidence tail and as the reference the classifier is measured against.
+
+**3. Contract clause risk review — 400 contracts per year, high-value judgment.**
+Low volume, high variance, an expert reader is the baseline, and the governing standard shifts with case law and regulation. Facts, not form, are the gap. *Verdict:* general model plus retrieval over the clause library and policy standards, mandatory citations, no autonomous decision. Fine-tuning here is actively harmful: it bakes last year's positions into a system that must reflect this year's.
+
+**4. Payment fraud scoring — 5 ms budget, tabular features, regulator asks why.**
+Latency and explainability are hard gates that eliminate rungs 5–7 before economics is discussed. The signal is numeric and labeled history exists. *Verdict:* gradient-boosted trees on engineered features, with feature attribution for the regulator's question. A language model has a legitimate role adjacent to this — summarizing a flagged case for the analyst — but not in the scoring path.
+
+**5. Internal knowledge search — 30,000 documents, constant change.**
+The frequent request is "fine-tune a model on our wiki." The requirement is current facts with provenance, which fine-tuning cannot provide and retrieval can. *Verdict:* retrieval with citations over an index refreshed on document change, a general model for synthesis, and an explicit "not found in the sources" response. The engineering effort belongs in chunking, ranking, and access control — not in training.
+
+---
+
+## Anti-Patterns and What They Actually Mean
+
+| What is said | What is really being asked | The response that unblocks it |
+|---|---|---|
+| "Let's train it on our data" | "It should follow our conventions" | Put the conventions in a prompt and retrieval first, measure, then discuss training |
+| "We need 100% accuracy" | "I have no error budget and no escalation design" | Set a per-decision error budget and design abstention |
+| "We'll do a POC with the big model and move to something cheaper later" | "We are deferring the cost question" | Fine — but fix the switch criterion now, and keep the eval set that will prove it |
+| "The vendor's model is a black box, so we need our own" | Explainability, or procurement anxiety | Separate them: traceability is a design requirement, provider risk is a contract |
+| "AI can't be used here, it's regulated" | "Nobody has defined the authorization boundary" | Regulated does not mean prohibited. Classify the decision and name who signs it |
+| "It works in the demo" | The demo used the easy third of the distribution | Re-run on the frozen holdout, tail included |
+| "We should use an agent for this" | The task has multiple steps | Steps are not autonomy. Use a pipeline unless the path genuinely varies per item |
+| "Our data is too specialized for a general model" | An untested assumption, usually about vocabulary | Test it in an hour on twenty hard examples before designing around it |
+
+---
+
+## Running the Selection Discussion
+
+Most selection meetings fail structurally: approaches get named before the problem is decomposed, and seniority resolves what evidence should have. Impose an order.
+
+**Four questions, in this sequence. No approach may be named before question four.**
+
+1. **What are the layers?** Write the pipeline on the board. Nine boxes, not one.
+2. **Which layer are we discussing?** Every subsequent sentence is scoped to one box.
+3. **What are the hard constraints and the error budget for that box?** Latency, residency, reproducibility, cost ceiling, acceptable error rate, and who handles the errors.
+4. **What does the evaluation set say?** Now, and only now, compare approaches.
+
+If question four cannot be answered, the meeting's output is not a decision. It is an assignment: build the evaluation set and reconvene. A week spent on 200 labeled examples routinely saves a quarter spent on the wrong architecture.
+
+**Record the decision where it can be revisited.**
+
+```yaml
+decision: invoice-line-coding
+layer: classify
+date: 2026-09-06
+constraints:
+  latency_p95_ms: 5000
+  residency: EU
+  error_budget: "2% miscoded, caught by monthly reconciliation"
+  volume_per_year: 50000
+options_evaluated:
+  - approach: rules-on-supplier-master
+    accuracy: 0.71
+    cost_per_correct_decision: 0.004
+    rejected_because: "fails on new suppliers and split lines"
+  - approach: general-llm-with-schema
+    accuracy: 0.94
+    escalation_rate: 0.09
+    cost_per_correct_decision: 0.019
+    selected: true
+  - approach: trained-classifier
+    projected_accuracy: 0.93
+    break_even_volume_per_year: 25000000
+    rejected_because: "volume is 500x below break-even"
+decision: general-llm-with-schema
+review_on: 2027-03-06
+review_trigger: "volume above 2M/year, or p95 latency breach, or eval accuracy below 0.90"
+eval_set: evals/invoice-line-coding-v3 (247 items, 82 held out)
+owner: finance-operations
+```
+
+Decision rights follow the same separation as the layers. The domain owner sets the error budget and owns the labels. Engineering owns the evaluation harness and the measured numbers. Whoever holds the budget picks among options that have cleared the constraints — and cannot overrule a constraint, because a constraint is a fact about the world, not a preference.
+
+---
+
+## Selections Expire
+
+Every choice here is made against a price list and a capability level that will both move. Two years ago, several tasks now handled by a prompt genuinely required a trained model; several tasks now handled by a small model required a large one. The systems that aged well are not the ones that picked correctly — they are the ones that kept the ability to re-pick cheaply.
+
+| Practice | Why it preserves optionality |
+|---|---|
+| Keep prompts, schemas, and evals in version control | The asset survives any model it was written against |
+| Isolate model calls behind one interface | Swapping a provider is a configuration change, not a refactor |
+| Re-run the evaluation set quarterly, and on any price or model change | Selection is a standing question, not a one-time verdict |
+| Record the review trigger with the decision | Someone reconsiders on a number, not on a news cycle |
+| Never store business logic only inside a fine-tuned model | Logic in weights cannot be read, diffed, or reviewed |
+
+> **The durable assets are the decomposed pipeline, the labeled evaluation set, and the recorded decision — not the model.** Models are the most replaceable component in the system, and any architecture that treats one as permanent has locked in the fastest-moving part of the stack.
