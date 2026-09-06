@@ -1,0 +1,1 @@
+(globalThis.TURBOPACK||(globalThis.TURBOPACK=[])).push(["object"==typeof document?document.currentScript:void 0,37150,t=>{t.q("/_next/static/media/neural-training.worker.2k2otntwzeaat.ts")}]);
